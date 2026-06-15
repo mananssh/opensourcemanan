@@ -49,6 +49,7 @@ const DATE_RE = /^## (\d{4}-\d{2}-\d{2})\s*$/;
 export function parseChangelog(markdown: string): ChangelogDay[] {
   const lines = markdown.split("\n");
   const days: ChangelogDay[] = [];
+  const dayByDate = new Map<string, ChangelogDay>();
   let day: ChangelogDay | null = null;
   let entry: ChangelogEntry | null = null;
   const bodyBuffer: string[] = [];
@@ -63,8 +64,16 @@ export function parseChangelog(markdown: string): ChangelogDay[] {
     if (dateMatch) {
       flushBody();
       entry = null;
-      day = { date: dateMatch[1], entries: [] };
-      days.push(day);
+      const date = dateMatch[1];
+      // Coalesce repeated date headings into a single day (defensive against
+      // older CHANGELOG.md files that have duplicate same-date sections).
+      let existing = dayByDate.get(date);
+      if (!existing) {
+        existing = { date, entries: [] };
+        dayByDate.set(date, existing);
+        days.push(existing);
+      }
+      day = existing;
       continue;
     }
 

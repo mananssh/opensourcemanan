@@ -17,9 +17,6 @@
   result — so /changelog updates itself without weakening branch protection.
   Requires a RELEASE_TOKEN PAT (see ADR 0004). Closes the gap where the
   changelog only updated via a manual `npm run changelog`.
-
-## 2026-06-15
-
 - **19:53 · `6b71af4` · fix:** Use the directory/SKILL.md layout for project skills
   Project skills must live at `.claude/skills/<name>/SKILL.md` (the skill
   name derives from the directory) to be discovered by Claude Code. Moved

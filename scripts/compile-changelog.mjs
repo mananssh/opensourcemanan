@@ -67,13 +67,23 @@ for (const file of files.sort()) {
   }
 }
 
-const section = `## ${date}\n\n${lines.join("\n")}\n`;
+const newEntries = lines.join("\n");
+const dateHeading = `## ${date}`;
 
 const header = "# Changelog\n\n";
 let existing = existsSync(changelogPath) ? readFileSync(changelogPath, "utf8") : header;
 if (!existing.startsWith("# Changelog")) existing = header + existing;
-const rest = existing.slice(header.length).trimStart();
-const next = `${header}${section}${rest ? "\n" + rest : ""}`;
+const body = existing.slice(header.length).replace(/^\n+/, "");
+
+let next;
+if (body.startsWith(`${dateHeading}\n`)) {
+  // Merge into today's existing section — new entries on top, one heading.
+  const afterHeading = body.slice(dateHeading.length).replace(/^\n+/, "");
+  next = `${header}${dateHeading}\n\n${newEntries}\n${afterHeading}`;
+} else {
+  // No section for this date yet — prepend a new one.
+  next = `${header}${dateHeading}\n\n${newEntries}\n${body ? "\n" + body : ""}`;
+}
 writeFileSync(changelogPath, next.endsWith("\n") ? next : next + "\n");
 
 for (const file of files) rmSync(join(changesetDir, file));
