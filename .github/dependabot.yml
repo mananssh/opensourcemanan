@@ -11,6 +11,12 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # ESLint 10 is incompatible with eslint-config-next (its bundled
+      # eslint-plugin-react calls context.getFilename(), removed in v10).
+      # Re-enable once eslint-config-next supports ESLint 10.
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
     commit-message:
       prefix: chore
 
