@@ -13,6 +13,11 @@ export interface NavItem {
 export const siteNav: NavItem[] = [
   { label: "Home", href: "/" },
   {
+    label: "About",
+    href: "/osm",
+    description: "What this whole thing is.",
+  },
+  {
     label: "Changelog",
     href: "/changelog",
     description: "Everything that has shipped, newest first.",
