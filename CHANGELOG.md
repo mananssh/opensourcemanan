@@ -2,6 +2,13 @@
 
 ## 2026-06-15
 
+- **16:22 · `614e103` · fix:** Merge same-day changelog entries under one date heading
+  `scripts/compile-changelog.mjs` now folds new entries into an existing
+  same-date section (newest on top) instead of prepending a duplicate
+  `## YYYY-MM-DD` heading, so shipping multiple times in one day no longer
+  splits the changelog into repeated date groups. `lib/changelog.ts` also
+  coalesces duplicate date headings defensively when parsing, and the
+  already-duplicated CHANGELOG.md is collapsed into a single section.
 - **14:47 · `5a6e2f1` · feat:** Add a public /changelog page rendered from the changeset system
   The changelog is now a public artifact at `/changelog`, rendered as a
   polished, Vercel-style page. It's built as a system, not static content:
