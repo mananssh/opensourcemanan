@@ -47,7 +47,7 @@ export default function ChangelogPage() {
   const days = getChangelog();
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 pt-20 sm:pt-28">
+    <main className="container-editorial pt-20 sm:pt-28">
       <header>
         <p className="label-caps text-faint">The log</p>
         <h1 className="mt-5 font-display text-5xl font-light tracking-tight text-ink">

@@ -74,6 +74,17 @@ body::before {
   opacity: 0.05;
 }
 
+/*
+ * The single source of truth for page width. Every surface (header, footer,
+ * pages) uses this — change the measure once here, never per-page.
+ */
+@utility container-editorial {
+  width: 100%;
+  max-width: 48rem; /* matches Tailwind's max-w-3xl */
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
 /* Editorial small-caps label helper. */
 .label-caps {
   font-family: var(--font-mono), monospace;

@@ -5,7 +5,7 @@ export default function Home() {
   const sections = siteNav.filter((item) => item.href !== "/");
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-6 pt-20 sm:pt-28">
+    <main className="container-editorial pt-20 sm:pt-28">
       {/* Masthead */}
       <p className="label-caps text-faint">Vol. 01 — Open-source almanac</p>
 
