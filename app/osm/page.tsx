@@ -19,7 +19,7 @@ const ETHOS = [
 
 export default function OsmPage() {
   return (
-    <main className="relative mx-auto w-full max-w-2xl overflow-hidden px-6 pt-24 sm:pt-32">
+    <main className="container-editorial relative overflow-hidden pt-24 sm:pt-32">
       {/* Oversized ghosted wordmark — depth, not decoration. */}
       <span
         aria-hidden
