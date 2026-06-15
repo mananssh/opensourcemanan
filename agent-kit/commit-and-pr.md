@@ -46,7 +46,7 @@ Includes an authoring path behind the owner-only access tier.
 - Body — the human-facing change description.
 - **Datetime and commit hash are NOT written here** — they're filled at compile time from git.
 
-On release, `npm run changelog` (`scripts/compile-changelog.mjs`) concatenates all `.changeset/*.md` into `CHANGELOG.md` grouped by date as `datetime · short-hash · type: summary · description`, then clears the consumed changeset files.
+Compilation is **automated**: the `Release` workflow (`.github/workflows/release.yml`) runs after every merge to `main`, runs `npm run changelog` (`scripts/compile-changelog.mjs`) to concatenate all `.changeset/*.md` into `CHANGELOG.md` grouped by date as `datetime · short-hash · type: summary · description`, clears the consumed changeset files, and opens a small auto-merging PR with the result (surfaced at `/changelog`). You can still run `npm run changelog` locally. See [ADR 0004](../docs/decisions/0004-release-automation.md).
 
 The `/commit` skill offers to create a changeset if one is missing.
 

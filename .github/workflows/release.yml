@@ -1,0 +1,66 @@
+name: Release
+
+# Compiles pending changesets into CHANGELOG.md after every merge to main.
+#
+# main is protected (PR required, enforce_admins on), so this cannot push
+# directly. Instead it opens a tiny auto-merging PR with the compiled changelog.
+#
+# Requires a fine-grained PAT in the `RELEASE_TOKEN` secret (Contents: RW,
+# Pull requests: RW on this repo). GitHub's default GITHUB_TOKEN cannot be used:
+# PRs it opens do not trigger CI, so required checks would never run and
+# auto-merge would never fire. See docs/decisions/0004-release-automation.md.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  changelog:
+    name: Compile changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Compile pending changesets
+        id: compile
+        run: |
+          npm run changelog
+          if [ -z "$(git status --porcelain CHANGELOG.md .changeset)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No pending changesets — nothing to release."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open auto-merging release PR
+        if: steps.compile.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          branch="release/changelog-${GITHUB_SHA::7}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add CHANGELOG.md .changeset
+          git commit -m "chore(release): compile changelog"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "chore(release): compile changelog" \
+            --body "Automated. Folds the pending changeset(s) merged into \`main\` into \`CHANGELOG.md\` (now visible at /changelog). Auto-merges once checks pass."
+          gh pr merge "$branch" --squash --auto --delete-branch
