@@ -2,6 +2,14 @@
 
 ## 2026-06-15
 
+- **22:50 · `b652c64` · feat:** Add the /osm manifesto page
+  A single public page at /osm describing what OSM is, in a few punchy words.
+  Heightens the Editorial Logbook system (no divergence): oversized Fraunces
+  hero with a pulsing accent, a ghosted OSM watermark for depth, a mono ethos
+  strip, and a printed-style colophon. Staggered CSS-only reveal on load
+  (respects prefers-reduced-motion), light + dark via tokens (ADR 0005), design
+  reviewed first (ADR 0006). Reusable `.reveal`/`.accent-pulse` motion primitives
+  added to the design system; reachable via a config-driven "About" nav entry.
 - **22:34 · `9fc3221` · feat:** Color-code changelog type tags and show commit time
   Each changelog entry's type (feat/fix/perf/refactor/docs/test/chore/ci) now
   renders as a highlighted chip with its own muted, paper-harmonized color —
