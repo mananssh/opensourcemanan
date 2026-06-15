@@ -19,6 +19,20 @@ const TYPE_LABELS: Record<ChangeType, string> = {
   ci: "CI",
 };
 
+// Highlighter chip per type — muted tones that sit on warm paper. Each defines
+// BOTH light and dark (ADR 0005). A deliberate divergence from single-accent
+// (ADR 0006): the type is the one place color earns its keep.
+const TYPE_CHIP: Record<ChangeType, string> = {
+  feat: "bg-[#dde8cf] text-[#4a6b1f] dark:bg-[#202a16] dark:text-[#9ec97a]",
+  fix: "bg-[#f3e3c4] text-[#8a5208] dark:bg-[#2b2113] dark:text-[#dca85a]",
+  perf: "bg-[#e7e0f1] text-[#5d3a8a] dark:bg-[#241d31] dark:text-[#b59ddd]",
+  refactor: "bg-[#d9e5f0] text-[#2c5578] dark:bg-[#16222f] dark:text-[#84b2d6]",
+  docs: "bg-[#d6e8e4] text-[#2a665f] dark:bg-[#142421] dark:text-[#74c0b5]",
+  test: "bg-[#f0dde1] text-[#8e3a4e] dark:bg-[#2a181c] dark:text-[#d98ea0]",
+  chore: "bg-[#e7e0d2] text-[#6a6051] dark:bg-[#262019] dark:text-[#a0937f]",
+  ci: "bg-[#e0e2e6] text-[#4a5563] dark:bg-[#1c1f24] dark:text-[#98a2b0]",
+};
+
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
@@ -61,12 +75,14 @@ export default function ChangelogPage() {
               <ol className="mt-8 space-y-9">
                 {day.entries.map((entry, i) => (
                   <li key={`${entry.hash}-${i}`}>
-                    <div className="mb-1.5 flex items-center gap-3">
-                      <span className="label-caps text-accent">
+                    <div className="mb-1.5 flex items-center gap-2.5">
+                      <span
+                        className={`label-caps rounded-[3px] px-1.5 py-0.5 ${TYPE_CHIP[entry.type] ?? TYPE_CHIP.chore}`}
+                      >
                         {TYPE_LABELS[entry.type] ?? entry.type}
                       </span>
-                      <span className="font-mono text-xs text-faint">
-                        {entry.hash}
+                      <span className="font-mono text-xs text-faint tabular-nums">
+                        {entry.time} · {entry.hash}
                       </span>
                     </div>
 
