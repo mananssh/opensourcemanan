@@ -1,26 +1,83 @@
 @import "tailwindcss";
 
+/* Manual (class-based) dark mode driven by next-themes, not prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. EVERY token is defined for both themes — see ADR 0005:
+ * features reference semantic tokens, never a single hardcoded mode.
+ * This is the Editorial Logbook palette (warm paper / warm ink).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f5f1e7; /* warm off-white page */
+  --surface: #fffdf7; /* raised surface */
+  --ink: #221c15; /* warm near-black text */
+  --muted: #6d6354; /* secondary text */
+  --faint: #968b78; /* tertiary / timestamps */
+  --rule: #ddd3c1; /* hairline rules */
+  --accent: #8c2b1c; /* oxblood */
+  --accent-soft: #ede2d3; /* accent tint for chips */
+}
+
+.dark {
+  --paper: #15120d;
+  --surface: #1d1811;
+  --ink: #ece4d5;
+  --muted: #a0937f;
+  --faint: #7c7160;
+  --rule: #322a1e;
+  --accent: #db6a4a; /* terracotta — legible on dark */
+  --accent-soft: #2a201a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-newsreader);
+  --font-mono: var(--font-jetbrains);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle paper grain — atmosphere, not noise. Fixed so it doesn't scroll. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark body::before {
+  opacity: 0.05;
+}
+
+/* Editorial small-caps label helper. */
+.label-caps {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.6875rem;
 }

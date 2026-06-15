@@ -16,5 +16,7 @@ A change is done when **all** of these are true. CI enforces the hard gates; the
 - [ ] **devil's-advocate considered** — reviewed the critique; risks addressed or consciously accepted.
 - [ ] **Built as a system, not static content** — if it's content that grows, it's on the content-system primitive, not a hardcoded page (see [conventions.md](./conventions.md)).
 - [ ] **Four-axis discipline** — Access / Data / Telemetry / Rendering chosen declaratively; no reimplemented plumbing.
+- [ ] **Light + dark both done** — any UI works and was checked in both themes; colors come from semantic tokens defined for both modes (ADR 0005). No single-mode features.
+- [ ] **Design review done (for UI work)** — ran `/design-review`; committed to a deliberate aesthetic with distinctive type, not default/AI-slop (ADR 0006).
 - [ ] **Docs updated** — relevant `docs/` or `agent-kit/` reflects the change; an ADR added for any architectural decision.
 - [ ] **Conventional commit** + branch-from-latest-`origin/main` + PR (see [commit-and-pr.md](./commit-and-pr.md)).

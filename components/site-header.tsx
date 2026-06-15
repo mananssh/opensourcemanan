@@ -1,34 +1,39 @@
 import Link from "next/link";
 import { siteNav } from "@/lib/site-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 /**
- * Site header. Renders the nav from the `siteNav` config — adding a link is a
- * config edit, not a code change.
+ * Editorial Logbook header: OSM wordmark + hairline rule, nav from the
+ * `siteNav` config (config-driven surface), and the global theme toggle.
  */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-10 border-b border-zinc-200/70 bg-white/80 backdrop-blur dark:border-zinc-800/70 dark:bg-black/80">
-      <nav className="mx-auto flex w-full max-w-3xl items-center justify-between px-6 py-4">
-        <Link
-          href="/"
-          className="font-medium tracking-tight text-zinc-900 dark:text-zinc-100"
-        >
-          Manan Shah
+    <header className="sticky top-0 z-40 border-b border-rule bg-paper/85 backdrop-blur-sm">
+      <nav className="mx-auto flex w-full max-w-2xl items-center justify-between px-6 py-5">
+        <Link href="/" className="group inline-flex items-baseline gap-0.5">
+          <span className="font-display text-xl font-semibold tracking-tight text-ink">
+            OSM
+          </span>
+          <span className="font-display text-xl leading-none text-accent">.</span>
         </Link>
-        <ul className="flex items-center gap-6 text-sm">
-          {siteNav
-            .filter((item) => item.href !== "/")
-            .map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-        </ul>
+
+        <div className="flex items-center gap-7">
+          <ul className="flex items-center gap-6">
+            {siteNav
+              .filter((item) => item.href !== "/")
+              .map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="label-caps text-muted transition-colors hover:text-accent"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+          </ul>
+          <ThemeToggle />
+        </div>
       </nav>
     </header>
   );
