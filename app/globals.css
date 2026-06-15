@@ -81,3 +81,48 @@ body::before {
   letter-spacing: 0.18em;
   font-size: 0.6875rem;
 }
+
+/*
+ * Motion primitives — reusable across features (ADR 0006 keeps design
+ * deliberate; these keep motion consistent). `.reveal` does a staggered
+ * fade-up; set --reveal-delay inline to sequence elements. Both respect
+ * prefers-reduced-motion.
+ */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes accent-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.reveal {
+  opacity: 0;
+  animation: reveal-up 0.75s cubic-bezier(0.2, 0.65, 0.3, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+.accent-pulse {
+  animation: accent-pulse 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .accent-pulse {
+    animation: none;
+    opacity: 1;
+  }
+}
