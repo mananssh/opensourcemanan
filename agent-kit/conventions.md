@@ -45,7 +45,14 @@ A feature is **self-contained** and **registers into shared shells** rather than
 - Surface area (nav entry, gated routes, telemetry opt-in) is **config-driven** — adding a feature is mostly editing a manifest, not wiring.
 - Use `/feature` to scaffold — it generates the system skeleton against this convention.
 
-## 4. Code style
+## 4. Frontend & theming
+
+Two non-negotiables for anything with a UI:
+
+- **Light *and* dark, always.** Every feature must support both themes — never ship a single mode. The toggle is a global primitive (`components/theme-toggle.tsx`, ADR 0005); features inherit it. Colors may differ per feature, but reference **semantic design tokens** (`bg-paper`, `text-ink`, `text-accent`, `border-rule`, … defined for both themes in `app/globals.css`) — never hardcode a hex that only works in one mode. A new feature defining its own palette must define it for **both** `:root` and `.dark`.
+- **Conscious design review before building UI.** Do not default to generic/AI-slop aesthetics (system fonts, Inter, purple-on-white, predictable layouts). Before implementing a new surface, run **`/design-review`** (ADR 0006) to commit to an aesthetic direction, distinctive type, and a light+dark token set. Match the existing **Editorial Logbook** system unless a feature deliberately and consciously diverges.
+
+## 5. Code style
 
 - **TypeScript everywhere.** No `any` without a written reason. Prefer `type`/`interface` at module boundaries.
 - Match surrounding code: naming, comment density, idiom.

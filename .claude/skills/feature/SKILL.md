@@ -28,6 +28,8 @@ Scaffold a new feature the right way: as a **system, not static content**, compo
    - An authoring/create path where applicable.
    - Declarative manifest entry for nav + access + telemetry — config-driven surface.
 
-6. **Note the Next.js caveat.** Read `node_modules/next/dist/docs/` before writing Next.js code — this version diverges from training-data assumptions.
+6. **If the feature has UI, design it consciously first.** Run **`/design-review`** (ADR 0006) before writing components, and ensure **both light and dark** themes via semantic tokens (ADR 0005). No single-mode, no default/AI-slop styling.
 
-7. **Finish per the checklist**: `agent-kit/definition-of-done.md` (add a changeset, run `/oss-check`, etc.).
+7. **Note the Next.js caveat.** Read `node_modules/next/dist/docs/` before writing Next.js code — this version diverges from training-data assumptions.
+
+8. **Finish per the checklist**: `agent-kit/definition-of-done.md` (add a changeset, run `/oss-check`, etc.).
