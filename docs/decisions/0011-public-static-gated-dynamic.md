@@ -1,6 +1,27 @@
 # ADR 0011 — Public posts render static/ISR; gated posts render dynamic
 
-**Status:** Accepted · 2026-06-16
+**Status:** REVERTED · 2026-06-16 — caused a production 500 (see Update).
+
+## Update — reverted
+
+Shipping this caused `DYNAMIC_SERVER_USAGE` 500s on **gated** posts in
+production. Setting `export const revalidate` puts the whole route segment in
+static/ISR mode, but the gated render reads the session (`auth()` → cookies),
+which is disallowed during static generation. Public posts (no cookies) worked;
+gated posts 500'd. You cannot mix per-session-dynamic and static-prerender on one
+dynamic route segment without PPR.
+
+**The post route is reverted to fully dynamic** (reads the session, no
+`generateStaticParams`/`revalidate`). The DA #3 goal — avoid recompiling
+MDX+Shiki every request — will be solved by **caching the MDX compilation**
+keyed by `(slug, updatedAt)` (route stays dynamic), not by route-level static
+rendering. Tracked as a follow-up.
+
+The original (now-reverted) decision follows for the record.
+
+---
+
+**Original status:** Accepted · 2026-06-16
 
 ## Context
 
