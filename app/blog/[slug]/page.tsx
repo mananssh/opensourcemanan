@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getPostAccess } from "@/lib/blog/queries";
+import { getPostAccess, getPostTags, getRelatedPosts } from "@/lib/blog/queries";
 import { PostBody, extractToc } from "@/lib/blog/mdx";
 import { readingMinutes } from "@/lib/blog/reading-time";
+import { PostList } from "@/components/blog/post-list";
 
 type Params = Promise<{ slug: string }>;
 
@@ -51,6 +52,12 @@ export default async function PostPage({ params }: { params: Params }) {
 
   const toc = extractToc(post.bodyMdx);
   const mins = readingMinutes(post.bodyMdx);
+  const postTags = await getPostTags(post.id);
+  const related = await getRelatedPosts({
+    id: post.id,
+    categoryId: post.categoryId,
+    tagIds: postTags.map((t) => t.id),
+  });
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -87,6 +94,20 @@ export default async function PostPage({ params }: { params: Params }) {
             {post.excerpt}
           </p>
         )}
+        {postTags.length > 0 && (
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {postTags.map((t) => (
+              <li key={t.id}>
+                <Link
+                  href={`/blog/tag/${t.slug}`}
+                  className="inline-flex rounded-full border border-rule px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted transition-colors hover:border-accent hover:text-accent"
+                >
+                  #{t.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </header>
 
       <div className="mt-12 lg:grid lg:grid-cols-[1fr_15rem] lg:gap-14">
@@ -117,7 +138,16 @@ export default async function PostPage({ params }: { params: Params }) {
         )}
       </div>
 
-      <div className="mt-20 border-t border-rule pt-6">
+      {related.length > 0 && (
+        <section className="mt-20 border-t border-rule pt-10">
+          <p className="mb-2 font-mono text-xs uppercase tracking-[0.25em] text-faint">
+            Related
+          </p>
+          <PostList posts={related} />
+        </section>
+      )}
+
+      <div className="mt-16 border-t border-rule pt-6">
         <Link
           href="/blog"
           className="font-mono text-xs uppercase tracking-[0.2em] text-muted transition-colors hover:text-accent"

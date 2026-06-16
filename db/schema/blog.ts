@@ -5,6 +5,7 @@ import {
   text,
   integer,
   timestamp,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 /** Four-mode visibility, shared by posts and categories (most-restrictive wins). */
@@ -50,5 +51,26 @@ export const posts = pgTable("posts", {
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+export const tags = pgTable("tags", {
+  id: uuid().primaryKey().defaultRandom(),
+  slug: text().notNull().unique(),
+  name: text().notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+export const postTags = pgTable(
+  "post_tags",
+  {
+    postId: uuid()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    tagId: uuid()
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.tagId] })],
+);
+
 export type Category = typeof categories.$inferSelect;
 export type Post = typeof posts.$inferSelect;
+export type Tag = typeof tags.$inferSelect;

@@ -1,7 +1,16 @@
 import { cache } from "react";
-import { eq, desc } from "drizzle-orm";
+import type { Session } from "next-auth";
+import { eq, desc, and, or, ne, ilike, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
-import { posts, categories, type Post, type Category } from "@/db/schema";
+import {
+  posts,
+  categories,
+  tags,
+  postTags,
+  type Post,
+  type Category,
+  type Tag,
+} from "@/db/schema";
 import { auth } from "@/lib/auth";
 import {
   canSee,
@@ -203,6 +212,120 @@ export const getPostAccess = cache(async (slug: string): Promise<PostAccess> => 
     return { status: "notfound" };
   }, { status: "notfound" });
 });
+
+function visibleFilter(session: Session | null) {
+  return (r: CardRow) => {
+    const { post, category } = rowGates(r);
+    return canSeePost(session, post, category);
+  };
+}
+
+/** Tags attached to a post (for display). */
+export const getPostTags = cache(async (postId: string): Promise<Tag[]> => {
+  return safe(async () => {
+    return db
+      .select({
+        id: tags.id,
+        slug: tags.slug,
+        name: tags.name,
+        createdAt: tags.createdAt,
+      })
+      .from(postTags)
+      .innerJoin(tags, eq(postTags.tagId, tags.id))
+      .where(eq(postTags.postId, postId))
+      .orderBy(tags.name);
+  }, []);
+});
+
+export const getTag = cache(async (slug: string): Promise<Tag | null> => {
+  return safe(async () => {
+    const rows = await db.select().from(tags).where(eq(tags.slug, slug)).limit(1);
+    return rows[0] ?? null;
+  }, null);
+});
+
+/** Visible published posts carrying a tag. */
+export const listPostsByTag = cache(
+  async (slug: string): Promise<PostCard[]> => {
+    const session = await auth();
+    return safe(async () => {
+      const rows = (await db
+        .select(cardColumns)
+        .from(posts)
+        .innerJoin(postTags, eq(postTags.postId, posts.id))
+        .innerJoin(tags, eq(tags.id, postTags.tagId))
+        .leftJoin(categories, eq(posts.categoryId, categories.id))
+        .where(and(eq(posts.status, "published"), eq(tags.slug, slug)))
+        .orderBy(desc(posts.publishedAt))) as CardRow[];
+      return rows.filter(visibleFilter(session)).map(toCard);
+    }, []);
+  },
+);
+
+/** Full-text-ish search over title/excerpt/body of visible published posts. */
+export const searchVisiblePosts = cache(
+  async (query: string): Promise<PostCard[]> => {
+    const term = query.trim();
+    if (!term) return [];
+    const session = await auth();
+    return safe(async () => {
+      const like = `%${term}%`;
+      const rows = (await db
+        .select(cardColumns)
+        .from(posts)
+        .leftJoin(categories, eq(posts.categoryId, categories.id))
+        .where(
+          and(
+            eq(posts.status, "published"),
+            or(
+              ilike(posts.title, like),
+              ilike(posts.excerpt, like),
+              ilike(posts.bodyMdx, like),
+            ),
+          ),
+        )
+        .orderBy(desc(posts.publishedAt))) as CardRow[];
+      return rows.filter(visibleFilter(session)).map(toCard);
+    }, []);
+  },
+);
+
+/** Related posts: same category or a shared tag, excluding the post itself. */
+export const getRelatedPosts = cache(
+  async (input: {
+    id: string;
+    categoryId: string | null;
+    tagIds: string[];
+  }): Promise<PostCard[]> => {
+    const session = await auth();
+    return safe(async () => {
+      const conds = [];
+      if (input.categoryId) conds.push(eq(posts.categoryId, input.categoryId));
+      if (input.tagIds.length > 0) {
+        conds.push(
+          inArray(
+            posts.id,
+            db
+              .select({ pid: postTags.postId })
+              .from(postTags)
+              .where(inArray(postTags.tagId, input.tagIds)),
+          ),
+        );
+      }
+      if (conds.length === 0) return [];
+      const rows = (await db
+        .select(cardColumns)
+        .from(posts)
+        .leftJoin(categories, eq(posts.categoryId, categories.id))
+        .where(
+          and(eq(posts.status, "published"), ne(posts.id, input.id), or(...conds)),
+        )
+        .orderBy(desc(posts.publishedAt))
+        .limit(8)) as CardRow[];
+      return rows.filter(visibleFilter(session)).map(toCard).slice(0, 3);
+    }, []);
+  },
+);
 
 /** Published + effectively-public posts only — for sitemap/RSS (no session). */
 export const listPublicPosts = cache(async (): Promise<
