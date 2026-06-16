@@ -2,6 +2,16 @@
 
 ## 2026-06-16
 
+- **14:58 · `477ba96` · feat:** Blog discovery — tags, search, and related posts
+  Phase 3 of the blog.
+  
+  - Tags: tags + post_tags (m2m) tables and migration; edit tags (comma-separated)
+    in the post admin (upserted + linked on save); tag chips on posts; tag landing
+    pages at /blog/tag/[slug].
+  - Search: full-text-ish search over title/excerpt/body of visible posts, at
+    /blog/search (with a search box on the blog index). Visibility-filtered.
+  - Related posts: each post shows up to 3 related (same category or shared tag),
+    visibility-filtered.
 - **13:17 · `c26f057` · feat:** Owner-gated blog admin CMS (create/edit/organize posts + categories)
   Phase 2 of the blog: an owner-gated admin at /blog/admin to author and manage
   content — retiring the seed scripts.
