@@ -22,6 +22,13 @@
       "when": 1781621214463,
       "tag": "0002_clear_omega_red",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781628456735,
+      "tag": "0003_elite_pretty_boy",
+      "breakpoints": true
     }
   ]
 }

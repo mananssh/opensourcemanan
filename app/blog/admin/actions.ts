@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import GithubSlugger from "github-slugger";
 import { db } from "@/db/client";
-import { posts, categories, tags, postTags } from "@/db/schema";
+import { posts, categories, tags, postTags, comments } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
 import { readingMinutes } from "@/lib/blog/reading-time";
 import { makePublic } from "@/lib/storage/gcs";
@@ -177,6 +177,14 @@ export async function deleteCategory(formData: FormData): Promise<void> {
   await requireOwner();
   const id = str(formData, "id");
   if (id) await db.delete(categories).where(eq(categories.id, id));
+  revalidateBlog();
+  redirect("/blog/admin");
+}
+
+export async function deleteComment(formData: FormData): Promise<void> {
+  await requireOwner();
+  const id = str(formData, "id");
+  if (id) await db.delete(comments).where(eq(comments.id, id));
   revalidateBlog();
   redirect("/blog/admin");
 }

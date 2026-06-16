@@ -71,6 +71,40 @@ export const postTags = pgTable(
   (t) => [primaryKey({ columns: [t.postId, t.tagId] })],
 );
 
+/** One reaction (like) per signed-in user per post. */
+export const reactions = pgTable(
+  "reactions",
+  {
+    postId: uuid()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    userEmail: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.userEmail] })],
+);
+
+/** Comments from signed-in users; owner-moderated (delete). Plaintext body. */
+export const comments = pgTable("comments", {
+  id: uuid().primaryKey().defaultRandom(),
+  postId: uuid()
+    .notNull()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  userEmail: text().notNull(),
+  userName: text().notNull(),
+  body: text().notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Per-post view counter. */
+export const postViews = pgTable("post_views", {
+  postId: uuid()
+    .primaryKey()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  count: integer().notNull().default(0),
+});
+
 export type Category = typeof categories.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
+export type Comment = typeof comments.$inferSelect;
