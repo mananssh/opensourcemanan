@@ -128,7 +128,7 @@ export const listVisiblePosts = cache(
         .from(posts)
         .leftJoin(categories, eq(posts.categoryId, categories.id))
         .where(eq(posts.status, "published"))
-        .orderBy(desc(posts.publishedAt))) as CardRow[];
+        .orderBy(desc(posts.publishedAt), desc(posts.createdAt))) as CardRow[];
       return rows
         .filter((r) => (opts?.categorySlug ? r.categorySlug === opts.categorySlug : true))
         .filter((r) => {
@@ -203,6 +203,29 @@ export const getPostAccess = cache(async (slug: string): Promise<PostAccess> => 
     return { status: "notfound" };
   }, { status: "notfound" });
 });
+
+/**
+ * A single published + effectively-public post, WITHOUT reading the session —
+ * so the post page can render it statically/ISR (no per-request MDX+Shiki
+ * recompile). Returns null for gated/draft/missing; the page then falls back to
+ * the session-aware `getPostAccess` (dynamic) for those. (Resolves DA #3.)
+ */
+export const getPublicPost = cache(
+  async (slug: string): Promise<PostWithCategory | null> => {
+    return safe(async () => {
+      const rows = await db
+        .select()
+        .from(posts)
+        .leftJoin(categories, eq(posts.categoryId, categories.id))
+        .where(eq(posts.slug, slug))
+        .limit(1);
+      if (rows.length === 0) return null;
+      const post: PostWithCategory = { ...rows[0].posts, category: rows[0].categories };
+      if (post.status !== "published") return null;
+      return isEffectivelyPublic(post, post.category) ? post : null;
+    }, null);
+  },
+);
 
 /** Published + effectively-public posts only — for sitemap/RSS (no session). */
 export const listPublicPosts = cache(async (): Promise<

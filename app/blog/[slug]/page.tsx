@@ -1,10 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getPostAccess } from "@/lib/blog/queries";
+import {
+  getPublicPost,
+  getPostAccess,
+  listPublicPosts,
+  type PostWithCategory,
+} from "@/lib/blog/queries";
 import { PostBody, extractToc, readingMinutes } from "@/lib/blog/mdx";
 
 type Params = Promise<{ slug: string }>;
+
+// Public posts are prerendered (below) and revalidated hourly; gated posts fall
+// through to the dynamic session check (DA #3).
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const posts = await listPublicPosts();
+  return posts.map((p) => ({ slug: p.slug }));
+}
 
 function fmtDate(d: Date | null): string {
   if (!d) return "";
@@ -21,9 +36,12 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const access = await getPostAccess(slug);
-  if (access.status !== "ok") return { title: "Not found" };
-  const post = access.post;
+  let post: PostWithCategory | null = await getPublicPost(slug);
+  if (!post) {
+    const access = await getPostAccess(slug);
+    post = access.status === "ok" ? access.post : null;
+  }
+  if (!post) return { title: "Not found" };
   const description = post.metaDescription ?? post.excerpt ?? undefined;
   return {
     title: post.metaTitle ?? post.title,
@@ -39,10 +57,16 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const access = await getPostAccess(slug);
-  if (access.status === "signin") redirect(`/sign-in?next=/blog/${slug}`);
-  if (access.status === "notfound") notFound();
-  const post = access.post;
+
+  // Fast path: public post → no session read → statically rendered / ISR.
+  let post: PostWithCategory | null = await getPublicPost(slug);
+  if (!post) {
+    // Gated or missing → session-aware (dynamic).
+    const access = await getPostAccess(slug);
+    if (access.status === "signin") redirect(`/sign-in?next=/blog/${slug}`);
+    if (access.status === "notfound") notFound();
+    post = access.post;
+  }
 
   const toc = extractToc(post.bodyMdx);
   const mins = readingMinutes(post.bodyMdx);
