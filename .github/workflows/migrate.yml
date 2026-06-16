@@ -1,0 +1,40 @@
+name: Migrate
+
+# Applies pending DB migrations after every merge to main, against the shared
+# CockroachDB. The schema/migration rule is enforced on PRs by the "DB schema
+# in sync" check; this step deploys what was committed. See ADR 0007.
+#
+# Requires the DATABASE_URL secret. Until it's set, this job skips cleanly so it
+# never blocks main.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Apply DB migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "DATABASE_URL secret not set — skipping migrations. Add it to enable."
+            exit 0
+          fi
+          npm run db:migrate

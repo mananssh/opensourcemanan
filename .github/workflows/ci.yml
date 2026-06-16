@@ -31,6 +31,30 @@ jobs:
       - name: Build
         run: npm run build
 
+  db-schema:
+    name: DB schema in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # `generate` is offline (no DATABASE_URL needed). If the schema changed
+      # without a committed migration, it writes one here and the check fails.
+      - name: Generate migrations from schema
+        run: npm run db:generate
+      - name: Require a committed migration for schema changes
+        run: |
+          if [ -n "$(git status --porcelain db/migrations)" ]; then
+            echo "::error::Schema changed but no migration was committed. Run 'npm run db:generate' and commit the result (see agent-kit/database.md)."
+            git --no-pager status --porcelain db/migrations
+            git --no-pager diff -- db/migrations
+            exit 1
+          fi
+          echo "Schema and migrations are in sync."
+
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
