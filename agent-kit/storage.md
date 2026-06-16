@@ -11,15 +11,21 @@ See [ADR 0009](../docs/decisions/0009-shared-storage.md).
   `POST /api/storage/upload-url` — the browser PUTs the file straight to GCS, so
   bytes never pass through the server and the bucket is never publicly writable.
 - **Persist the returned `key`** (e.g. `posts.coverImage`), not a full URL.
-- **Render with `publicUrl(key)`** — objects are public-read (CDN-cacheable,
-  works with static/ISR).
+- **Access is per object, default private** (the bucket itself is NOT public):
+  - **public** asset → `await makePublic(key)`, then render `publicUrl(key)`
+    (stable, CDN-cacheable — use for public post covers, OG images).
+  - **private** asset → render `await getReadUrl(key)` (short-lived signed URL),
+    issued server-side only to viewers who pass the owning record's visibility
+    gate. So gated content's images are gated too.
 - Only the **owner** can obtain an upload URL (the endpoint checks `isOwner`).
 
 ## API (`lib/storage/gcs.ts`)
 
 ```ts
-createUploadUrl({ vertical, filename, contentType }) // → { url, key, publicUrl }  (owner-gated caller)
-publicUrl(key)                                        // → stable https URL
+createUploadUrl({ vertical, filename, contentType }) // → { url, key }  (owner-gated; object is private)
+makePublic(key)                                       // → publicUrl; world-readable (public assets)
+publicUrl(key)                                        // → stable https URL (valid after makePublic)
+getReadUrl(key, expiresInSeconds?)                    // → short-lived signed URL (private assets)
 deleteObject(key)                                     // remove an object
 ```
 
@@ -32,7 +38,8 @@ actually needs GCS and `GCP_SERVICE_ACCOUNT` is unset.
 1. `POST /api/storage/upload-url` with `{ vertical, filename, contentType }`.
 2. `PUT` the file to the returned `url` (with the same `Content-Type`).
 3. Save the returned `key` on the owning DB row.
-4. Render `publicUrl(key)`.
+4. If the asset should be public, `await makePublic(key)`. Render `publicUrl(key)`
+   for public assets, or `await getReadUrl(key)` for private/gated ones.
 
 ## Setup (one-time)
 
@@ -40,8 +47,9 @@ actually needs GCS and `GCP_SERVICE_ACCOUNT` is unset.
    bucket → create a JSON key.
 2. Put the JSON (single line) in `GCP_SERVICE_ACCOUNT` — `.env.local` (dev) and
    Vercel (prod). Optionally set `GCS_BUCKET`.
-3. **Make the bucket public-read** (e.g. grant `allUsers` the
-   `Storage Object Viewer` role) so `publicUrl` works.
+3. **Keep the bucket private** — do **not** grant `allUsers`. Use **fine-grained**
+   access control (not uniform bucket-level access) so individual objects can be
+   made public via `makePublic`.
 4. **CORS** on the bucket to allow browser `PUT` uploads:
    ```json
    [{ "origin": ["http://localhost:3000", "https://<your-domain>"],
@@ -51,5 +59,5 @@ actually needs GCS and `GCP_SERVICE_ACCOUNT` is unset.
 `.env*` is gitignored — never commit the service-account JSON (see
 [oss-safety.md](./oss-safety.md)).
 
-> Public-read means a known image URL is viewable even if its post is gated.
-> Accepted for v1; gated-image proxying can be added later.
+> Safe by default: the bucket is private, so a private object is never readable
+> without a signed URL. Only objects explicitly made public are world-readable.
