@@ -2,6 +2,14 @@
 
 ## 2026-06-16
 
+- **12:37 · `ef0241a` · perf:** Cache MDX compilation so posts don't recompile Shiki per request
+  Properly resolve DA #3 without route-level static rendering (which 500'd gated
+  posts, ADR 0011). The post route stays dynamic for visibility gating, but the
+  expensive MDX compile (runs Shiki) is wrapped in unstable_cache keyed by the
+  source — identical content compiles once and is reused across requests; editing
+  a post changes the source and recompiles. Renders via @mdx-js/mdx compile/run,
+  keeping the body server-rendered RSC with MDX components intact (replaces
+  next-mdx-remote). See ADR 0012.
 - **12:27 · `ecbc337` · fix:** Fix 500 on gated blog posts (revert route-level static rendering)
   Gated posts 500'd in production with DYNAMIC_SERVER_USAGE: route-level
   `revalidate`/`generateStaticParams` put the post route in static mode, but the
