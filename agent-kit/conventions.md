@@ -30,7 +30,7 @@ Every feature is a composition of four **orthogonal, independently-chosen** conc
 | Axis | Options | Shared machinery (build once, reuse always) |
 |------|---------|----------------------------------------------|
 | **Access** | `public` · `authed` · `owner` | NextAuth v5 + Google, configured once in `lib/auth.ts`; features call `requireAuth()` / `requireOwner()` server-side (see [auth.md](./auth.md)). Declarative — a feature *declares* its access, never re-checks sessions. |
-| **Data** | `static` · `db` · `external` | One data-access layer. For `db`, one shared CockroachDB via Drizzle — features add tables to the shared schema; changes go through a schema file + committed migration (see [database.md](./database.md)). The content-system primitive sits on top. Swapping a source must not ripple into features. |
+| **Data** | `static` · `db` · `external` | One data-access layer. For `db`, one shared CockroachDB via Drizzle (see [database.md](./database.md)). For files/images, one shared GCS bucket via presigned uploads — store the key, render `publicUrl(key)` (see [storage.md](./storage.md)). The content-system primitive sits on top. Swapping a source must not ripple into features. |
 | **Telemetry** | `none` · `pageview` · `events` | One provider-agnostic `track()` seam. Features call `track()`; the provider is swappable in one place. |
 | **Rendering** | `page` · `api` · `both` | Shared layout, nav, and **one UI-primitive layer** (design tokens + components). Style once. |
 
