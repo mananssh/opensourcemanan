@@ -2,6 +2,13 @@
 
 ## 2026-06-16
 
+- **12:27 · `ecbc337` · fix:** Fix 500 on gated blog posts (revert route-level static rendering)
+  Gated posts 500'd in production with DYNAMIC_SERVER_USAGE: route-level
+  `revalidate`/`generateStaticParams` put the post route in static mode, but the
+  gated path reads the session (cookies), which is disallowed during static
+  generation. Reverted the post route to fully dynamic so visibility gating works
+  again (public 200, gated → sign-in). The DA #3 perf goal will be met by caching
+  MDX compilation instead of route-level static rendering (ADR 0011 updated).
 - **12:13 · `8f7a4f5` · feat:** Spotify-style category tiles + static/ISR rendering for public posts
   - Categories now read as real sections, not tags: each has an accent color and
     an optional cover image, rendered as Spotify-style genre tiles under a "Browse"
