@@ -35,12 +35,6 @@ export function extractToc(source: string): TocItem[] {
   return toc;
 }
 
-/** ~200 wpm reading estimate, min 1. */
-export function readingMinutes(source: string): number {
-  const words = source.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
-}
-
 const components: Record<string, ComponentType<{ children?: ReactNode }>> = {
   Callout: ({ children }) => (
     <aside className="my-6 border-l-2 border-accent bg-accent-soft/50 px-4 py-3 font-body text-ink">
