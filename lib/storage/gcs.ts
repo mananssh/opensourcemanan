@@ -6,15 +6,22 @@ import { randomUUID } from "node:crypto";
  * vertical writes under its own prefix (`blog/…`, later `projects/…`); the DB
  * stores the returned object **key**, never a blob.
  *
+ * Access is decided PER OBJECT, not per bucket (ADR 0009). The bucket is private
+ * (no public access); objects are private by default:
+ *   - private (default) → read via `getReadUrl(key)` (short-lived signed URL,
+ *     issued server-side only to authorized viewers — respects visibility).
+ *   - public (opt-in)   → call `makePublic(key)`; then `publicUrl(key)` is a
+ *     stable, CDN-cacheable URL (post covers, OG images).
+ *
  *   const { url, key } = await createUploadUrl({ vertical: "blog", filename, contentType });
  *   // browser PUTs the file to `url`, then we persist `key`
- *   <img src={publicUrl(key)} />
+ *   await makePublic(key);            // for public assets
+ *   <img src={publicUrl(key)} />      // public
+ *   <img src={await getReadUrl(key)} />  // private / gated
  *
- * Objects are public-read (fast, CDN-cacheable, static/ISR-friendly). Presigned
- * URLs are used only for owner uploads. Lazy singleton — importing this never
- * connects or throws, so it's build-safe without credentials; the first call
- * that needs GCS throws if GCP_SERVICE_ACCOUNT is unset. See agent-kit/storage.md
- * and ADR 0009.
+ * Lazy singleton — importing this never connects or throws, so it's build-safe
+ * without credentials; the first call that needs GCS throws if GCP_SERVICE_ACCOUNT
+ * is unset. See agent-kit/storage.md.
  */
 const BUCKET = process.env.GCS_BUCKET ?? "opensourcemanan";
 
@@ -28,11 +35,7 @@ function getStorage(): Storage {
       "GCP_SERVICE_ACCOUNT is not set. Add the service-account JSON to .env.local (see .env.example) and the deployment environment.",
     );
   }
-  let sa: {
-    project_id?: string;
-    client_email?: string;
-    private_key?: string;
-  };
+  let sa: { project_id?: string; client_email?: string; private_key?: string };
   try {
     sa = JSON.parse(raw);
   } catch {
@@ -60,13 +63,14 @@ function buildKey(vertical: StorageVertical, filename: string): string {
 
 /**
  * Create a presigned v4 PUT URL for a direct browser upload. Caller MUST be
- * owner-gated. Returns the URL to PUT to and the object key to persist.
+ * owner-gated. The object is private until `makePublic` is called. Returns the
+ * URL to PUT to and the object key to persist.
  */
 export async function createUploadUrl(opts: {
   vertical: StorageVertical;
   filename: string;
   contentType: string;
-}): Promise<{ url: string; key: string; publicUrl: string }> {
+}): Promise<{ url: string; key: string }> {
   const key = buildKey(opts.vertical, opts.filename);
   const [url] = await getStorage()
     .bucket(BUCKET)
@@ -77,12 +81,37 @@ export async function createUploadUrl(opts: {
       expires: Date.now() + 15 * 60 * 1000, // 15 minutes
       contentType: opts.contentType,
     });
-  return { url, key, publicUrl: publicUrl(key) };
+  return { url, key };
 }
 
-/** Stable public URL for a stored object key. */
+/** Make an object world-readable (for public assets). Returns its public URL. */
+export async function makePublic(key: string): Promise<string> {
+  await getStorage().bucket(BUCKET).file(key).makePublic();
+  return publicUrl(key);
+}
+
+/** Stable public URL — only valid after `makePublic(key)`. */
 export function publicUrl(key: string): string {
   return `https://storage.googleapis.com/${BUCKET}/${key}`;
+}
+
+/**
+ * Short-lived signed read URL for a PRIVATE object. Generate server-side and
+ * only hand to viewers who pass the owning record's visibility gate.
+ */
+export async function getReadUrl(
+  key: string,
+  expiresInSeconds = 3600,
+): Promise<string> {
+  const [url] = await getStorage()
+    .bucket(BUCKET)
+    .file(key)
+    .getSignedUrl({
+      version: "v4",
+      action: "read",
+      expires: Date.now() + expiresInSeconds * 1000,
+    });
+  return url;
 }
 
 /** Delete an object by key (e.g. when a post's cover image changes). */
