@@ -1,0 +1,99 @@
+import Link from "next/link";
+import { adminListPosts, adminListCategories } from "@/lib/blog/admin";
+import { togglePublish } from "./actions";
+
+export const metadata = { title: "Admin" };
+
+const th = "py-2 text-left font-mono text-[0.65rem] uppercase tracking-[0.15em] text-faint";
+const td = "py-3 align-top";
+
+export default async function AdminDashboard() {
+  const [posts, categories] = await Promise.all([
+    adminListPosts(),
+    adminListCategories(),
+  ]);
+
+  return (
+    <div className="space-y-14">
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold text-ink">Posts</h2>
+          <Link href="/blog/admin/posts/new" className="font-mono text-xs uppercase tracking-[0.15em] text-accent hover:underline">+ New</Link>
+        </div>
+        {posts.length === 0 ? (
+          <p className="font-mono text-sm text-faint">No posts yet.</p>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-rule">
+                <th className={th}>Title</th>
+                <th className={th}>Category</th>
+                <th className={th}>Visibility</th>
+                <th className={th}>Status</th>
+                <th className={th}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.map((p) => (
+                <tr key={p.id} className="border-b border-rule">
+                  <td className={td}>
+                    <Link href={`/blog/admin/posts/${p.id}`} className="font-body text-ink hover:text-accent">
+                      {p.title}
+                    </Link>
+                  </td>
+                  <td className={`${td} font-mono text-xs text-muted`}>{p.categoryName ?? "—"}</td>
+                  <td className={`${td} font-mono text-xs text-muted`}>{p.visibility}</td>
+                  <td className={`${td} font-mono text-xs`}>
+                    <span className={p.status === "published" ? "text-accent" : "text-faint"}>{p.status}</span>
+                  </td>
+                  <td className={`${td} text-right`}>
+                    <form action={togglePublish} className="inline">
+                      <input type="hidden" name="id" value={p.id} />
+                      <button type="submit" className="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent">
+                        {p.status === "published" ? "Unpublish" : "Publish"}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-xl font-bold text-ink">Categories</h2>
+          <Link href="/blog/admin/categories/new" className="font-mono text-xs uppercase tracking-[0.15em] text-accent hover:underline">+ New</Link>
+        </div>
+        {categories.length === 0 ? (
+          <p className="font-mono text-sm text-faint">No categories yet.</p>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-rule">
+                <th className={th}>Name</th>
+                <th className={th}>Visibility</th>
+                <th className={th}>Order</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map((c) => (
+                <tr key={c.id} className="border-b border-rule">
+                  <td className={td}>
+                    <span className="mr-2 inline-block h-3 w-3 rounded-sm align-middle" style={{ backgroundColor: c.accentColor }} />
+                    <Link href={`/blog/admin/categories/${c.id}`} className="font-body text-ink hover:text-accent">
+                      {c.name}
+                    </Link>
+                  </td>
+                  <td className={`${td} font-mono text-xs text-muted`}>{c.visibility}</td>
+                  <td className={`${td} font-mono text-xs text-muted`}>{c.sortOrder}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+    </div>
+  );
+}
