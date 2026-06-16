@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Archivo, Hanken_Grotesk } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthButton } from "@/components/auth-button";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -36,14 +37,9 @@ export default function BlogLayout({
           >
             <span className="text-accent">/</span>blog
           </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/"
-              className="font-mono text-[0.7rem] uppercase tracking-[0.2em] text-muted transition-colors hover:text-accent"
-            >
-              ← osm
-            </Link>
+          <div className="flex items-center gap-3">
             <ThemeToggle />
+            <AuthButton />
           </div>
         </nav>
       </header>
@@ -51,11 +47,8 @@ export default function BlogLayout({
       <main className="flex-1">{children}</main>
 
       <footer className="border-t border-rule">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-10 font-mono text-[0.7rem] uppercase tracking-[0.2em] text-faint">
-          <span>OSM — Blog</span>
-          <Link href="/" className="transition-colors hover:text-accent">
-            ← back to osm
-          </Link>
+        <div className="mx-auto w-full max-w-5xl px-6 py-10 font-mono text-[0.7rem] uppercase tracking-[0.2em] text-faint">
+          Rabbit holes — a blog.
         </div>
       </footer>
     </div>
