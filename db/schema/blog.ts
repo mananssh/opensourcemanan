@@ -22,6 +22,8 @@ export const categories = pgTable("categories", {
   slug: text().notNull().unique(),
   name: text().notNull(),
   description: text(),
+  accentColor: text().notNull().default("#3b3b3b"), // tile background (Spotify-style)
+  coverImageKey: text(), // GCS key for the tile's merged background image
   visibility: visibility().notNull().default("public"),
   allowedEmails: text().array().notNull().default([]),
   sortOrder: integer().notNull().default(0),
