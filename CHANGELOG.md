@@ -2,6 +2,15 @@
 
 ## 2026-06-16
 
+- **10:43 · `6b9b1af` · fix:** Make the shared bucket private with per-object access (safe by default)
+  Revise the storage primitive so the GCS bucket is no longer blanket-public —
+  which would have exposed every vertical's files and gated content's images.
+  The bucket is now private; objects are private by default and read via
+  short-lived signed URLs (getReadUrl) only for authorized viewers. An object is
+  world-readable only via an explicit makePublic(key) (public post covers, OG
+  images → stable CDN publicUrl). Keeps one bucket safe for every vertical.
+  Updated ADR 0009 and agent-kit/storage.md (bucket stays private, fine-grained
+  ACLs, no allUsers).
 - **10:25 · `b4d7410` · feat:** Add the shared GCS storage primitive (presigned uploads, key-in-DB)
   Third shared resource alongside DB and auth: one Google Cloud Storage bucket
   (opensourcemanan) for the whole site. lib/storage/gcs.ts exposes
