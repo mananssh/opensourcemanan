@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Fraunces, Newsreader, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -48,9 +46,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SiteHeader />
-          <div className="flex-1">{children}</div>
-          <SiteFooter />
+          {children}
         </ThemeProvider>
       </body>
     </html>

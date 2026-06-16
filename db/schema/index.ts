@@ -23,8 +23,7 @@
  *   // then here:
  *   export * from "./blog";
  *
- * No feature tables exist yet — the first lands with the first feature that
- * needs persistence.
+ * The blog is the first collection.
  */
 
-export {};
+export * from "./blog";
