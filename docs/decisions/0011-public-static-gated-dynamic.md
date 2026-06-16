@@ -13,9 +13,8 @@ dynamic route segment without PPR.
 
 **The post route is reverted to fully dynamic** (reads the session, no
 `generateStaticParams`/`revalidate`). The DA #3 goal — avoid recompiling
-MDX+Shiki every request — will be solved by **caching the MDX compilation**
-keyed by `(slug, updatedAt)` (route stays dynamic), not by route-level static
-rendering. Tracked as a follow-up.
+MDX+Shiki every request — is now solved by **caching the MDX compilation** (route
+stays dynamic), implemented in **[ADR 0012](./0012-cache-mdx-compilation.md)**.
 
 The original (now-reverted) decision follows for the record.
 
