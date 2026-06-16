@@ -13,9 +13,11 @@ const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
 export function PostForm({
   post,
   categories,
+  tagNames,
 }: {
   post?: Post;
   categories: Category[];
+  tagNames?: string;
 }) {
   return (
     <form action={savePost} className="max-w-2xl space-y-6">
@@ -68,6 +70,11 @@ export function PostForm({
           <label className={labelCls} htmlFor="allowedEmails">Allowed emails (for allowlist)</label>
           <input id="allowedEmails" name="allowedEmails" defaultValue={post?.allowedEmails.join(", ")} placeholder="a@x.com, b@y.com" className={inputCls} />
         </div>
+      </div>
+
+      <div>
+        <label className={labelCls} htmlFor="tags">Tags (comma-separated)</label>
+        <input id="tags" name="tags" defaultValue={tagNames} placeholder="react, design, notes" className={inputCls} />
       </div>
 
       <div>

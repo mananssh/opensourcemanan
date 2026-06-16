@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import GithubSlugger from "github-slugger";
 import { db } from "@/db/client";
-import { posts, categories } from "@/db/schema";
+import { posts, categories, tags, postTags } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
 import { readingMinutes } from "@/lib/blog/reading-time";
 import { makePublic } from "@/lib/storage/gcs";
@@ -43,6 +43,23 @@ function revalidateBlog(): void {
   revalidatePath("/blog/admin", "layout");
 }
 
+/** Replace a post's tags: upsert each tag by slug, then rewrite the links. */
+async function syncPostTags(postId: string, names: string[]): Promise<void> {
+  const unique = [...new Set(names.map((n) => n.trim()).filter(Boolean))];
+  await db.delete(postTags).where(eq(postTags.postId, postId));
+  if (unique.length === 0) return;
+  const tagIds: string[] = [];
+  for (const name of unique) {
+    const [tag] = await db
+      .insert(tags)
+      .values({ slug: slugify(name), name })
+      .onConflictDoUpdate({ target: tags.slug, set: { name } })
+      .returning({ id: tags.id });
+    tagIds.push(tag.id);
+  }
+  await db.insert(postTags).values(tagIds.map((tagId) => ({ postId, tagId })));
+}
+
 export async function savePost(formData: FormData): Promise<void> {
   await requireOwner();
   const id = str(formData, "id");
@@ -67,6 +84,7 @@ export async function savePost(formData: FormData): Promise<void> {
     updatedAt: new Date(),
   };
 
+  let postId = id;
   if (id) {
     const [existing] = await db
       .select({ publishedAt: posts.publishedAt })
@@ -79,10 +97,20 @@ export async function savePost(formData: FormData): Promise<void> {
         : (existing?.publishedAt ?? null);
     await db.update(posts).set({ ...data, publishedAt }).where(eq(posts.id, id));
   } else {
-    await db
+    const [row] = await db
       .insert(posts)
-      .values({ ...data, publishedAt: data.status === "published" ? new Date() : null });
+      .values({ ...data, publishedAt: data.status === "published" ? new Date() : null })
+      .returning({ id: posts.id });
+    postId = row.id;
   }
+
+  await syncPostTags(
+    postId,
+    str(formData, "tags")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
+  );
 
   revalidateBlog();
   redirect("/blog/admin");
