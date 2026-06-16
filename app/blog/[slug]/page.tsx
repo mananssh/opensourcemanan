@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getPostAccess } from "@/lib/blog/queries";
-import { PostBody, extractToc, readingMinutes } from "@/lib/blog/mdx";
+import { PostBody, extractToc } from "@/lib/blog/mdx";
+import { readingMinutes } from "@/lib/blog/reading-time";
 
 type Params = Promise<{ slug: string }>;
 

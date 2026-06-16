@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
+import Link from "next/link";
 import { useState } from "react";
 
 /**
@@ -69,6 +70,16 @@ export function AuthButton() {
               {user.email}
               {user.isOwner ? " · owner" : ""}
             </p>
+            {user.isOwner && (
+              <Link
+                href="/blog/admin"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="mt-1 block rounded-md px-2 py-1.5 font-mono text-xs text-ink transition-colors hover:bg-accent-soft hover:text-accent"
+              >
+                Blog admin
+              </Link>
+            )}
             <button
               type="button"
               role="menuitem"
