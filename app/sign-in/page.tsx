@@ -7,6 +7,24 @@ export const metadata: Metadata = {
 };
 
 export default async function SignInPage() {
+  // Degrade gracefully before auth env is configured (e.g. AUTH_SECRET not yet
+  // set on the deployment) so this public route never 500s.
+  if (!process.env.AUTH_SECRET) {
+    return (
+      <main className="container-editorial pt-24 sm:pt-32">
+        <p className="label-caps text-faint">Access</p>
+        <h1 className="mt-5 font-display text-5xl font-light tracking-tight text-ink">
+          Not configured yet<span className="text-accent">.</span>
+        </h1>
+        <p className="mt-10 max-w-md font-body text-lg leading-relaxed text-muted">
+          Sign-in isn&rsquo;t set up in this environment. Add the auth
+          environment variables (see <code className="font-mono">.env.example</code>)
+          to enable it.
+        </p>
+      </main>
+    );
+  }
+
   const session = await auth();
   const user = session?.user;
 
