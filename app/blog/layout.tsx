@@ -18,7 +18,7 @@ const hanken = Hanken_Grotesk({
 export const metadata: Metadata = {
   title: { default: "Blog", template: "%s · OSM Blog" },
   description:
-    "Long-form essays and deep dives on engineering, design, and the things I build.",
+    "Deep dives into whatever I'm currently obsessed with — no single topic, just things worth thinking hard about.",
 };
 
 export default function BlogLayout({

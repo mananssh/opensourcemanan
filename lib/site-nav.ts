@@ -20,7 +20,7 @@ export const siteNav: NavItem[] = [
   {
     label: "Blog",
     href: "/blog",
-    description: "Long-form essays & deep dives.",
+    description: "Deep dives into current obsessions.",
   },
   {
     label: "Changelog",

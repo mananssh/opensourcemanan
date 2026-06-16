@@ -35,7 +35,7 @@ export async function GET() {
 <rss version="2.0"><channel>
 <title>OSM Blog</title>
 <link>${siteUrl}/blog</link>
-<description>Long-form essays and deep dives on engineering, design, and the things I build.</description>
+<description>Deep dives into whatever I'm currently obsessed with — no single topic, just things worth thinking hard about.</description>
 ${items}
 </channel></rss>`;
 
