@@ -19,6 +19,7 @@ import {
   effectiveVisibility,
   type Gate,
 } from "@/lib/content/visibility";
+import { safeDb } from "@/lib/blog/safe-db";
 
 /**
  * The blog store — every read filters by the CURRENT session server-side, so
@@ -41,36 +42,7 @@ export interface PostCard {
 
 export type PostWithCategory = Post & { category: Category | null };
 
-function isExpectedEmptyDbError(error: unknown): boolean {
-  // Walk the cause chain — drizzle wraps the underlying Postgres error, so the
-  // 42P01 code / message can be nested rather than top-level.
-  let e: unknown = error;
-  for (let i = 0; i < 5 && e; i++) {
-    const o = e as { code?: unknown; message?: unknown; cause?: unknown };
-    if (o.code === "42P01") return true; // undefined_table (pre-migration)
-    if (
-      typeof o.message === "string" &&
-      (o.message.includes("DATABASE_URL is not set") ||
-        o.message.includes("does not exist"))
-    ) {
-      return true;
-    }
-    e = o.cause;
-  }
-  return false;
-}
-
-async function safe<T>(fn: () => Promise<T>, emptyFallback: T): Promise<T> {
-  try {
-    return await fn();
-  } catch (error) {
-    if (isExpectedEmptyDbError(error)) {
-      console.warn("[blog] DB not ready, returning empty:", error);
-      return emptyFallback;
-    }
-    throw error; // real failure — let it surface
-  }
-}
+const safe = safeDb;
 
 // Columns needed for listings + the visibility filter (no bodyMdx).
 const cardColumns = {

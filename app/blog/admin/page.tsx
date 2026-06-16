@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { adminListPosts, adminListCategories } from "@/lib/blog/admin";
-import { togglePublish } from "./actions";
+import {
+  adminListPosts,
+  adminListCategories,
+  adminRecentComments,
+} from "@/lib/blog/admin";
+import { togglePublish, deleteComment } from "./actions";
 
 export const metadata = { title: "Admin" };
 
@@ -8,9 +12,10 @@ const th = "py-2 text-left font-mono text-[0.65rem] uppercase tracking-[0.15em] 
 const td = "py-3 align-top";
 
 export default async function AdminDashboard() {
-  const [posts, categories] = await Promise.all([
+  const [posts, categories, comments] = await Promise.all([
     adminListPosts(),
     adminListCategories(),
+    adminRecentComments(),
   ]);
 
   return (
@@ -92,6 +97,40 @@ export default async function AdminDashboard() {
               ))}
             </tbody>
           </table>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-4 font-display text-xl font-bold text-ink">Comments</h2>
+        {comments.length === 0 ? (
+          <p className="font-mono text-sm text-faint">No comments yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {comments.map((c) => (
+              <li key={c.id} className="flex items-start justify-between gap-4 border-b border-rule pb-4">
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-sm font-bold text-ink">{c.userName}</span>
+                    <span className="font-mono text-[0.65rem] text-faint">on</span>
+                    {c.postSlug ? (
+                      <Link href={`/blog/${c.postSlug}`} className="font-mono text-[0.7rem] text-accent hover:underline">
+                        {c.postTitle}
+                      </Link>
+                    ) : (
+                      <span className="font-mono text-[0.7rem] text-faint">(deleted post)</span>
+                    )}
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap font-body text-sm text-muted">{c.body}</p>
+                </div>
+                <form action={deleteComment}>
+                  <input type="hidden" name="id" value={c.id} />
+                  <button type="submit" className="shrink-0 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent">
+                    Delete
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </div>

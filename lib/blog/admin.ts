@@ -5,6 +5,7 @@ import {
   categories,
   tags,
   postTags,
+  comments,
   type Post,
   type Category,
 } from "@/db/schema";
@@ -75,4 +76,32 @@ export async function adminGetCategory(id: string): Promise<Category | undefined
     .where(eq(categories.id, id))
     .limit(1);
   return rows[0];
+}
+
+export interface AdminCommentRow {
+  id: string;
+  body: string;
+  userName: string;
+  userEmail: string;
+  createdAt: Date;
+  postTitle: string | null;
+  postSlug: string | null;
+}
+
+export async function adminRecentComments(): Promise<AdminCommentRow[]> {
+  const rows = await db
+    .select({
+      id: comments.id,
+      body: comments.body,
+      userName: comments.userName,
+      userEmail: comments.userEmail,
+      createdAt: comments.createdAt,
+      postTitle: posts.title,
+      postSlug: posts.slug,
+    })
+    .from(comments)
+    .leftJoin(posts, eq(comments.postId, posts.id))
+    .orderBy(desc(comments.createdAt))
+    .limit(50);
+  return rows as AdminCommentRow[];
 }
