@@ -15,6 +15,13 @@
       "when": 1781611640932,
       "tag": "0001_safe_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781621214463,
+      "tag": "0002_clear_omega_red",
+      "breakpoints": true
     }
   ]
 }

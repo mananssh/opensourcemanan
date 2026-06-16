@@ -47,6 +47,20 @@ export default async function BlogIndex() {
           Deep dives into whatever I&rsquo;m currently obsessed with. No single
           topic — just things worth thinking hard about.
         </p>
+
+        <form
+          action="/blog/search"
+          method="get"
+          className="reveal mt-8 max-w-md"
+          style={{ "--reveal-delay": "230ms" } as React.CSSProperties}
+        >
+          <input
+            name="q"
+            placeholder="Search posts…"
+            aria-label="Search posts"
+            className="w-full rounded-full border border-rule bg-surface px-4 py-2 font-mono text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-accent"
+          />
+        </form>
       </header>
 
       {categories.length > 0 && (

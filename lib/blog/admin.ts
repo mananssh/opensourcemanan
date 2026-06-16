@@ -1,6 +1,13 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { posts, categories, type Post, type Category } from "@/db/schema";
+import {
+  posts,
+  categories,
+  tags,
+  postTags,
+  type Post,
+  type Category,
+} from "@/db/schema";
 
 /**
  * Owner-facing reads for the admin CMS — NO visibility filtering and includes
@@ -41,6 +48,17 @@ export async function adminListPosts(): Promise<AdminPostRow[]> {
 export async function adminGetPost(id: string): Promise<Post | undefined> {
   const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   return rows[0];
+}
+
+/** Comma-joined tag names for a post, for prefilling the editor. */
+export async function adminGetPostTagNames(postId: string): Promise<string> {
+  const rows = await db
+    .select({ name: tags.name })
+    .from(postTags)
+    .innerJoin(tags, eq(postTags.tagId, tags.id))
+    .where(eq(postTags.postId, postId))
+    .orderBy(tags.name);
+  return rows.map((r) => r.name).join(", ");
 }
 
 export async function adminListCategories(): Promise<Category[]> {
