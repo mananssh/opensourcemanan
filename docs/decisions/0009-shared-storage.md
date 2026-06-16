@@ -20,9 +20,15 @@ publicly writable.
 - **Presigned uploads, owner-gated.** `POST /api/storage/upload-url` checks
   `isOwner` and returns a presigned v4 PUT URL; the browser uploads straight to
   GCS. The bucket stays non-writable publicly and bytes skip the server.
-- **Public-read serving.** Objects are public-read — fast, CDN-cacheable, and
-  compatible with static/ISR rendering. (Trade-off: a known image URL is viewable
-  even if its post is gated; accepted for v1, gated-image proxying deferred.)
+- **Private bucket, per-object access (safe by default).** The bucket is **not**
+  public. Objects are private by default and read via short-lived signed URLs
+  (`getReadUrl`), issued server-side only to viewers who pass the owning record's
+  visibility gate. An object is made world-readable only by an explicit
+  `makePublic(key)` (public post covers, OG images → stable CDN URLs via
+  `publicUrl`). This keeps one bucket safe for *every* vertical — a private
+  vertical's files are never exposed by a blanket bucket policy, and gated
+  content's images stay gated. (Requires fine-grained bucket ACLs, not uniform
+  bucket-level access, so individual objects can be made public.)
 - **Creds via env.** Service-account JSON in `GCP_SERVICE_ACCOUNT` (`.env.local`
   + Vercel), not Workload Identity Federation — simpler for a solo project. The
   client is a lazy singleton, build-safe without creds.
@@ -31,7 +37,8 @@ publicly writable.
 
 - `GCP_SERVICE_ACCOUNT` (+ optional `GCS_BUCKET`) required at runtime; never
   committed (`.env*` gitignored).
-- Bucket needs public-read + a CORS rule allowing `PUT` from the site origins.
+- Bucket stays private with fine-grained ACLs + a CORS rule allowing `PUT` from
+  the site origins. No `allUsers` grant.
 - A dedicated `media` table and an `<ImageUpload>` component arrive with the
   first consumer (the blog admin); v1 keeps keys on the owning row.
 - Rejected: storing blobs in the DB (bloat) and uploads through the server

@@ -43,6 +43,9 @@ export async function POST(request: Request) {
     );
   }
 
+  // Returns { url, key }. The object is private until the caller calls
+  // makePublic(key) for public assets; gated assets stay private and are read
+  // via getReadUrl(key).
   const result = await createUploadUrl({
     vertical: vertical as StorageVertical,
     filename,
