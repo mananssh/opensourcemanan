@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getVisiblePost } from "@/lib/blog/queries";
+import { notFound, redirect } from "next/navigation";
+import { getPostAccess } from "@/lib/blog/queries";
 import { PostBody, extractToc, readingMinutes } from "@/lib/blog/mdx";
 
 type Params = Promise<{ slug: string }>;
@@ -21,8 +21,9 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getVisiblePost(slug);
-  if (!post) return { title: "Not found" };
+  const access = await getPostAccess(slug);
+  if (access.status !== "ok") return { title: "Not found" };
+  const post = access.post;
   const description = post.metaDescription ?? post.excerpt ?? undefined;
   return {
     title: post.metaTitle ?? post.title,
@@ -38,8 +39,10 @@ export async function generateMetadata({
 
 export default async function PostPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const post = await getVisiblePost(slug);
-  if (!post) notFound();
+  const access = await getPostAccess(slug);
+  if (access.status === "signin") redirect(`/sign-in?next=/blog/${slug}`);
+  if (access.status === "notfound") notFound();
+  const post = access.post;
 
   const toc = extractToc(post.bodyMdx);
   const mins = readingMinutes(post.bodyMdx);

@@ -1,6 +1,9 @@
 import { listPublicPosts } from "@/lib/blog/queries";
 import { siteUrl } from "@/lib/site";
 
+// Regenerate at most hourly so new posts appear without a redeploy (DA #2).
+export const revalidate = 3600;
+
 function esc(s: string): string {
   return s.replace(
     /[<>&'"]/g,
@@ -32,7 +35,7 @@ export async function GET() {
 <rss version="2.0"><channel>
 <title>OSM Blog</title>
 <link>${siteUrl}/blog</link>
-<description>Writing, in the open.</description>
+<description>Long-form essays and deep dives on engineering, design, and the things I build.</description>
 ${items}
 </channel></rss>`;
 

@@ -50,3 +50,15 @@ export function isEffectivelyPublic(
 ): boolean {
   return post.visibility === "public" && (!category || category.visibility === "public");
 }
+
+const ORDER: Record<Visibility, number> = {
+  public: 0,
+  authed: 1,
+  allowlist: 2,
+  owner: 3,
+};
+
+/** The stricter of two visibility levels (most-restrictive wins). */
+export function effectiveVisibility(a: Visibility, b: Visibility): Visibility {
+  return ORDER[a] >= ORDER[b] ? a : b;
+}

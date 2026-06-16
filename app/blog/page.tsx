@@ -4,7 +4,8 @@ import { PostList } from "@/components/blog/post-list";
 
 export const metadata = {
   title: "Blog",
-  description: "Writing, in the open — notes, builds, and experiments.",
+  description:
+    "Long-form essays and deep dives on engineering, design, and the things I build.",
 };
 
 export default async function BlogIndex() {
@@ -21,7 +22,7 @@ export default async function BlogIndex() {
           className="reveal font-mono text-xs uppercase tracking-[0.25em] text-faint"
           style={{ "--reveal-delay": "0ms" } as React.CSSProperties}
         >
-          OSM — Journal
+          OSM — The Blog
         </p>
         <h1
           className="reveal mt-4 font-display text-[18vw] font-extrabold uppercase leading-[0.82] tracking-[-0.03em] text-ink sm:text-[10rem]"
@@ -33,7 +34,8 @@ export default async function BlogIndex() {
           className="reveal mt-6 max-w-xl font-body text-lg leading-relaxed text-muted"
           style={{ "--reveal-delay": "180ms" } as React.CSSProperties}
         >
-          Notes, builds, and experiments — thinking out loud, in public.
+          Considered, long-form essays and deep dives on engineering, design, and
+          the things I build.
         </p>
 
         {categories.length > 0 && (

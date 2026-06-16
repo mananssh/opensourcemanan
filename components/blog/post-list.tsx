@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { readingMinutes } from "@/lib/blog/mdx";
-import type { PostWithCategory } from "@/lib/blog/queries";
+import type { PostCard } from "@/lib/blog/queries";
 
 function fmtDate(d: Date | null): string {
   if (!d) return "";
@@ -16,7 +15,7 @@ export function PostList({
   posts,
   showCategory = true,
 }: {
-  posts: PostWithCategory[];
+  posts: PostCard[];
   showCategory?: boolean;
 }) {
   if (posts.length === 0) {
@@ -52,7 +51,7 @@ export function PostList({
                   <span className="text-accent">{p.category.name}</span>
                 )}
                 {p.publishedAt && <span>{fmtDate(p.publishedAt)}</span>}
-                <span>{readingMinutes(p.bodyMdx)} min</span>
+                <span>{p.readingMinutes} min</span>
               </div>
             </div>
             <span
