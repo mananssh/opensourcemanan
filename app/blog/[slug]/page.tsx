@@ -2,9 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getPostAccess, getPostTags, getRelatedPosts } from "@/lib/blog/queries";
+import {
+  getReactionState,
+  listComments,
+  getViewCount,
+} from "@/lib/blog/engagement";
+import { auth } from "@/lib/auth";
 import { PostBody, extractToc } from "@/lib/blog/mdx";
 import { readingMinutes } from "@/lib/blog/reading-time";
 import { PostList } from "@/components/blog/post-list";
+import { ReactionBar } from "@/components/blog/reaction-bar";
+import { CommentSection } from "@/components/blog/comment-section";
+import { ViewBeacon } from "@/components/blog/view-beacon";
 
 type Params = Promise<{ slug: string }>;
 
@@ -58,6 +67,12 @@ export default async function PostPage({ params }: { params: Params }) {
     categoryId: post.categoryId,
     tagIds: postTags.map((t) => t.id),
   });
+  const [session, reaction, comments, views] = await Promise.all([
+    auth(),
+    getReactionState(post.id),
+    listComments(post.id),
+    getViewCount(post.id),
+  ]);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -82,6 +97,7 @@ export default async function PostPage({ params }: { params: Params }) {
           )}
           {post.publishedAt && <span>{fmtDate(post.publishedAt)}</span>}
           <span>{mins} min read</span>
+          <span>{views} view{views === 1 ? "" : "s"}</span>
           {post.status !== "published" && (
             <span className="rounded-sm bg-accent px-1.5 text-paper">draft</span>
           )}
@@ -137,6 +153,24 @@ export default async function PostPage({ params }: { params: Params }) {
           </aside>
         )}
       </div>
+
+      <div className="mt-12">
+        <ReactionBar
+          postId={post.id}
+          slug={post.slug}
+          count={reaction.count}
+          reacted={reaction.reacted}
+        />
+      </div>
+
+      <CommentSection
+        postId={post.id}
+        slug={post.slug}
+        comments={comments}
+        session={session}
+      />
+
+      <ViewBeacon postId={post.id} />
 
       {related.length > 0 && (
         <section className="mt-20 border-t border-rule pt-10">
