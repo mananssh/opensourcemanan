@@ -18,6 +18,11 @@ export const siteNav: NavItem[] = [
     description: "What this whole thing is.",
   },
   {
+    label: "Blog",
+    href: "/blog",
+    description: "Deep dives into current obsessions.",
+  },
+  {
     label: "Changelog",
     href: "/changelog",
     description: "Everything that has shipped, newest first.",
