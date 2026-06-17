@@ -2,6 +2,11 @@
 
 ## 2026-06-17
 
+- **12:16 · `066ed5b` · feat:** Edit + Delete controls directly on the admin posts/categories lists
+  Surface editing and deletion of posts and categories right on the admin
+  dashboard: each post and category row now has explicit Edit and Delete actions
+  (delete asks for confirmation and shows a pending state). Previously editing
+  meant clicking the title and delete lived only on the edit page.
 - **12:00 · `ea2540a` · fix:** Wider, legible post editor (themed) + local draft autosave
   Fix the post editor reported issues: the create/edit form is now full-width
   (was a narrow left-aligned column); the editor content reuses the blog's prose
