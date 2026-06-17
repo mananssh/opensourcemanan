@@ -1,0 +1,42 @@
+name: Prune deployments
+
+# Weekly cleanup of old Vercel preview deployments — keeps production + the
+# latest few previews, deletes the rest. Manual run available. See ADR 0013.
+# Skips cleanly until the VERCEL_* secrets are set.
+
+on:
+  schedule:
+    - cron: "0 4 * * 1" # Mondays 04:00 UTC
+  workflow_dispatch:
+    inputs:
+      keep:
+        description: "How many recent previews to keep"
+        default: "5"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prune-deployments
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Prune preview deployments
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+          PRUNE_KEEP: ${{ github.event.inputs.keep || '5' }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "VERCEL_TOKEN / VERCEL_PROJECT_ID not set — skipping."
+            exit 0
+          fi
+          node scripts/prune-deployments.mjs
