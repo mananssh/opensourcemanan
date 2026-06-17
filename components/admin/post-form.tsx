@@ -2,6 +2,7 @@ import { savePost, deletePost } from "@/app/blog/admin/actions";
 import { ImageUpload } from "@/components/image-upload";
 import { MdxEditor } from "@/components/admin/mdx-editor";
 import { CategorySelect } from "@/components/admin/category-select";
+import { AdminForm } from "@/components/admin/admin-form";
 import { SubmitButton } from "@/components/blog/submit-button";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Post, Category } from "@/db/schema";
@@ -24,7 +25,7 @@ export function PostForm({
 }) {
   return (
     <>
-      <form
+      <AdminForm
         action={savePost}
         className="w-full space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
       >
@@ -110,14 +111,7 @@ export function PostForm({
           </div>
         </div>
       </details>
-
-        <SubmitButton
-          className="rounded-full bg-accent px-5 py-2 font-mono text-sm text-white transition-opacity hover:opacity-90"
-          pendingLabel="Saving…"
-        >
-          Save
-        </SubmitButton>
-      </form>
+      </AdminForm>
 
       {post && (
         <form action={deletePost} className="mt-4">

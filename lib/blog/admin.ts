@@ -10,12 +10,14 @@ import {
   type Post,
   type Category,
 } from "@/db/schema";
+import { requireOwner } from "@/lib/auth";
 
 /**
  * Owner-facing reads for the admin CMS — NO visibility filtering and includes
- * drafts. Only ever called under the owner-gated /blog/admin layout; the write
- * actions re-check `requireOwner` independently (server actions are directly
- * invokable).
+ * drafts + commenter PII. Every function calls `requireOwner()` itself so the
+ * guard is co-located with the data access, not solely on the admin layout: if
+ * one of these is ever imported into a non-admin route, it still can't leak.
+ * (`requireOwner` resolves `auth()`, which is request-cached, so it's cheap.)
  */
 
 export interface AdminPostRow {
@@ -30,6 +32,7 @@ export interface AdminPostRow {
 }
 
 export async function adminListPosts(): Promise<AdminPostRow[]> {
+  await requireOwner();
   const rows = await db
     .select({
       id: posts.id,
@@ -48,12 +51,14 @@ export async function adminListPosts(): Promise<AdminPostRow[]> {
 }
 
 export async function adminGetPost(id: string): Promise<Post | undefined> {
+  await requireOwner();
   const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   return rows[0];
 }
 
 /** Comma-joined tag names for a post, for prefilling the editor. */
 export async function adminGetPostTagNames(postId: string): Promise<string> {
+  await requireOwner();
   const rows = await db
     .select({ name: tags.name })
     .from(postTags)
@@ -64,6 +69,7 @@ export async function adminGetPostTagNames(postId: string): Promise<string> {
 }
 
 export async function adminListCategories(): Promise<Category[]> {
+  await requireOwner();
   return db
     .select()
     .from(categories)
@@ -71,6 +77,7 @@ export async function adminListCategories(): Promise<Category[]> {
 }
 
 export async function adminGetCategory(id: string): Promise<Category | undefined> {
+  await requireOwner();
   const rows = await db
     .select()
     .from(categories)
@@ -90,11 +97,13 @@ export interface AdminCommentRow {
 }
 
 export async function adminCountSubscribers(): Promise<number> {
+  await requireOwner();
   const [row] = await db.select({ c: sqlCount() }).from(subscribers);
   return Number(row?.c ?? 0);
 }
 
 export async function adminRecentComments(): Promise<AdminCommentRow[]> {
+  await requireOwner();
   const rows = await db
     .select({
       id: comments.id,

@@ -2,6 +2,9 @@
 
 import { useState, type ChangeEvent } from "react";
 
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,image/avif";
+
 /**
  * Owner image picker: uploads straight to GCS via a presigned URL, then writes
  * the object key into a hidden form field. The save action makes it public.
@@ -25,6 +28,11 @@ export function ImageUpload({
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_BYTES) {
+      setError("Image is too large (max 10 MB).");
+      e.target.value = "";
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -67,7 +75,7 @@ export function ImageUpload({
       )}
       <input
         type="file"
-        accept="image/*"
+        accept={ACCEPT}
         onChange={onFile}
         disabled={busy}
         className="block w-full font-mono text-xs text-muted file:mr-3 file:rounded-full file:border file:border-rule file:bg-surface file:px-3 file:py-1.5 file:font-mono file:text-xs file:text-ink hover:file:border-accent"

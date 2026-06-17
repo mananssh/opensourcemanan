@@ -325,6 +325,22 @@ export const getPublicPostMeta = cache(
   },
 );
 
+/**
+ * True if `postId` is a real, published post — the gate for counting a view.
+ * Session-less by design (the beacon is anonymous); blocks draft posts and
+ * arbitrary/unknown UUIDs from inflating counts.
+ */
+export async function isPublishedPostId(postId: string): Promise<boolean> {
+  return safe(async () => {
+    const rows = await db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(and(eq(posts.id, postId), eq(posts.status, "published")))
+      .limit(1);
+    return rows.length > 0;
+  }, false);
+}
+
 /** Published + effectively-public posts only — for sitemap/RSS (no session). */
 export const listPublicPosts = cache(async (): Promise<
   (PostCard & { updatedAt: Date })[]
