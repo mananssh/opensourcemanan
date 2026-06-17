@@ -1,12 +1,13 @@
 import { savePost, deletePost } from "@/app/blog/admin/actions";
 import { ImageUpload } from "@/components/image-upload";
+import { MdxEditor } from "@/components/admin/mdx-editor";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Post, Category } from "@/db/schema";
 
 const labelCls =
   "mb-1.5 block font-mono text-[0.7rem] uppercase tracking-[0.15em] text-faint";
 const inputCls =
-  "w-full rounded-md border border-rule bg-surface px-3 py-2 font-body text-ink outline-none transition-colors focus:border-accent";
+  "w-full rounded-md border border-rule bg-paper px-3 py-2 font-body text-ink outline-none transition-colors focus:border-accent";
 
 const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
 
@@ -20,7 +21,10 @@ export function PostForm({
   tagNames?: string;
 }) {
   return (
-    <form action={savePost} className="max-w-2xl space-y-6">
+    <form
+      action={savePost}
+      className="max-w-2xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
+    >
       {post && <input type="hidden" name="id" value={post.id} />}
 
       <div>
@@ -87,8 +91,8 @@ export function PostForm({
       </div>
 
       <div>
-        <label className={labelCls} htmlFor="bodyMdx">Body (MDX)</label>
-        <textarea id="bodyMdx" name="bodyMdx" rows={18} defaultValue={post?.bodyMdx ?? ""} className={`${inputCls} font-mono text-sm`} />
+        <label className={labelCls}>Body (MDX)</label>
+        <MdxEditor name="bodyMdx" defaultValue={post?.bodyMdx ?? ""} />
       </div>
 
       <details className="rounded-md border border-rule p-3">
