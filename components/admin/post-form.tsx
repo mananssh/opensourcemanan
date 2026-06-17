@@ -1,6 +1,7 @@
 import { savePost, deletePost } from "@/app/blog/admin/actions";
 import { ImageUpload } from "@/components/image-upload";
 import { MdxEditor } from "@/components/admin/mdx-editor";
+import { CategorySelect } from "@/components/admin/category-select";
 import { SubmitButton } from "@/components/blog/submit-button";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Post, Category } from "@/db/schema";
@@ -47,12 +48,11 @@ export function PostForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelCls} htmlFor="categoryId">Category</label>
-          <select id="categoryId" name="categoryId" defaultValue={post?.categoryId ?? ""} className={inputCls}>
-            <option value="">— none —</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <CategorySelect
+            name="categoryId"
+            categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+            defaultValue={post?.categoryId}
+          />
         </div>
         <div>
           <label className={labelCls} htmlFor="status">Status</label>
