@@ -188,13 +188,21 @@ body::before {
 .blog-prose > * + * {
   margin-top: 1.25rem;
 }
+.blog-prose h1,
 .blog-prose h2,
-.blog-prose h3 {
+.blog-prose h3,
+.blog-prose h4,
+.blog-prose h5,
+.blog-prose h6 {
   font-family: var(--font-display), sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.15;
   scroll-margin-top: 6rem;
+}
+.blog-prose h1 {
+  margin-top: 2.5rem;
+  font-size: 2.25rem;
 }
 .blog-prose h2 {
   margin-top: 2.75rem;
@@ -203,6 +211,15 @@ body::before {
 .blog-prose h3 {
   margin-top: 2rem;
   font-size: 1.35rem;
+}
+.blog-prose h4 {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+}
+.blog-prose h5,
+.blog-prose h6 {
+  margin-top: 1.25rem;
+  font-size: 1rem;
 }
 .blog-prose h2 a,
 .blog-prose h3 a {
@@ -230,6 +247,21 @@ body::before {
 }
 .blog-prose li + li {
   margin-top: 0.4rem;
+}
+/* GFM task lists — keep checkboxes inside the content, not hanging in the margin. */
+.blog-prose ul:has(input[type="checkbox"]),
+.blog-prose ul.contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+.blog-prose li.task-list-item,
+.blog-prose li:has(> input[type="checkbox"]) {
+  list-style: none;
+}
+.blog-prose input[type="checkbox"] {
+  margin-right: 0.5rem;
+  accent-color: var(--accent);
+  vertical-align: middle;
 }
 .blog-prose blockquote {
   border-left: 2px solid var(--accent);
@@ -298,4 +330,41 @@ html.dark .blog-prose [data-rehype-pretty-code-figure] span {
 .code-copy-btn:hover {
   color: var(--accent);
   border-color: var(--accent);
+}
+
+/*
+ * MDXEditor (admin post editor): map its theme variables onto our semantic
+ * tokens so the editor follows the vertical's light/dark palette automatically
+ * and everything stays legible. Higher specificity than the library defaults.
+ */
+.vertical-blog .mdxeditor {
+  --baseBg: var(--surface);
+  --baseBgSubtle: var(--paper);
+  --baseBgHover: var(--accent-soft);
+  --baseBgActive: var(--accent-soft);
+  --basePageBg: var(--paper);
+  --baseBase: var(--paper);
+  --baseBorder: var(--rule);
+  --baseBorderHover: var(--accent);
+  --baseLine: var(--rule);
+  --baseSolid: var(--muted);
+  --baseSolidHover: var(--ink);
+  --baseText: var(--ink);
+  --baseTextContrast: var(--ink);
+
+  --accentBase: var(--accent-soft);
+  --accentBg: var(--accent-soft);
+  --accentBgSubtle: var(--accent-soft);
+  --accentBgHover: var(--accent-soft);
+  --accentBgActive: var(--accent-soft);
+  --accentLine: var(--accent);
+  --accentBorder: var(--accent);
+  --accentBorderHover: var(--accent);
+  --accentSolid: var(--accent);
+  --accentSolidHover: var(--accent);
+  --accentText: var(--accent);
+  --accentTextContrast: var(--accent);
+}
+.vertical-blog .mdxeditor [contenteditable] {
+  color: var(--ink);
 }
