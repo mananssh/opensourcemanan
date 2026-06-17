@@ -7,8 +7,13 @@ export default function SiteLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="flex min-h-full flex-col">
+      <a href="#content" className="skip-link">
+        Skip to content
+      </a>
       <SiteHeader />
-      <div className="flex-1">{children}</div>
+      <div id="content" tabIndex={-1} className="flex-1 outline-none">
+        {children}
+      </div>
       <SiteFooter />
     </div>
   );

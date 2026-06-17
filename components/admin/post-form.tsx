@@ -10,7 +10,7 @@ import type { Post, Category } from "@/db/schema";
 const labelCls =
   "mb-1.5 block font-mono text-[0.7rem] uppercase tracking-[0.15em] text-faint";
 const inputCls =
-  "w-full rounded-md border border-rule bg-paper px-3 py-2 font-body text-ink outline-none transition-colors focus:border-accent";
+  "w-full rounded-md border border-rule bg-paper px-3 py-2 font-body text-ink transition-colors focus:border-accent";
 
 const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
 

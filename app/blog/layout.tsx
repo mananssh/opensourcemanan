@@ -36,6 +36,9 @@ export default function BlogLayout({
     <div
       className={`vertical-blog ${archivo.variable} ${hanken.variable} flex min-h-full flex-col bg-paper font-body text-ink`}
     >
+      <a href="#content" className="skip-link">
+        Skip to content
+      </a>
       <header className="sticky top-0 z-40 border-b border-rule bg-paper/80 backdrop-blur">
         <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link
@@ -51,7 +54,9 @@ export default function BlogLayout({
         </nav>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main id="content" tabIndex={-1} className="flex-1 outline-none">
+        {children}
+      </main>
 
       <VerticalFooter tagline="Rabbit holes — a blog." />
     </div>

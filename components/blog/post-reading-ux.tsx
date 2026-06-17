@@ -23,6 +23,12 @@ export function PostReadingUx() {
   }, []);
 
   useEffect(() => {
+    // One polite live region so screen readers hear "Code copied".
+    const live = document.createElement("div");
+    live.setAttribute("aria-live", "polite");
+    live.className = "sr-only";
+    document.body.appendChild(live);
+
     const pres = document.querySelectorAll<HTMLElement>(".blog-prose pre");
     const buttons: HTMLButtonElement[] = [];
     pres.forEach((pre) => {
@@ -33,13 +39,16 @@ export function PostReadingUx() {
       btn.type = "button";
       btn.textContent = "Copy";
       btn.className = "code-copy-btn";
+      btn.setAttribute("aria-label", "Copy code");
       btn.addEventListener("click", async () => {
         const code = pre.querySelector("code")?.textContent ?? pre.textContent ?? "";
         try {
           await navigator.clipboard.writeText(code);
           btn.textContent = "Copied";
+          live.textContent = "Code copied";
           setTimeout(() => {
             btn.textContent = "Copy";
+            live.textContent = "";
           }, 1500);
         } catch {
           /* clipboard unavailable */
@@ -48,12 +57,15 @@ export function PostReadingUx() {
       pre.appendChild(btn);
       buttons.push(btn);
     });
-    return () => buttons.forEach((b) => b.remove());
+    return () => {
+      buttons.forEach((b) => b.remove());
+      live.remove();
+    };
   }, []);
 
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-50 h-0.5">
+      <div className="fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden>
         <div
           className="h-full bg-accent"
           style={{ width: `${progress}%` }}
@@ -62,7 +74,12 @@ export function PostReadingUx() {
       {showTop && (
         <button
           type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => {
+            const reduce = window.matchMedia(
+              "(prefers-reduced-motion: reduce)",
+            ).matches;
+            window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+          }}
           aria-label="Scroll to top"
           className="fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-rule bg-surface text-ink shadow-md transition-colors hover:border-accent hover:text-accent"
         >
