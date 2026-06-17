@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { auth, signIn, signOut } from "@/lib/auth";
+import { SubmitButton } from "@/components/blog/submit-button";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -57,12 +58,12 @@ export default async function SignInPage() {
               await signOut({ redirectTo: "/sign-in" });
             }}
           >
-            <button
-              type="submit"
+            <SubmitButton
               className="mt-8 inline-flex items-center rounded-full border border-rule px-5 py-2 font-mono text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+              pendingLabel="Signing out…"
             >
               Sign out
-            </button>
+            </SubmitButton>
           </form>
         </div>
       ) : (
@@ -78,15 +79,15 @@ export default async function SignInPage() {
               await signIn("google", { redirectTo: "/sign-in" });
             }}
           >
-            <button
-              type="submit"
+            <SubmitButton
               className="mt-8 inline-flex items-center gap-3 rounded-full bg-ink px-6 py-3 font-mono text-sm tracking-wide text-paper transition-opacity hover:opacity-90"
+              pendingLabel="Redirecting…"
             >
               <span aria-hidden className="text-accent">
                 ◆
               </span>
               Continue with Google
-            </button>
+            </SubmitButton>
           </form>
         </div>
       )}
