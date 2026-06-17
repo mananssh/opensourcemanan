@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, count as sqlCount } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   posts,
@@ -6,6 +6,7 @@ import {
   tags,
   postTags,
   comments,
+  subscribers,
   type Post,
   type Category,
 } from "@/db/schema";
@@ -86,6 +87,11 @@ export interface AdminCommentRow {
   createdAt: Date;
   postTitle: string | null;
   postSlug: string | null;
+}
+
+export async function adminCountSubscribers(): Promise<number> {
+  const [row] = await db.select({ c: sqlCount() }).from(subscribers);
+  return Number(row?.c ?? 0);
 }
 
 export async function adminRecentComments(): Promise<AdminCommentRow[]> {
