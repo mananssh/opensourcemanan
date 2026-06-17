@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 /**
- * Prune Vercel deployments: keep ALL production deployments + the most recent
- * preview deployments (PRUNE_KEEP, default 5), delete the rest of the previews.
- * Production is never touched. See ADR 0013.
+ * Prune Vercel deployments: keep the most recent production deployments
+ * (PRUNE_KEEP_PRODUCTION, default 3) + the most recent preview deployments
+ * (PRUNE_KEEP, default 5), delete the rest. Recency = createdAt desc, so the
+ * latest are kept and the oldest are pruned. See ADR 0013.
  *
  * Env: VERCEL_TOKEN (required), VERCEL_PROJECT_ID (required),
  *      VERCEL_TEAM_ID (optional, for team-scoped projects),
- *      PRUNE_KEEP (optional, default 5), DRY_RUN ("1" to only print).
+ *      PRUNE_KEEP (optional, default 5 — previews),
+ *      PRUNE_KEEP_PRODUCTION (optional, default 3 — production),
+ *      DRY_RUN ("1" to only print).
  */
 const TOKEN = process.env.VERCEL_TOKEN;
 const PROJECT = process.env.VERCEL_PROJECT_ID;
 const TEAM = process.env.VERCEL_TEAM_ID;
 const KEEP = Number(process.env.PRUNE_KEEP ?? 5);
+const KEEP_PRODUCTION = Number(process.env.PRUNE_KEEP_PRODUCTION ?? 3);
 const DRY = process.env.DRY_RUN === "1";
 
 if (!TOKEN || !PROJECT) {
@@ -50,17 +54,20 @@ for (;;) {
   until = data.pagination.next;
 }
 
-const production = all.filter((d) => d.target === "production");
-const previews = all
-  .filter((d) => d.target !== "production")
-  .sort((a, b) => b.createdAt - a.createdAt);
+const byNewest = (a, b) => b.createdAt - a.createdAt;
+const production = all.filter((d) => d.target === "production").sort(byNewest);
+const previews = all.filter((d) => d.target !== "production").sort(byNewest);
 
-const keep = previews.slice(0, KEEP);
-const toDelete = previews.slice(KEEP);
+const toDelete = [
+  ...production.slice(KEEP_PRODUCTION),
+  ...previews.slice(KEEP),
+];
 
 console.log(
-  `total=${all.length}  production=${production.length} (kept)  ` +
-    `previews=${previews.length}  keepingLatest=${keep.length}  deleting=${toDelete.length}` +
+  `total=${all.length}  ` +
+    `production=${production.length} (keep latest ${Math.min(KEEP_PRODUCTION, production.length)})  ` +
+    `previews=${previews.length} (keep latest ${Math.min(KEEP, previews.length)})  ` +
+    `deleting=${toDelete.length}` +
     (DRY ? "  [DRY RUN]" : ""),
 );
 

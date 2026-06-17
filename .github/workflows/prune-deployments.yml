@@ -1,7 +1,7 @@
 name: Prune deployments
 
-# Weekly cleanup of old Vercel preview deployments — keeps production + the
-# latest few previews, deletes the rest. Manual run available. See ADR 0013.
+# Weekly cleanup of old Vercel deployments — keeps the latest few production
+# and preview deployments, deletes the rest. Manual run available. See ADR 0013.
 # Skips cleanly until the VERCEL_* secrets are set.
 
 on:
@@ -12,6 +12,9 @@ on:
       keep:
         description: "How many recent previews to keep"
         default: "5"
+      keep_production:
+        description: "How many recent production deployments to keep"
+        default: "3"
 
 permissions:
   contents: read
@@ -34,6 +37,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
           PRUNE_KEEP: ${{ github.event.inputs.keep || '5' }}
+          PRUNE_KEEP_PRODUCTION: ${{ github.event.inputs.keep_production || '3' }}
         run: |
           if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "VERCEL_TOKEN / VERCEL_PROJECT_ID not set — skipping."

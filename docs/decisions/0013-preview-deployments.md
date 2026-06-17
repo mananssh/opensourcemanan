@@ -22,10 +22,13 @@ Unset on prod/local → normal behavior.
 `dependabot/*` branches. Real feature-branch previews still deploy.
 
 **3. Prune on a schedule.** Vercel doesn't auto-delete. `scripts/prune-deployments.mjs`
-(npm `prune-deploys`) keeps **all production deployments + the latest 5 previews**
-and deletes the rest via the Vercel API; production is never touched. Runs weekly
-(and on demand) via `.github/workflows/prune-deployments.yml`, skipping cleanly
-until secrets are set. `DRY_RUN=1` to preview.
+(npm `prune-deploys`) keeps the **latest 3 production + latest 5 preview**
+deployments (recency = `createdAt` desc) and deletes the rest via the Vercel API.
+The current live production deployment is always the newest, so it's always kept;
+older production builds beyond the 3 most recent are pruned too (shrinking the
+rollback window to the last 3). Tunable via `PRUNE_KEEP_PRODUCTION` / `PRUNE_KEEP`.
+Runs weekly (and on demand) via `.github/workflows/prune-deployments.yml`, skipping
+cleanly until secrets are set. `DRY_RUN=1` to preview.
 
 ## One-time setup (manual)
 
