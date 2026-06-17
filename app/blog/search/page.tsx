@@ -23,8 +23,9 @@ export default async function SearchPage({
             name="q"
             defaultValue={q}
             autoFocus
+            aria-label="Search posts"
             placeholder="Search posts…"
-            className="w-full border-b-2 border-rule bg-transparent pb-2 font-display text-3xl text-ink outline-none placeholder:text-faint focus:border-accent sm:text-4xl"
+            className="w-full border-b-2 border-rule bg-transparent pb-2 font-display text-3xl text-ink placeholder:text-faint focus:border-accent sm:text-4xl"
           />
         </form>
         {term && (

@@ -59,7 +59,7 @@ export default async function BlogIndex() {
             name="q"
             placeholder="Search posts…"
             aria-label="Search posts"
-            className="w-full rounded-full border border-rule bg-surface px-4 py-2 font-mono text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-accent"
+            className="w-full rounded-full border border-rule bg-surface px-4 py-2 font-mono text-sm text-ink transition-colors placeholder:text-faint focus:border-accent"
           />
         </form>
       </header>

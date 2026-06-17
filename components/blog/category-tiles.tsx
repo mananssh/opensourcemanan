@@ -20,7 +20,12 @@ export function CategoryTiles({ categories }: { categories: Category[] }) {
           className="group relative aspect-[1.6/1] overflow-hidden rounded-xl p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md"
           style={{ backgroundColor: c.accentColor }}
         >
-          <span className="relative z-10 line-clamp-2 font-display text-lg font-extrabold uppercase leading-[0.95] tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] sm:text-xl">
+          {/* Dark scrim so white text stays legible on any admin-chosen color. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/45 via-black/15 to-transparent"
+          />
+          <span className="relative z-10 line-clamp-2 font-display text-lg font-extrabold uppercase leading-[0.95] tracking-tight text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)] sm:text-xl">
             {c.name}
           </span>
           {c.coverImageKey && (
