@@ -2,6 +2,14 @@
 
 ## 2026-06-17
 
+- **13:44 · `b12b621` · build:** Adopt fuller commit/changeset type taxonomy (adds ops, build, style)
+  Documented the full Conventional Commits type set in agent-kit/commit-and-pr.md
+  (feat, fix, refactor, perf, style, test, docs, build, ops, chore) with a table,
+  optional scopes, and the `!` breaking-change indicator, based on qoomon's
+  taxonomy. Notably `ops` (infra/CI/CD/deploy) and `build` (build tooling/deps)
+  now have a home instead of being lumped into chore/feat. The changelog compiler
+  and .changeset/README accept the same vocabulary (dropped the unused `ci` in
+  favor of `ops`).
 - **13:27 · `ae5cfc0` · feat:** Prune workflow gains a dry_run dispatch input
   The Prune deployments workflow now has a `dry_run` boolean dispatch input. When
   checked, it sets DRY_RUN=1 so the run lists what would be deleted and deletes
