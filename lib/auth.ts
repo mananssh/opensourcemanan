@@ -27,6 +27,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
   // Single-host deployment on Vercel; trust the forwarded host.
   trustHost: true,
+  // On preview deployments, route OAuth through one stable URL (prod) so a
+  // single Google redirect URI covers every hashed preview host. Set
+  // AUTH_REDIRECT_PROXY_URL=https://<prod>/api/auth in the Vercel Preview env;
+  // unset (prod/local) = normal behavior. See ADR 0013.
+  redirectProxyUrl: process.env.AUTH_REDIRECT_PROXY_URL,
   callbacks: {
     jwt({ token }) {
       token.isOwner = isOwnerEmail(token.email);
