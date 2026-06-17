@@ -30,7 +30,7 @@ export function CategoryTiles({ categories }: { categories: Category[] }) {
               src={publicUrl(c.coverImageKey)}
               alt=""
               aria-hidden
-              className="pointer-events-none absolute -bottom-3 -right-5 h-20 w-32 rotate-[18deg] rounded-md object-cover shadow-xl transition-transform duration-200 group-hover:rotate-[14deg] sm:h-24 sm:w-44"
+              className="pointer-events-none absolute -bottom-3 -right-5 h-20 w-28 rotate-[18deg] rounded-md object-cover shadow-xl transition-transform duration-200 group-hover:rotate-[14deg] sm:h-24 sm:w-36"
             />
           )}
         </Link>
