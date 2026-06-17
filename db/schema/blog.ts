@@ -104,6 +104,12 @@ export const postViews = pgTable("post_views", {
   count: integer().notNull().default(0),
 });
 
+/** Newsletter signups (provider integration deferred — we just capture). */
+export const subscribers = pgTable("subscribers", {
+  email: text().primaryKey(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Category = typeof categories.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type Tag = typeof tags.$inferSelect;

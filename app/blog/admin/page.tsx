@@ -3,6 +3,7 @@ import {
   adminListPosts,
   adminListCategories,
   adminRecentComments,
+  adminCountSubscribers,
 } from "@/lib/blog/admin";
 import { togglePublish, deleteComment } from "./actions";
 
@@ -12,14 +13,19 @@ const th = "py-2 text-left font-mono text-[0.65rem] uppercase tracking-[0.15em] 
 const td = "py-3 align-top";
 
 export default async function AdminDashboard() {
-  const [posts, categories, comments] = await Promise.all([
+  const [posts, categories, comments, subscriberCount] = await Promise.all([
     adminListPosts(),
     adminListCategories(),
     adminRecentComments(),
+    adminCountSubscribers(),
   ]);
 
   return (
     <div className="space-y-14">
+      <p className="font-mono text-xs uppercase tracking-[0.15em] text-faint">
+        {subscriberCount} newsletter subscriber{subscriberCount === 1 ? "" : "s"}
+      </p>
+
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl font-bold text-ink">Posts</h2>

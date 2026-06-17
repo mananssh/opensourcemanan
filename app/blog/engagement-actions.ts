@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db/client";
-import { reactions, comments } from "@/db/schema";
+import { reactions, comments, subscribers } from "@/db/schema";
 import { requireAuth } from "@/lib/auth";
 
 /** Toggle the current user's reaction on a post. Requires sign-in. */
@@ -31,6 +31,23 @@ export async function toggleReaction(formData: FormData): Promise<void> {
       .onConflictDoNothing();
   }
   if (slug) revalidatePath(`/blog/${slug}`);
+}
+
+/** Newsletter signup (public). useActionState-shaped: (prevState, formData). */
+export async function subscribe(
+  _prev: { ok: boolean; message: string },
+  formData: FormData,
+): Promise<{ ok: boolean; message: string }> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return { ok: false, message: "Enter a valid email." };
+  }
+  try {
+    await db.insert(subscribers).values({ email }).onConflictDoNothing();
+  } catch {
+    return { ok: false, message: "Something went wrong — try again." };
+  }
+  return { ok: true, message: "Subscribed. Thanks!" };
 }
 
 /** Add a comment (plaintext) to a post. Requires sign-in. */
