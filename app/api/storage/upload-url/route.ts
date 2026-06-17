@@ -36,9 +36,12 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (!/^image\//.test(contentType)) {
+  // Allowlist concrete raster image types. SVG is excluded on purpose: an
+  // owner-uploaded SVG served from storage.googleapis.com would be a stored-XSS
+  // vector if ever rendered inline.
+  if (!/^image\/(png|jpe?g|gif|webp|avif)$/.test(contentType)) {
     return NextResponse.json(
-      { error: "Only image uploads are allowed" },
+      { error: "Allowed image types: png, jpg, gif, webp, avif" },
       { status: 400 },
     );
   }

@@ -33,6 +33,9 @@ import {
 
 /** Upload an in-editor image to GCS and return its public URL. */
 async function imageUploadHandler(file: File): Promise<string> {
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("Image is too large (max 10 MB).");
+  }
   const res = await fetch("/api/storage/upload-url", {
     method: "POST",
     headers: { "content-type": "application/json" },
