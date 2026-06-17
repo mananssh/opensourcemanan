@@ -3,6 +3,7 @@ import { Archivo, Hanken_Grotesk } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
+import { VerticalFooter } from "@/components/vertical-footer";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -46,11 +47,7 @@ export default function BlogLayout({
 
       <main className="flex-1">{children}</main>
 
-      <footer className="border-t border-rule">
-        <div className="mx-auto w-full max-w-5xl px-6 py-10 font-mono text-[0.7rem] uppercase tracking-[0.2em] text-faint">
-          Rabbit holes — a blog.
-        </div>
-      </footer>
+      <VerticalFooter tagline="Rabbit holes — a blog." />
     </div>
   );
 }
