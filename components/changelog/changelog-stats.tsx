@@ -47,13 +47,106 @@ const TYPE_ORDER: ChangeType[] = [
   "ci",
 ];
 
-function shortDate(iso: string): string {
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const DAY_MS = 86_400_000;
+
+function isoOf(t: number): string {
+  const d = new Date(t);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+function longDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
+    year: "numeric",
     timeZone: "UTC",
   });
+}
+
+interface Cell {
+  date: string;
+  count: number;
+}
+
+/**
+ * Bucket the calendar into GitHub-style week columns (Sun→Sat rows), spanning
+ * the Sunday on/before the first ship date through the Saturday on/after the
+ * last. Deterministic — bounded by real data, no dependence on "now".
+ */
+function buildWeeks(days: ChangelogDay[]): {
+  weeks: Cell[][];
+  monthLabels: string[];
+  max: number;
+} {
+  const counts = new Map<string, number>();
+  for (const d of days) counts.set(d.date, d.entries.length);
+  const dates = [...counts.keys()].sort();
+  const toUTC = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+
+  let start = toUTC(dates[0]);
+  start -= new Date(start).getUTCDay() * DAY_MS; // back to Sunday
+  let end = toUTC(dates[dates.length - 1]);
+  end += (6 - new Date(end).getUTCDay()) * DAY_MS; // forward to Saturday
+
+  const weeks: Cell[][] = [];
+  let col: Cell[] = [];
+  for (let t = start; t <= end; t += DAY_MS) {
+    const iso = isoOf(t);
+    col.push({ date: iso, count: counts.get(iso) ?? 0 });
+    if (new Date(t).getUTCDay() === 6) {
+      weeks.push(col);
+      col = [];
+    }
+  }
+  if (col.length) weeks.push(col);
+
+  // One label per week column: the month name when it changes, else "" — the
+  // label text overflows its column to the right (GitHub's trick).
+  let prevMonth = -1;
+  const monthLabels = weeks.map((w) => {
+    const month = Number(w[0].date.split("-")[1]);
+    if (month !== prevMonth) {
+      prevMonth = month;
+      return MONTHS[month - 1];
+    }
+    return "";
+  });
+
+  const max = Math.max(1, ...[...counts.values()]);
+  return { weeks, monthLabels, max };
+}
+
+// Empty + four accent intensities (our orange). Index 0 = no commits.
+const LEVELS = [
+  "bg-ink/5 dark:bg-ink/10",
+  "bg-accent/30",
+  "bg-accent/55",
+  "bg-accent/80",
+  "bg-accent",
+];
+
+function levelOf(count: number, max: number): number {
+  if (count === 0) return 0;
+  return Math.min(4, Math.max(1, Math.ceil((count / max) * 4)));
 }
 
 /**
@@ -73,37 +166,57 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
     .map((t) => ({ type: t, n: counts.get(t)! }))
     .sort((a, b) => b.n - a.n);
 
-  // Oldest → newest (days arrive newest-first) so the axis reads left to right.
-  const byDay = [...days].reverse().map((d) => ({
-    date: d.date,
-    n: d.entries.length,
-  }));
-  const maxDay = Math.max(...byDay.map((d) => d.n));
+  const activeDays = days.length;
+  const { weeks, monthLabels, max } = buildWeeks(days);
 
   return (
-    <section className="mt-12 grid gap-x-12 gap-y-10 border-y border-rule py-8 sm:grid-cols-2">
-      {/* Activity over time — a commit-per-day axis. One neutral tone so it
-          doesn't compete with the type colors on the right. */}
+    <section className="mt-12 space-y-10 border-y border-rule py-8">
+      {/* Activity — a GitHub-style contribution heatmap in accent intensities. */}
       <div>
         <div className="flex items-baseline justify-between">
           <p className="label-caps text-faint">Activity</p>
           <p className="font-mono text-xs text-faint tabular-nums">
-            {total} commits · {byDay.length} days
+            {total} commits · {activeDays} days
           </p>
         </div>
-        <div className="mt-4 flex h-16 items-end gap-1">
-          {byDay.map((d) => (
-            <div
-              key={d.date}
-              title={`${shortDate(d.date)} — ${d.n} commit${d.n === 1 ? "" : "s"}`}
-              style={{ height: `${Math.max(6, (d.n / maxDay) * 100)}%` }}
-              className="flex-1 rounded-sm bg-ink/15 transition-colors hover:bg-accent dark:bg-ink/20"
-            />
-          ))}
+
+        <div className="mt-4 overflow-x-auto pb-1">
+          <div className="inline-flex flex-col gap-1">
+            {/* Month labels — each sits at its week column and overflows right. */}
+            <div className="flex gap-[3px] pl-0">
+              {monthLabels.map((label, i) => (
+                <span
+                  key={i}
+                  className="w-3 shrink-0 whitespace-nowrap font-mono text-[0.6rem] leading-none text-faint"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+            {/* Week columns, Sun→Sat top→bottom. */}
+            <div className="flex gap-[3px]">
+              {weeks.map((week, i) => (
+                <div key={i} className="flex flex-col gap-[3px]">
+                  {week.map((cell) => (
+                    <span
+                      key={cell.date}
+                      title={`${longDate(cell.date)} — ${cell.count} commit${cell.count === 1 ? "" : "s"}`}
+                      className={`size-3 rounded-[2px] ${LEVELS[levelOf(cell.count, max)]}`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="mt-2 flex justify-between font-mono text-[0.65rem] uppercase tracking-[0.15em] text-faint">
-          <span>{shortDate(byDay[0].date)}</span>
-          <span>{shortDate(byDay[byDay.length - 1].date)}</span>
+
+        {/* Legend — Less → More, mirroring GitHub. */}
+        <div className="mt-3 flex items-center gap-1.5 font-mono text-[0.6rem] uppercase tracking-[0.15em] text-faint">
+          <span>Less</span>
+          {LEVELS.map((c, i) => (
+            <span key={i} className={`size-3 rounded-[2px] ${c}`} />
+          ))}
+          <span>More</span>
         </div>
       </div>
 

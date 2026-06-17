@@ -10,7 +10,8 @@ Three UI touches:
   "← OSM" and "Changelog" links back to the common union, themed per vertical
   via semantic tokens. Verticals stay visually independent; only the home/log
   links are shared.
-- Changelog gains a minimal activity panel above the log: a per-day commit
-  time-axis and a type-distribution bar, both hand-rolled from the existing
-  type palette and design tokens (no charting lib). Type vocabulary synced to
-  the commit taxonomy (adds style/build/ops; keeps ci for historical entries).
+- Changelog gains a minimal activity panel above the log: a GitHub-style
+  contribution heatmap in accent intensities (our orange) and a
+  type-distribution bar, both hand-rolled from the existing palette and design
+  tokens (no charting lib). Type vocabulary synced to the commit taxonomy (adds
+  style/build/ops; keeps ci for historical entries).
