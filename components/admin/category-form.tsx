@@ -1,5 +1,6 @@
 import { saveCategory, deleteCategory } from "@/app/blog/admin/actions";
 import { ImageUpload } from "@/components/image-upload";
+import { AdminForm } from "@/components/admin/admin-form";
 import { SubmitButton } from "@/components/blog/submit-button";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Category } from "@/db/schema";
@@ -14,7 +15,7 @@ const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
 export function CategoryForm({ category }: { category?: Category }) {
   return (
     <>
-      <form
+      <AdminForm
         action={saveCategory}
         className="max-w-xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
       >
@@ -70,14 +71,7 @@ export function CategoryForm({ category }: { category?: Category }) {
           initialUrl={category?.coverImageKey ? publicUrl(category.coverImageKey) : null}
         />
       </div>
-
-        <SubmitButton
-          className="rounded-full bg-accent px-5 py-2 font-mono text-sm text-white transition-opacity hover:opacity-90"
-          pendingLabel="Saving…"
-        >
-          Save
-        </SubmitButton>
-      </form>
+      </AdminForm>
 
       {category && (
         <form action={deleteCategory} className="mt-4 max-w-xl">

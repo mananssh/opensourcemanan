@@ -7,11 +7,17 @@ function isExpectedEmptyDbError(error: unknown): boolean {
   let e: unknown = error;
   for (let i = 0; i < 5 && e; i++) {
     const o = e as { code?: unknown; message?: unknown; cause?: unknown };
-    if (o.code === "42P01") return true; // undefined_table (pre-migration)
+    // Only the genuine pre-setup conditions degrade to empty:
+    //   - 42P01 undefined_table (a table missing before its migration runs)
+    //   - our own thrown "DATABASE_URL is not set" message
+    // We deliberately do NOT match the substring "does not exist" anymore: it
+    // also fires for undefined_column (42703), undefined_function, etc., which
+    // are real bugs (e.g. a bad migration) that must surface, not silently
+    // render "no posts".
+    if (o.code === "42P01") return true;
     if (
       typeof o.message === "string" &&
-      (o.message.includes("DATABASE_URL is not set") ||
-        o.message.includes("does not exist"))
+      o.message.includes("DATABASE_URL is not set")
     ) {
       return true;
     }

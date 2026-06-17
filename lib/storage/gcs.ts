@@ -78,10 +78,20 @@ export async function createUploadUrl(opts: {
     .getSignedUrl({
       version: "v4",
       action: "write",
-      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      // Short window: the URL only needs to live long enough for an in-editor
+      // upload, so a leaked URL is writable for minutes, not a quarter hour.
+      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
       contentType: opts.contentType,
     });
   return { url, key };
+}
+
+/** Object-key prefixes we ever mint — used to validate client-supplied keys. */
+const KEY_PREFIX_RE = /^(blog|projects|misc)\/[a-z0-9][a-z0-9./-]*$/;
+
+/** True if `key` looks like a key we minted (no traversal, known vertical). */
+export function isManagedKey(key: string): boolean {
+  return KEY_PREFIX_RE.test(key) && !key.includes("..");
 }
 
 /** Make an object world-readable (for public assets). Returns its public URL. */
