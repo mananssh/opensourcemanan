@@ -92,6 +92,7 @@ export interface AdminCommentRow {
   body: string;
   userName: string;
   userEmail: string;
+  status: "visible" | "hidden";
   createdAt: Date;
   postTitle: string | null;
   postSlug: string | null;
@@ -111,6 +112,7 @@ export async function adminRecentComments(): Promise<AdminCommentRow[]> {
       body: comments.body,
       userName: comments.userName,
       userEmail: comments.userEmail,
+      status: comments.status,
       createdAt: comments.createdAt,
       postTitle: posts.title,
       postSlug: posts.slug,

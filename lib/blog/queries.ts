@@ -7,6 +7,7 @@ import {
   categories,
   tags,
   postTags,
+  bookmarks,
   type Post,
   type Category,
   type Tag,
@@ -222,6 +223,28 @@ export const getPostAccess = cache(async (slug: string): Promise<PostAccess> => 
     if (eff === "authed" && !session?.user) return { status: "signin" };
     return { status: "notfound" };
   }, { status: "notfound" });
+});
+
+/** Posts the current viewer has bookmarked (and may still see), newest-saved first. */
+export const listBookmarkedPosts = cache(async (): Promise<PostCard[]> => {
+  const session = await auth();
+  const email = session?.user?.email?.toLowerCase() ?? null;
+  if (!email) return [];
+  return safe(async () => {
+    const rows = (await db
+      .select(cardColumns)
+      .from(bookmarks)
+      .innerJoin(posts, eq(posts.id, bookmarks.postId))
+      .leftJoin(categories, eq(posts.categoryId, categories.id))
+      .where(and(eq(bookmarks.userEmail, email), livePost()))
+      .orderBy(desc(bookmarks.createdAt))) as CardRow[];
+    return rows
+      .filter((r) => {
+        const { post, category } = rowGates(r);
+        return canSeePost(session, post, category);
+      })
+      .map(toCard);
+  }, []);
 });
 
 /** Newer/older neighbors of a post among the viewer's visible posts. */
