@@ -2,6 +2,12 @@
 
 ## 2026-06-17
 
+- **09:27 · `57a4518` · feat:** Polish — live MDX preview in the editor + nicer admin styling
+  Admin polish: the post editor's MDX body now has a Write/Preview toggle with a
+  live (approximate) render — Callouts and syntax highlighting still appear on the
+  published page. The admin dashboard, forms, and nav are restyled into the
+  Kinetic-Mono identity (cards, pill nav, better depth/spacing) while staying
+  functional.
 - **09:19 · `1bb98e3` · feat:** Polish — branded 404s, favicon, site/blog OG images, and post reading UX
   Site identity: a real OSM favicon (icon.tsx "o." monogram), branded 404 pages
   (editorial root + Kinetic-Mono blog), and default Open Graph cards for the
