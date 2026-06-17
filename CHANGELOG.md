@@ -2,6 +2,14 @@
 
 ## 2026-06-17
 
+- **10:45 · `c9b7f5b` · fix:** Loading/pending state on all server-action buttons + comment delete
+  Every button that runs a server action (reactions, post comment, admin save/
+  delete/publish, comment moderation, sign in/out) now disables itself and shows
+  a loading label while submitting (via a shared useFormStatus SubmitButton) — so
+  there's clear feedback and rapid multi-clicks can no longer fire duplicate
+  submissions (the cause of duplicate comments). Also: comment authors can delete
+  their own comments, and the owner can delete any. Admin Save/Delete are split
+  into separate forms so each shows an accurate pending state.
 - **09:27 · `57a4518` · feat:** Polish — live MDX preview in the editor + nicer admin styling
   Admin polish: the post editor's MDX body now has a Write/Preview toggle with a
   live (approximate) render — Callouts and syntax highlighting still appear on the
