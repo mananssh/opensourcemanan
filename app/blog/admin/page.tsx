@@ -5,8 +5,12 @@ import {
   adminRecentComments,
   adminCountSubscribers,
 } from "@/lib/blog/admin";
-import { togglePublish, deleteComment } from "./actions";
+import { togglePublish, deleteComment, deletePost, deleteCategory } from "./actions";
 import { SubmitButton } from "@/components/blog/submit-button";
+import { ConfirmSubmit } from "@/components/admin/confirm-submit";
+
+const rowAction =
+  "font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent";
 
 export const metadata = { title: "Admin" };
 
@@ -59,15 +63,27 @@ export default async function AdminDashboard() {
                     <span className={p.status === "published" ? "text-accent" : "text-faint"}>{p.status}</span>
                   </td>
                   <td className={`${td} text-right`}>
-                    <form action={togglePublish} className="inline">
-                      <input type="hidden" name="id" value={p.id} />
-                      <SubmitButton
-                        className="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent"
-                        pendingLabel="…"
-                      >
-                        {p.status === "published" ? "Unpublish" : "Publish"}
-                      </SubmitButton>
-                    </form>
+                    <div className="flex items-center justify-end gap-4">
+                      <form action={togglePublish} className="inline">
+                        <input type="hidden" name="id" value={p.id} />
+                        <SubmitButton className={rowAction} pendingLabel="…">
+                          {p.status === "published" ? "Unpublish" : "Publish"}
+                        </SubmitButton>
+                      </form>
+                      <Link href={`/blog/admin/posts/${p.id}`} className={rowAction}>
+                        Edit
+                      </Link>
+                      <form action={deletePost} className="inline">
+                        <input type="hidden" name="id" value={p.id} />
+                        <ConfirmSubmit
+                          message={`Delete "${p.title}"? This can't be undone.`}
+                          className={rowAction}
+                          pendingLabel="…"
+                        >
+                          Delete
+                        </ConfirmSubmit>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -90,6 +106,7 @@ export default async function AdminDashboard() {
                 <th className={th}>Name</th>
                 <th className={th}>Visibility</th>
                 <th className={th}>Order</th>
+                <th className={th}></th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +120,23 @@ export default async function AdminDashboard() {
                   </td>
                   <td className={`${td} font-mono text-xs text-muted`}>{c.visibility}</td>
                   <td className={`${td} font-mono text-xs text-muted`}>{c.sortOrder}</td>
+                  <td className={`${td} text-right`}>
+                    <div className="flex items-center justify-end gap-4">
+                      <Link href={`/blog/admin/categories/${c.id}`} className={rowAction}>
+                        Edit
+                      </Link>
+                      <form action={deleteCategory} className="inline">
+                        <input type="hidden" name="id" value={c.id} />
+                        <ConfirmSubmit
+                          message={`Delete category "${c.name}"? Posts keep their content but lose this category.`}
+                          className={rowAction}
+                          pendingLabel="…"
+                        >
+                          Delete
+                        </ConfirmSubmit>
+                      </form>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
