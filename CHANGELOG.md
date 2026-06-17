@@ -2,6 +2,11 @@
 
 ## 2026-06-17
 
+- **22:42 · `9d627d6` · ops:** Run the deployment prune on every merge to main
+  The prune-deployments workflow now also triggers on push to main, so the
+  deployment created by each merge is pruned down to the keep window right away
+  (latest 3 production + 5 previews) instead of accumulating until the weekly cron.
+  The weekly cron and manual dispatch remain as a safety net.
 - **21:45 · `fa975b4` · feat:** Blog engagement — optimistic reactions, threaded/moderated/rate-limited comments, bookmarks
   Addresses the blog audit (§6, excluding telemetry/newsletter):
   - Reactions now update optimistically (instant heart + count) via useOptimistic.
