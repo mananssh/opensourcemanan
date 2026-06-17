@@ -14,14 +14,19 @@ import { join } from "node:path";
  * `ENTRY_RE` below to match.
  */
 
+// Commit/changeset vocabulary — see agent-kit/commit-and-pr.md#types. `ci` is
+// retained only to render historical entries from before `ops` replaced it.
 export type ChangeType =
   | "feat"
   | "fix"
   | "refactor"
-  | "docs"
-  | "test"
-  | "chore"
   | "perf"
+  | "style"
+  | "test"
+  | "docs"
+  | "build"
+  | "ops"
+  | "chore"
   | "ci";
 
 export interface ChangelogEntry {
