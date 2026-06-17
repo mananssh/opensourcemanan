@@ -180,7 +180,7 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
           </p>
         </div>
 
-        <div className="mt-4 overflow-x-auto pb-1">
+        <div className="mt-3 overflow-x-auto pt-7">
           <div className="inline-flex flex-col gap-1">
             {/* Month labels — each sits at its week column and overflows right. */}
             <div className="flex gap-[3px] pl-0">
@@ -198,11 +198,16 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
               {weeks.map((week, i) => (
                 <div key={i} className="flex flex-col gap-[3px]">
                   {week.map((cell) => (
-                    <span
-                      key={cell.date}
-                      title={`${longDate(cell.date)} — ${cell.count} commit${cell.count === 1 ? "" : "s"}`}
-                      className={`size-3 rounded-[2px] ${LEVELS[levelOf(cell.count, max)]}`}
-                    />
+                    <span key={cell.date} className="group relative block">
+                      <span
+                        className={`block size-3 rounded-[2px] ${LEVELS[levelOf(cell.count, max)]}`}
+                      />
+                      {/* Hover tooltip — date + commit count for that day. */}
+                      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 font-mono text-[0.65rem] leading-none text-paper shadow-md group-hover:block">
+                        {cell.count} commit{cell.count === 1 ? "" : "s"} ·{" "}
+                        {longDate(cell.date)}
+                      </span>
+                    </span>
                   ))}
                 </div>
               ))}
