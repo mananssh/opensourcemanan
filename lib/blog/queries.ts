@@ -299,6 +299,32 @@ export const getRelatedPosts = cache(
   },
 );
 
+/** Title + category for an effectively-public post — session-less, for OG images. */
+export const getPublicPostMeta = cache(
+  async (slug: string): Promise<{ title: string; categoryName: string | null } | null> => {
+    return safe(async () => {
+      const rows = await db
+        .select({
+          title: posts.title,
+          status: posts.status,
+          postVisibility: posts.visibility,
+          categoryName: categories.name,
+          categoryVisibility: categories.visibility,
+        })
+        .from(posts)
+        .leftJoin(categories, eq(posts.categoryId, categories.id))
+        .where(eq(posts.slug, slug))
+        .limit(1);
+      if (rows.length === 0) return null;
+      const r = rows[0];
+      if (r.status !== "published") return null;
+      if (r.postVisibility !== "public") return null;
+      if (r.categoryName && r.categoryVisibility !== "public") return null;
+      return { title: r.title, categoryName: r.categoryName };
+    }, null);
+  },
+);
+
 /** Published + effectively-public posts only — for sitemap/RSS (no session). */
 export const listPublicPosts = cache(async (): Promise<
   (PostCard & { updatedAt: Date })[]

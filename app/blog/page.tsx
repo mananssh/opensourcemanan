@@ -1,6 +1,7 @@
 import { listVisiblePosts, listVisibleCategories } from "@/lib/blog/queries";
 import { PostList } from "@/components/blog/post-list";
 import { CategoryTiles } from "@/components/blog/category-tiles";
+import { NewsletterForm } from "@/components/blog/newsletter-form";
 
 export const metadata = {
   title: "Blog",
@@ -73,6 +74,18 @@ export default async function BlogIndex() {
       <section>
         <SectionLabel>Latest</SectionLabel>
         <PostList posts={posts} />
+      </section>
+
+      <section className="mt-20 border-t border-rule pt-12">
+        <h2 className="font-display text-2xl font-bold text-ink">
+          New posts, in your inbox
+        </h2>
+        <p className="mt-2 mb-6 max-w-md font-body text-muted">
+          No spam — just a note when something new goes up.
+        </p>
+        <div className="max-w-lg">
+          <NewsletterForm />
+        </div>
       </section>
     </div>
   );
