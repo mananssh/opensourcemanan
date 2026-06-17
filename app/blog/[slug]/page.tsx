@@ -14,6 +14,7 @@ import { PostList } from "@/components/blog/post-list";
 import { ReactionBar } from "@/components/blog/reaction-bar";
 import { CommentSection } from "@/components/blog/comment-section";
 import { ViewBeacon } from "@/components/blog/view-beacon";
+import { PostReadingUx } from "@/components/blog/post-reading-ux";
 
 type Params = Promise<{ slug: string }>;
 
@@ -85,6 +86,7 @@ export default async function PostPage({ params }: { params: Params }) {
 
   return (
     <article className="mx-auto w-full max-w-5xl px-6 pb-28 pt-16">
+      <PostReadingUx />
       <header className="reveal border-b border-rule pb-10">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-faint">
           {post.category && (
