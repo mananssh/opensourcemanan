@@ -1,5 +1,5 @@
 import { listPublicPostsForFeed } from "@/lib/blog/queries";
-import { renderRss } from "@/lib/blog/feed";
+import { renderJsonFeed } from "@/lib/blog/feed";
 import { siteUrl, blogTitle, blogDescription } from "@/lib/site";
 
 // Regenerate at most hourly so new posts appear without a redeploy.
@@ -7,14 +7,13 @@ export const revalidate = 3600;
 
 export async function GET() {
   const items = await listPublicPostsForFeed();
-  const xml = renderRss({
+  const feed = renderJsonFeed({
     title: blogTitle,
     description: blogDescription,
-    feedUrl: `${siteUrl}/blog/feed.xml`,
-    link: `${siteUrl}/blog`,
+    feedUrl: `${siteUrl}/blog/feed.json`,
     items,
   });
-  return new Response(xml, {
-    headers: { "Content-Type": "application/rss+xml; charset=utf-8" },
+  return Response.json(feed, {
+    headers: { "Content-Type": "application/feed+json; charset=utf-8" },
   });
 }
