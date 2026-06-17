@@ -1,10 +1,13 @@
 name: Prune deployments
 
-# Weekly cleanup of old Vercel deployments — keeps the latest few production
-# and preview deployments, deletes the rest. Manual run available. See ADR 0013.
-# Skips cleanly until the VERCEL_* secrets are set.
+# Cleanup of old Vercel deployments — keeps the latest few production and
+# preview deployments, deletes the rest. Runs on every merge to main (each merge
+# creates a new deployment, so prune right after), plus a weekly safety net and
+# manual dispatch. See ADR 0013. Skips cleanly until the VERCEL_* secrets are set.
 
 on:
+  push:
+    branches: [main]
   schedule:
     - cron: "0 4 * * 1" # Mondays 04:00 UTC
   workflow_dispatch:
