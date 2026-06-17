@@ -6,6 +6,7 @@ import {
   adminCountSubscribers,
 } from "@/lib/blog/admin";
 import { togglePublish, deleteComment, deletePost, deleteCategory } from "./actions";
+import { toggleCommentVisibility } from "@/app/blog/engagement-actions";
 import { SubmitButton } from "@/components/blog/submit-button";
 import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 
@@ -163,18 +164,35 @@ export default async function AdminDashboard() {
                     ) : (
                       <span className="font-mono text-[0.7rem] text-faint">(deleted post)</span>
                     )}
+                    {c.status === "hidden" && (
+                      <span className="rounded-sm bg-accent-soft px-1.5 font-mono text-[0.6rem] uppercase tracking-[0.1em] text-accent">
+                        hidden
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 whitespace-pre-wrap font-body text-sm text-muted">{c.body}</p>
                 </div>
-                <form action={deleteComment}>
-                  <input type="hidden" name="id" value={c.id} />
-                  <SubmitButton
-                    className="shrink-0 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent"
-                    pendingLabel="…"
-                  >
-                    Delete
-                  </SubmitButton>
-                </form>
+                <div className="flex shrink-0 items-center gap-3">
+                  <form action={toggleCommentVisibility}>
+                    <input type="hidden" name="commentId" value={c.id} />
+                    {c.postSlug && <input type="hidden" name="slug" value={c.postSlug} />}
+                    <SubmitButton
+                      className="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent"
+                      pendingLabel="…"
+                    >
+                      {c.status === "visible" ? "Hide" : "Show"}
+                    </SubmitButton>
+                  </form>
+                  <form action={deleteComment}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <SubmitButton
+                      className="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent"
+                      pendingLabel="…"
+                    >
+                      Delete
+                    </SubmitButton>
+                  </form>
+                </div>
               </li>
             ))}
           </ul>

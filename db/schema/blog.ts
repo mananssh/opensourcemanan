@@ -8,6 +8,7 @@ import {
   timestamp,
   primaryKey,
   index,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 /** Four-mode visibility, shared by posts and categories (most-restrictive wins). */
@@ -19,6 +20,9 @@ export const visibility = pgEnum("visibility", [
 ]);
 
 export const postStatus = pgEnum("post_status", ["draft", "published"]);
+
+/** Comment moderation state — comments post immediately; owner can hide spam. */
+export const commentStatus = pgEnum("comment_status", ["visible", "hidden"]);
 
 export const categories = pgTable("categories", {
   id: uuid().primaryKey().defaultRandom(),
@@ -104,12 +108,29 @@ export const comments = pgTable(
     postId: uuid()
       .notNull()
       .references(() => posts.id, { onDelete: "cascade" }),
+    parentId: uuid().references((): AnyPgColumn => comments.id, {
+      onDelete: "cascade",
+    }),
     userEmail: text().notNull(),
     userName: text().notNull(),
     body: text().notNull(),
+    status: commentStatus().notNull().default("visible"),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("comments_post_created_idx").on(t.postId, t.createdAt)],
+);
+
+/** A reader's saved posts. One bookmark per signed-in user per post. */
+export const bookmarks = pgTable(
+  "bookmarks",
+  {
+    postId: uuid()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    userEmail: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.userEmail] })],
 );
 
 /** Per-post view counter. */
@@ -130,3 +151,4 @@ export type Category = typeof categories.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
+export type Bookmark = typeof bookmarks.$inferSelect;
