@@ -6,13 +6,16 @@ import type { Category } from "@/db/schema";
 const labelCls =
   "mb-1.5 block font-mono text-[0.7rem] uppercase tracking-[0.15em] text-faint";
 const inputCls =
-  "w-full rounded-md border border-rule bg-surface px-3 py-2 font-body text-ink outline-none transition-colors focus:border-accent";
+  "w-full rounded-md border border-rule bg-paper px-3 py-2 font-body text-ink outline-none transition-colors focus:border-accent";
 
 const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
 
 export function CategoryForm({ category }: { category?: Category }) {
   return (
-    <form action={saveCategory} className="max-w-xl space-y-6">
+    <form
+      action={saveCategory}
+      className="max-w-xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
+    >
       {category && <input type="hidden" name="id" value={category.id} />}
 
       <div className="grid grid-cols-2 gap-4">
@@ -34,7 +37,7 @@ export function CategoryForm({ category }: { category?: Category }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelCls} htmlFor="accentColor">Accent color</label>
-          <input id="accentColor" name="accentColor" type="color" defaultValue={category?.accentColor ?? "#1d4ed8"} className="h-10 w-full cursor-pointer rounded-md border border-rule bg-surface" />
+          <input id="accentColor" name="accentColor" type="color" defaultValue={category?.accentColor ?? "#1d4ed8"} className="h-10 w-full cursor-pointer rounded-md border border-rule bg-paper" />
         </div>
         <div>
           <label className={labelCls} htmlFor="sortOrder">Sort order</label>
