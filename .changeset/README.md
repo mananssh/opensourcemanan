@@ -15,7 +15,7 @@ summary: One-line imperative summary
 Human-facing description of the change. Can be multiple paragraphs.
 ```
 
-- `type` — one of: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `ci`.
+- `type` — one of: `feat`, `fix`, `refactor`, `perf`, `style`, `test`, `docs`, `build`, `ops`, `chore` (same vocabulary as commit types — see [`agent-kit/commit-and-pr.md`](../agent-kit/commit-and-pr.md#types)).
 - `summary` — one line, imperative mood.
 - Body — what changed and why, for the changelog reader.
 - **Do not** put datetime or commit hash here — they're added at compile time from git.
