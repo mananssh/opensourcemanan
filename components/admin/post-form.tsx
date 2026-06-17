@@ -1,6 +1,7 @@
 import { savePost, deletePost } from "@/app/blog/admin/actions";
 import { ImageUpload } from "@/components/image-upload";
 import { MdxEditor } from "@/components/admin/mdx-editor";
+import { SubmitButton } from "@/components/blog/submit-button";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Post, Category } from "@/db/schema";
 
@@ -21,10 +22,11 @@ export function PostForm({
   tagNames?: string;
 }) {
   return (
-    <form
-      action={savePost}
-      className="max-w-2xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
-    >
+    <>
+      <form
+        action={savePost}
+        className="max-w-2xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
+      >
       {post && <input type="hidden" name="id" value={post.id} />}
 
       <div>
@@ -109,16 +111,25 @@ export function PostForm({
         </div>
       </details>
 
-      <div className="flex items-center gap-3">
-        <button type="submit" className="rounded-full bg-accent px-5 py-2 font-mono text-sm text-white transition-opacity hover:opacity-90">
+        <SubmitButton
+          className="rounded-full bg-accent px-5 py-2 font-mono text-sm text-white transition-opacity hover:opacity-90"
+          pendingLabel="Saving…"
+        >
           Save
-        </button>
-        {post && (
-          <button type="submit" formAction={deletePost} className="rounded-full border border-rule px-5 py-2 font-mono text-sm text-muted transition-colors hover:border-accent hover:text-accent">
-            Delete
-          </button>
-        )}
-      </div>
-    </form>
+        </SubmitButton>
+      </form>
+
+      {post && (
+        <form action={deletePost} className="mt-4 max-w-2xl">
+          <input type="hidden" name="id" value={post.id} />
+          <SubmitButton
+            className="font-mono text-sm text-muted transition-colors hover:text-accent"
+            pendingLabel="Deleting…"
+          >
+            Delete post
+          </SubmitButton>
+        </form>
+      )}
+    </>
   );
 }

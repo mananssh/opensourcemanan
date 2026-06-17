@@ -1,4 +1,5 @@
 import { toggleReaction } from "@/app/blog/engagement-actions";
+import { SubmitButton } from "@/components/blog/submit-button";
 
 /** Like/clap toggle (server form). Clicking while signed-out redirects to sign-in. */
 export function ReactionBar({
@@ -16,9 +17,7 @@ export function ReactionBar({
     <form action={toggleReaction}>
       <input type="hidden" name="postId" value={postId} />
       <input type="hidden" name="slug" value={slug} />
-      <button
-        type="submit"
-        aria-pressed={reacted}
+      <SubmitButton
         className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 font-mono text-sm transition-colors ${
           reacted
             ? "border-accent text-accent"
@@ -28,7 +27,7 @@ export function ReactionBar({
         <span aria-hidden>{reacted ? "♥" : "♡"}</span>
         <span className="tabular-nums">{count}</span>
         <span className="sr-only">likes</span>
-      </button>
+      </SubmitButton>
     </form>
   );
 }

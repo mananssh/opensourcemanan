@@ -33,6 +33,26 @@ export async function toggleReaction(formData: FormData): Promise<void> {
   if (slug) revalidatePath(`/blog/${slug}`);
 }
 
+/** Delete a comment — allowed for its author or the owner. */
+export async function deleteOwnComment(formData: FormData): Promise<void> {
+  const session = await requireAuth();
+  const email = session.user?.email?.toLowerCase();
+  const isOwner = session.user?.isOwner ?? false;
+  const id = String(formData.get("commentId") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  if (!id || !email) return;
+
+  const [row] = await db
+    .select({ email: comments.userEmail })
+    .from(comments)
+    .where(eq(comments.id, id))
+    .limit(1);
+  if (row && (isOwner || row.email.toLowerCase() === email)) {
+    await db.delete(comments).where(eq(comments.id, id));
+  }
+  if (slug) revalidatePath(`/blog/${slug}`);
+}
+
 /** Newsletter signup (public). useActionState-shaped: (prevState, formData). */
 export async function subscribe(
   _prev: { ok: boolean; message: string },
