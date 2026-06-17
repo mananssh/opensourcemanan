@@ -5,7 +5,6 @@ import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypePrettyCode from "rehype-pretty-code";
-import GithubSlugger from "github-slugger";
 import type { ComponentType, ReactNode } from "react";
 
 export interface TocItem {
@@ -14,33 +13,73 @@ export interface TocItem {
   id: string;
 }
 
-/** Pull h2/h3 headings out of the MDX source for a table of contents. Slugs
- *  match rehype-slug (both use github-slugger). Skips fenced code blocks. */
-export function extractToc(source: string): TocItem[] {
-  const slugger = new GithubSlugger();
-  const toc: TocItem[] = [];
-  let inFence = false;
-  for (const line of source.split("\n")) {
-    if (/^\s*(```|~~~)/.test(line)) {
-      inFence = !inFence;
-      continue;
-    }
-    if (inFence) continue;
-    const m = line.match(/^(#{2,3})\s+(.+?)\s*#*\s*$/);
-    if (m) {
-      const text = m[2].replace(/[*_`[\]]/g, "").trim();
-      toc.push({ depth: m[1].length, text, id: slugger.slug(text) });
-    }
-  }
-  return toc;
+// Minimal hast shape for the heading collector (avoids a unist-util dependency).
+interface HastNode {
+  type: string;
+  tagName?: string;
+  value?: string;
+  properties?: { id?: unknown };
+  children?: HastNode[];
 }
 
-const components: Record<string, ComponentType<{ children?: ReactNode }>> = {
-  Callout: ({ children }) => (
+function headingText(node: HastNode): string {
+  let s = "";
+  const walk = (n: HastNode) => {
+    if (n.type === "text" && typeof n.value === "string") s += n.value;
+    n.children?.forEach(walk);
+  };
+  walk(node);
+  return s.trim();
+}
+
+/**
+ * Rehype plugin that collects h2/h3 headings into `out`, reading the id that
+ * rehype-slug assigned to the *rendered* heading — so the TOC anchors always
+ * match the real heading ids (no parallel regex slugger that can drift).
+ */
+function rehypeCollectToc(out: TocItem[]) {
+  return () => (tree: unknown) => {
+    const visit = (node: HastNode) => {
+      if (
+        node.type === "element" &&
+        (node.tagName === "h2" || node.tagName === "h3")
+      ) {
+        const id = node.properties?.id;
+        if (typeof id === "string") {
+          out.push({
+            depth: node.tagName === "h2" ? 2 : 3,
+            text: headingText(node),
+            id,
+          });
+        }
+      }
+      node.children?.forEach(visit);
+    };
+    visit(tree as HastNode);
+  };
+}
+
+type MdxComponentMap = Record<string, ComponentType<Record<string, unknown>>>;
+
+const components: MdxComponentMap = {
+  Callout: (props) => (
     <aside className="my-6 border-l-2 border-accent bg-accent-soft/50 px-4 py-3 font-body text-ink">
-      {children}
+      {props.children as ReactNode}
     </aside>
   ),
+  // Markdown images → lazy <figure> with an optional caption from the title.
+  img: (props) => {
+    const src = typeof props.src === "string" ? props.src : "";
+    const alt = typeof props.alt === "string" ? props.alt : "";
+    const title = typeof props.title === "string" ? props.title : undefined;
+    return (
+      <figure className="blog-figure">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={alt} loading="lazy" decoding="async" />
+        {title && <figcaption>{title}</figcaption>}
+      </figure>
+    );
+  },
 };
 
 const rehypePrettyCodeOptions = {
@@ -48,40 +87,54 @@ const rehypePrettyCodeOptions = {
   keepBackground: false,
 };
 
+const autolinkOptions = {
+  behavior: "append" as const,
+  properties: {
+    className: ["heading-anchor"],
+    ariaLabel: "Link to this section",
+    tabIndex: -1,
+  },
+  content: {
+    type: "element" as const,
+    tagName: "span",
+    properties: { ariaHidden: "true" },
+    children: [{ type: "text" as const, value: "#" }],
+  },
+};
+
 /**
- * Compile MDX → runnable function body. This is the expensive step (it runs
- * Shiki for code highlighting), so it's cached in the Next data cache keyed by
- * the source string: the same post compiles once and is reused across requests
- * (and serverless invocations). The route stays dynamic for visibility gating;
- * only this pure compile is cached. (Resolves DA #3 without route-level static
- * rendering — see ADR 0011.)
+ * Compile MDX → { runnable code, TOC }. The expensive step (Shiki highlighting)
+ * is cached in the Next data cache keyed by the source string, so a post
+ * compiles once and is reused across requests. The route stays dynamic for
+ * visibility gating; only this pure compile is cached (ADR 0011/0012).
+ *
+ * The TOC is collected during the same rehype pass as slug assignment, so its
+ * anchor ids can never diverge from the rendered heading ids.
  */
-const compileMdx = unstable_cache(
-  async (source: string): Promise<string> => {
+export const compilePost = unstable_cache(
+  async (source: string): Promise<{ code: string; toc: TocItem[] }> => {
+    const toc: TocItem[] = [];
     const compiled = await compile(source, {
       outputFormat: "function-body",
       development: false,
       remarkPlugins: [remarkGfm],
       rehypePlugins: [
         rehypeSlug,
-        [rehypeAutolinkHeadings, { behavior: "wrap" }],
+        rehypeCollectToc(toc),
+        [rehypeAutolinkHeadings, autolinkOptions],
         [rehypePrettyCode, rehypePrettyCodeOptions],
       ],
     });
-    return String(compiled);
+    return { code: String(compiled), toc };
   },
-  ["blog-mdx-compile"],
+  ["blog-mdx-compile-v2"],
   { tags: ["blog-mdx"] },
 );
 
-type MdxContent = ComponentType<{
-  components?: Record<string, ComponentType<{ children?: ReactNode }>>;
-}>;
+type MdxContent = ComponentType<{ components?: MdxComponentMap }>;
 
-/** Render trusted (owner-authored) MDX from the DB. Compile is cached; render
- *  (run) is cheap and happens per request. */
-export async function PostBody({ source }: { source: string }) {
-  const code = await compileMdx(source);
+/** Render precompiled MDX (run() is cheap and happens per request). */
+export async function PostBody({ code }: { code: string }) {
   const mod = (await run(code, {
     ...runtime,
     baseUrl: import.meta.url,

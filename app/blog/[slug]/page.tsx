@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getPostAccess, getPostTags, getRelatedPosts } from "@/lib/blog/queries";
+import {
+  getPostAccess,
+  getPostTags,
+  getRelatedPosts,
+  getPostNeighbors,
+} from "@/lib/blog/queries";
 import {
   getReactionState,
   listComments,
   getViewCount,
 } from "@/lib/blog/engagement";
 import { auth } from "@/lib/auth";
-import { PostBody, extractToc } from "@/lib/blog/mdx";
-import { readingMinutes } from "@/lib/blog/reading-time";
+import { PostBody, compilePost } from "@/lib/blog/mdx";
 import { PostList } from "@/components/blog/post-list";
 import { ReactionBar } from "@/components/blog/reaction-bar";
+import { SharePost } from "@/components/blog/share-post";
 import { CommentSection } from "@/components/blog/comment-section";
 import { ViewBeacon } from "@/components/blog/view-beacon";
 import { PostReadingUx } from "@/components/blog/post-reading-ux";
@@ -74,20 +79,22 @@ export default async function PostPage({ params }: { params: Params }) {
   if (access.status === "notfound") notFound();
   const post = access.post;
 
-  const toc = extractToc(post.bodyMdx);
-  const mins = readingMinutes(post.bodyMdx);
+  const { code, toc } = await compilePost(post.bodyMdx);
+  const mins = post.readingMinutes;
   const postTags = await getPostTags(post.id);
-  const related = await getRelatedPosts({
-    id: post.id,
-    categoryId: post.categoryId,
-    tagIds: postTags.map((t) => t.id),
-  });
-  const [session, reaction, comments, views] = await Promise.all([
-    auth(),
-    getReactionState(post.id),
-    listComments(post.id),
-    getViewCount(post.id),
-  ]);
+  const [related, neighbors, session, reaction, comments, views] =
+    await Promise.all([
+      getRelatedPosts({
+        id: post.id,
+        categoryId: post.categoryId,
+        tagIds: postTags.map((t) => t.id),
+      }),
+      getPostNeighbors(post.slug),
+      auth(),
+      getReactionState(post.id),
+      listComments(post.id),
+      getViewCount(post.id),
+    ]);
 
   const canonical = `${siteUrl}/blog/${post.slug}`;
   const jsonLd = {
@@ -193,7 +200,7 @@ export default async function PostPage({ params }: { params: Params }) {
 
       <div className="mt-12 lg:grid lg:grid-cols-[1fr_15rem] lg:gap-14">
         <div className="min-w-0 max-w-2xl">
-          <PostBody source={post.bodyMdx} />
+          <PostBody code={code} />
         </div>
 
         {toc.length > 0 && (
@@ -207,13 +214,14 @@ export default async function PostPage({ params }: { params: Params }) {
         )}
       </div>
 
-      <div className="mt-12">
+      <div className="mt-12 flex flex-wrap items-center justify-between gap-4">
         <ReactionBar
           postId={post.id}
           slug={post.slug}
           count={reaction.count}
           reacted={reaction.reacted}
         />
+        <SharePost url={`${siteUrl}/blog/${post.slug}`} title={post.title} />
       </div>
 
       <CommentSection
@@ -224,6 +232,42 @@ export default async function PostPage({ params }: { params: Params }) {
       />
 
       <ViewBeacon postId={post.id} />
+
+      {(neighbors.newer || neighbors.older) && (
+        <nav
+          aria-label="More posts"
+          className="mt-16 grid gap-4 border-t border-rule pt-8 sm:grid-cols-2"
+        >
+          {neighbors.newer ? (
+            <Link
+              href={`/blog/${neighbors.newer.slug}`}
+              className="group rounded-lg border border-rule p-4 transition-colors hover:border-accent"
+            >
+              <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-faint">
+                ← Newer
+              </span>
+              <span className="mt-1 block font-display font-semibold text-ink transition-colors group-hover:text-accent">
+                {neighbors.newer.title}
+              </span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {neighbors.older && (
+            <Link
+              href={`/blog/${neighbors.older.slug}`}
+              className="group rounded-lg border border-rule p-4 text-right transition-colors hover:border-accent"
+            >
+              <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-faint">
+                Older →
+              </span>
+              <span className="mt-1 block font-display font-semibold text-ink transition-colors group-hover:text-accent">
+                {neighbors.older.title}
+              </span>
+            </Link>
+          )}
+        </nav>
+      )}
 
       {related.length > 0 && (
         <section className="mt-20 border-t border-rule pt-10">

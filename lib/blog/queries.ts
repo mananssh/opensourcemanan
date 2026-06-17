@@ -185,6 +185,19 @@ export const getPostAccess = cache(async (slug: string): Promise<PostAccess> => 
   }, { status: "notfound" });
 });
 
+/** Newer/older neighbors of a post among the viewer's visible posts. */
+export const getPostNeighbors = cache(
+  async (slug: string): Promise<{ newer: PostCard | null; older: PostCard | null }> => {
+    const all = await listVisiblePosts();
+    const i = all.findIndex((p) => p.slug === slug);
+    if (i === -1) return { newer: null, older: null };
+    return {
+      newer: i > 0 ? all[i - 1] : null,
+      older: i < all.length - 1 ? all[i + 1] : null,
+    };
+  },
+);
+
 function visibleFilter(session: Session | null) {
   return (r: CardRow) => {
     const { post, category } = rowGates(r);
