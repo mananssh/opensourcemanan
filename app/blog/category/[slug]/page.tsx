@@ -13,9 +13,22 @@ export async function generateMetadata({
   const { slug } = await params;
   const category = await getVisibleCategory(slug);
   if (!category) return { title: "Not found" };
+  const description = category.description ?? undefined;
   return {
     title: category.name,
-    description: category.description ?? undefined,
+    description,
+    alternates: {
+      canonical: `/blog/category/${slug}`,
+      types:
+        category.visibility === "public"
+          ? {
+              "application/rss+xml": [
+                { url: `/blog/category/${slug}/feed.xml`, title: category.name },
+              ],
+            }
+          : undefined,
+    },
+    openGraph: { title: category.name, description, type: "website" },
   };
 }
 

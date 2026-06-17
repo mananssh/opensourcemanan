@@ -15,6 +15,7 @@ import { ReactionBar } from "@/components/blog/reaction-bar";
 import { CommentSection } from "@/components/blog/comment-section";
 import { ViewBeacon } from "@/components/blog/view-beacon";
 import { PostReadingUx } from "@/components/blog/post-reading-ux";
+import { siteUrl, siteName, siteAuthor } from "@/lib/site";
 
 type Params = Promise<{ slug: string }>;
 
@@ -41,14 +42,26 @@ export async function generateMetadata({
   if (access.status !== "ok") return { title: "Not found" };
   const post = access.post;
   const description = post.metaDescription ?? post.excerpt ?? undefined;
+  const canonical = `/blog/${slug}`;
+  const isPublished = post.status === "published";
   return {
     title: post.metaTitle ?? post.title,
     description,
+    alternates: { canonical },
+    // Drafts are owner-only previews — never let a crawler index them.
+    robots: isPublished ? undefined : { index: false, follow: false },
     openGraph: {
       title: post.title,
       description,
       type: "article",
+      url: canonical,
       publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt?.toISOString(),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description,
     },
   };
 }
@@ -75,13 +88,49 @@ export default async function PostPage({ params }: { params: Params }) {
     getViewCount(post.id),
   ]);
 
+  const canonical = `${siteUrl}/blog/${post.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: post.excerpt ?? undefined,
-    datePublished: post.publishedAt?.toISOString(),
-    dateModified: post.updatedAt?.toISOString(),
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: post.title,
+        description: post.metaDescription ?? post.excerpt ?? undefined,
+        datePublished: post.publishedAt?.toISOString(),
+        dateModified: post.updatedAt?.toISOString(),
+        mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+        url: canonical,
+        image: [`${canonical}/opengraph-image`],
+        author: { "@type": "Person", name: siteAuthor.name, url: siteAuthor.url },
+        publisher: { "@type": "Person", name: siteAuthor.name, url: siteAuthor.url },
+        ...(post.category
+          ? { articleSection: post.category.name }
+          : {}),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: siteName, item: siteUrl },
+          { "@type": "ListItem", position: 2, name: "Blog", item: `${siteUrl}/blog` },
+          ...(post.category
+            ? [
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: post.category.name,
+                  item: `${siteUrl}/blog/category/${post.category.slug}`,
+                },
+              ]
+            : []),
+          {
+            "@type": "ListItem",
+            position: post.category ? 4 : 3,
+            name: post.title,
+            item: canonical,
+          },
+        ],
+      },
+    ],
   };
 
   return (

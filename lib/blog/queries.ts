@@ -360,3 +360,105 @@ export const listPublicPosts = cache(async (): Promise<
       .map((r) => ({ ...toCard(r), updatedAt: r.updatedAt }));
   }, []);
 });
+
+export interface FeedItem {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  bodyMdx: string;
+  publishedAt: Date | null;
+  updatedAt: Date;
+  category: { name: string; slug: string } | null;
+}
+
+/**
+ * Effectively-public published posts WITH body — for RSS/JSON feeds (no
+ * session). Optionally scoped to a category for per-category feeds.
+ */
+export const listPublicPostsForFeed = cache(
+  async (opts?: { categorySlug?: string }): Promise<FeedItem[]> => {
+    return safe(async () => {
+      const rows = (await db
+        .select({ ...cardColumns, bodyMdx: posts.bodyMdx, updatedAt: posts.updatedAt })
+        .from(posts)
+        .leftJoin(categories, eq(posts.categoryId, categories.id))
+        .where(eq(posts.status, "published"))
+        .orderBy(desc(posts.publishedAt))) as (CardRow & {
+        bodyMdx: string;
+        updatedAt: Date;
+      })[];
+      return rows
+        .filter((r) => (opts?.categorySlug ? r.categorySlug === opts.categorySlug : true))
+        .filter((r) => {
+          const { post, category } = rowGates(r);
+          return isEffectivelyPublic(post, category);
+        })
+        .map((r) => ({
+          slug: r.slug,
+          title: r.title,
+          excerpt: r.excerpt,
+          bodyMdx: r.bodyMdx,
+          publishedAt: r.publishedAt,
+          updatedAt: r.updatedAt,
+          category: r.categorySlug
+            ? { name: r.categoryName ?? "", slug: r.categorySlug }
+            : null,
+        }));
+    }, []);
+  },
+);
+
+/** Public categories (visibility = public) — for the sitemap (no session). */
+export const listPublicCategories = cache(async (): Promise<
+  { slug: string; updatedAt: Date }[]
+> => {
+  return safe(async () => {
+    const rows = await db
+      .select({ slug: categories.slug, updatedAt: categories.updatedAt })
+      .from(categories)
+      .where(eq(categories.visibility, "public"));
+    return rows;
+  }, []);
+});
+
+/** Distinct tag slugs that appear on effectively-public posts — for the sitemap. */
+export const listPublicTagSlugs = cache(async (): Promise<string[]> => {
+  return safe(async () => {
+    const rows = (await db
+      .selectDistinct({
+        tagSlug: tags.slug,
+        postVisibility: posts.visibility,
+        postAllowedEmails: posts.allowedEmails,
+        categorySlug: categories.slug,
+        categoryVisibility: categories.visibility,
+        categoryAllowedEmails: categories.allowedEmails,
+      })
+      .from(tags)
+      .innerJoin(postTags, eq(postTags.tagId, tags.id))
+      .innerJoin(posts, eq(posts.id, postTags.postId))
+      .leftJoin(categories, eq(posts.categoryId, categories.id))
+      .where(eq(posts.status, "published"))) as {
+      tagSlug: string;
+      postVisibility: Gate["visibility"];
+      postAllowedEmails: string[];
+      categorySlug: string | null;
+      categoryVisibility: Gate["visibility"] | null;
+      categoryAllowedEmails: string[] | null;
+    }[];
+    const slugs = new Set<string>();
+    for (const r of rows) {
+      const post: Gate = {
+        visibility: r.postVisibility,
+        allowedEmails: r.postAllowedEmails,
+      };
+      const category: Gate | null = r.categorySlug
+        ? {
+            visibility: r.categoryVisibility ?? "public",
+            allowedEmails: r.categoryAllowedEmails ?? [],
+          }
+        : null;
+      if (isEffectivelyPublic(post, category)) slugs.add(r.tagSlug);
+    }
+    return [...slugs];
+  }, []);
+});
