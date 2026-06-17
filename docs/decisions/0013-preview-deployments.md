@@ -27,8 +27,10 @@ deployments (recency = `createdAt` desc) and deletes the rest via the Vercel API
 The current live production deployment is always the newest, so it's always kept;
 older production builds beyond the 3 most recent are pruned too (shrinking the
 rollback window to the last 3). Tunable via `PRUNE_KEEP_PRODUCTION` / `PRUNE_KEEP`.
-Runs weekly (and on demand) via `.github/workflows/prune-deployments.yml`, skipping
-cleanly until secrets are set. `DRY_RUN=1` to preview.
+Runs on **every merge to `main`** (each merge creates a deployment, so prune
+right after), plus a weekly cron safety net and on-demand dispatch, via
+`.github/workflows/prune-deployments.yml`, skipping cleanly until secrets are
+set. `DRY_RUN=1` to preview.
 
 ## One-time setup (manual)
 
