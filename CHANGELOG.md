@@ -2,6 +2,19 @@
 
 ## 2026-06-17
 
+- **14:28 · `65dbbec` · feat:** Wider category art, shared vertical footer, changelog activity charts
+  Three UI touches:
+  - Blog category tiles: the corner cover image is wider so the tile reads less
+    empty, keeping its vertical position.
+  - New shared `VerticalFooter` — every vertical (currently /blog) gets quiet
+    "← OSM" and "Changelog" links back to the common union, themed per vertical
+    via semantic tokens. Verticals stay visually independent; only the home/log
+    links are shared.
+  - Changelog gains a minimal activity panel above the log: a GitHub-style
+    contribution heatmap in accent intensities (our orange) and a
+    type-distribution bar, both hand-rolled from the existing palette and design
+    tokens (no charting lib). Type vocabulary synced to the commit taxonomy (adds
+    style/build/ops; keeps ci for historical entries).
 - **13:44 · `b12b621` · build:** Adopt fuller commit/changeset type taxonomy (adds ops, build, style)
   Documented the full Conventional Commits type set in agent-kit/commit-and-pr.md
   (feat, fix, refactor, perf, style, test, docs, build, ops, chore) with a table,
