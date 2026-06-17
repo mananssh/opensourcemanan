@@ -12,7 +12,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const tag = await getTag(slug);
-  return { title: tag ? `#${tag.name}` : "Not found" };
+  if (!tag) return { title: "Not found" };
+  return {
+    title: `#${tag.name}`,
+    alternates: { canonical: `/blog/tag/${slug}` },
+    openGraph: { title: `#${tag.name}`, type: "website" },
+  };
 }
 
 export default async function TagPage({ params }: { params: Params }) {

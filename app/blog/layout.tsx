@@ -21,6 +21,12 @@ export const metadata: Metadata = {
   title: { default: "Blog", template: "%s · OSM Blog" },
   description:
     "Deep dives into whatever I'm currently obsessed with — no single topic, just things worth thinking hard about.",
+  alternates: {
+    types: {
+      "application/rss+xml": [{ url: "/blog/feed.xml", title: "OSM Blog" }],
+      "application/feed+json": [{ url: "/blog/feed.json", title: "OSM Blog" }],
+    },
+  },
 };
 
 export default function BlogLayout({

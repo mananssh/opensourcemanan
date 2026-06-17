@@ -3,6 +3,7 @@ import { Fraunces, Newsreader, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { siteUrl, siteName, siteAuthor } from "@/lib/site";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -24,9 +25,30 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: { default: "OSM", template: "%s · OSM" },
   description:
     "A Next.js project that serves as my main developer website and has everything I'd like to keep OSS — from portfolio to blogs.",
+};
+
+// Site-wide structured data (Person + WebSite) for richer search results.
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": `${siteUrl}/#person`,
+      name: siteAuthor.name,
+      url: siteUrl,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#website`,
+      url: siteUrl,
+      name: siteName,
+      publisher: { "@id": `${siteUrl}/#person` },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -41,6 +63,10 @@ export default function RootLayout({
       className={`${fraunces.variable} ${newsreader.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+        />
         <SessionProvider>
           <ThemeProvider
             attribute="class"
