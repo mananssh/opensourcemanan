@@ -36,6 +36,13 @@
       "when": 1781683245084,
       "tag": "0004_nosy_quasar",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781731324434,
+      "tag": "0005_whole_stingray",
+      "breakpoints": true
     }
   ]
 }
