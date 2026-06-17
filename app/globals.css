@@ -13,7 +13,7 @@
   --surface: #fffdf7; /* raised surface */
   --ink: #221c15; /* warm near-black text */
   --muted: #6d6354; /* secondary text */
-  --faint: #968b78; /* tertiary / timestamps */
+  --faint: #6f6451; /* tertiary / timestamps — kept ≥4.5:1 (AA) */
   --rule: #ddd3c1; /* hairline rules */
   --accent: #8c2b1c; /* oxblood */
   --accent-soft: #ede2d3; /* accent tint for chips */
@@ -29,7 +29,7 @@
   --surface: #1d1811;
   --ink: #ece4d5;
   --muted: #a0937f;
-  --faint: #7c7160;
+  --faint: #8e8472;
   --rule: #322a1e;
   --accent: #db6a4a; /* terracotta — legible on dark */
   --accent-soft: #2a201a;
@@ -46,7 +46,7 @@
   --surface: #ffffff;
   --ink: #0b0b0c;
   --muted: #5a5a5e;
-  --faint: #9a9aa0;
+  --faint: #6b6b72;
   --rule: #e6e6e3;
   --accent: #ff4d2e;
   --accent-soft: #ffe9e3;
@@ -61,7 +61,7 @@ html.dark .vertical-blog {
   --surface: #141416;
   --ink: #f4f4f2;
   --muted: #a0a0a6;
-  --faint: #6a6a70;
+  --faint: #8e8e95;
   --rule: #26262a;
   --accent: #ff6a4d;
   --accent-soft: #2a1712;
@@ -95,6 +95,37 @@ body {
   font-family: var(--font-body), Georgia, serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/*
+ * Global keyboard focus ring. One consistent, visible indicator for every
+ * interactive element (links, buttons, inputs, TOC anchors) — replaces relying
+ * on color-only `focus:border-accent`, which fails WCAG 2.4.7 / 1.4.1.
+ */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Skip-to-content: hidden until focused, then drops into the top-left. */
+.skip-link {
+  position: fixed;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  transition: transform 0.15s ease;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+}
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 /* Subtle paper grain — atmosphere, not noise. Fixed so it doesn't scroll. */
@@ -326,6 +357,12 @@ html.dark .blog-prose [data-rehype-pretty-code-figure] span {
 .blog-prose pre:hover .code-copy-btn,
 .code-copy-btn:focus-visible {
   opacity: 1;
+}
+/* Touch devices have no hover — keep the copy button visible there. */
+@media (hover: none) {
+  .code-copy-btn {
+    opacity: 0.85;
+  }
 }
 .code-copy-btn:hover {
   color: var(--accent);

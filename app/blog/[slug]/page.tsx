@@ -15,6 +15,7 @@ import { ReactionBar } from "@/components/blog/reaction-bar";
 import { CommentSection } from "@/components/blog/comment-section";
 import { ViewBeacon } from "@/components/blog/view-beacon";
 import { PostReadingUx } from "@/components/blog/post-reading-ux";
+import { TableOfContents } from "@/components/blog/table-of-contents";
 import { siteUrl, siteName, siteAuthor } from "@/lib/site";
 
 type Params = Promise<{ slug: string }>;
@@ -177,30 +178,31 @@ export default async function PostPage({ params }: { params: Params }) {
         )}
       </header>
 
+      {/* Mobile TOC: collapsible, above the article (the sticky aside is
+          desktop-only and would otherwise sit uselessly below the post). */}
+      {toc.length > 0 && (
+        <details className="mt-8 rounded-lg border border-rule p-4 lg:hidden">
+          <summary className="cursor-pointer font-mono text-[0.7rem] uppercase tracking-[0.2em] text-faint">
+            On this page
+          </summary>
+          <div className="mt-3">
+            <TableOfContents items={toc} />
+          </div>
+        </details>
+      )}
+
       <div className="mt-12 lg:grid lg:grid-cols-[1fr_15rem] lg:gap-14">
         <div className="min-w-0 max-w-2xl">
           <PostBody source={post.bodyMdx} />
         </div>
 
         {toc.length > 0 && (
-          <aside className="mt-12 lg:mt-0">
-            <nav className="lg:sticky lg:top-24">
-              <p className="font-mono text-[0.7rem] uppercase tracking-[0.2em] text-faint">
-                On this page
-              </p>
-              <ul className="mt-3 space-y-2">
-                {toc.map((h) => (
-                  <li key={h.id} className={h.depth === 3 ? "pl-4" : ""}>
-                    <a
-                      href={`#${h.id}`}
-                      className="font-mono text-xs text-muted transition-colors hover:text-accent"
-                    >
-                      {h.text}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+          <aside className="hidden lg:block">
+            <TableOfContents
+              items={toc}
+              label="On this page"
+              className="lg:sticky lg:top-24"
+            />
           </aside>
         )}
       </div>
