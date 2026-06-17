@@ -27,7 +27,7 @@ export default function ChangelogPage() {
   const days = getChangelog();
 
   return (
-    <main className="container-editorial pt-10 sm:pt-14">
+    <main className="container-editorial pt-8 sm:pt-10">
       <header>
         <p className="label-caps text-faint">The log</p>
         <h1 className="mt-5 font-display text-5xl font-light tracking-tight text-ink">
@@ -43,7 +43,7 @@ export default function ChangelogPage() {
       ) : (
         <>
           <ChangelogStats days={days} />
-          <div className="mt-16 space-y-16">
+          <div className="mt-10 space-y-16">
           {days.map((day) => (
             <section key={day.date}>
               {/* Date divider — mono label + hairline rule */}

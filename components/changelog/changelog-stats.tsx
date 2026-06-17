@@ -170,7 +170,7 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
   const { weeks, monthLabels, max } = buildWeeks(days);
 
   return (
-    <section className="mt-12 space-y-10 border-y border-rule py-8">
+    <section className="mt-8 space-y-8 border-y border-rule py-7">
       {/* Activity — a GitHub-style contribution heatmap in accent intensities. */}
       <div>
         <div className="flex items-baseline justify-between">
@@ -180,7 +180,10 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
           </p>
         </div>
 
-        <div className="mt-3 overflow-x-auto pt-7">
+        {/* No overflow clipping so tooltips show in full; the grid fits the
+            column for a long while. Tooltips align to the edge on the first/last
+            week so they never run off-screen. */}
+        <div className="mt-3">
           <div className="inline-flex flex-col gap-1">
             {/* Month labels — each sits at its week column and overflows right. */}
             <div className="flex gap-[3px] pl-0">
@@ -195,22 +198,32 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
             </div>
             {/* Week columns, Sun→Sat top→bottom. */}
             <div className="flex gap-[3px]">
-              {weeks.map((week, i) => (
-                <div key={i} className="flex flex-col gap-[3px]">
-                  {week.map((cell) => (
-                    <span key={cell.date} className="group relative block">
-                      <span
-                        className={`block size-3 rounded-[2px] ${LEVELS[levelOf(cell.count, max)]}`}
-                      />
-                      {/* Hover tooltip — date + commit count for that day. */}
-                      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 font-mono text-[0.65rem] leading-none text-paper shadow-md group-hover:block">
-                        {cell.count} commit{cell.count === 1 ? "" : "s"} ·{" "}
-                        {longDate(cell.date)}
+              {weeks.map((week, i) => {
+                const align =
+                  i === 0
+                    ? "left-0"
+                    : i === weeks.length - 1
+                      ? "right-0"
+                      : "left-1/2 -translate-x-1/2";
+                return (
+                  <div key={i} className="flex flex-col gap-[3px]">
+                    {week.map((cell) => (
+                      <span key={cell.date} className="group relative block">
+                        <span
+                          className={`block size-3 rounded-[2px] ${LEVELS[levelOf(cell.count, max)]}`}
+                        />
+                        {/* Hover tooltip — date + commit count for that day. */}
+                        <span
+                          className={`pointer-events-none absolute bottom-full ${align} z-20 mb-1.5 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 font-mono text-[0.65rem] leading-none text-paper shadow-md group-hover:block`}
+                        >
+                          {cell.count} commit{cell.count === 1 ? "" : "s"} ·{" "}
+                          {longDate(cell.date)}
+                        </span>
                       </span>
-                    </span>
-                  ))}
-                </div>
-              ))}
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
