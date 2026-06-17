@@ -2,6 +2,8 @@
 
 ## 2026-06-17
 
+- **11:12 · `5592cce` · chore:** Favicon monogram is now "M." instead of "o."
+  Swap the favicon monogram from "o." to "M." — the period stays the brand accent.
 - **11:08 · `ec0e6f0` · feat:** WYSIWYG MDX post editor (with image upload) + inline category creation
   The post body is now a full WYSIWYG MDX editor (@mdxeditor/editor): toolbar,
   formatting, links, tables, code blocks, a source-mode toggle for raw MDX, and a
