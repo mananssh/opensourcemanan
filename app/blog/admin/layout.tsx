@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireOwner } from "@/lib/auth";
 
 const navCls =
-  "font-mono text-[0.7rem] uppercase tracking-[0.15em] text-muted transition-colors hover:text-accent";
+  "rounded-full border border-rule px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.15em] text-muted transition-colors hover:border-accent hover:text-accent";
 
 export default async function AdminLayout({
   children,

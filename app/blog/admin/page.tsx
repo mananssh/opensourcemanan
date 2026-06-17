@@ -21,12 +21,12 @@ export default async function AdminDashboard() {
   ]);
 
   return (
-    <div className="space-y-14">
-      <p className="font-mono text-xs uppercase tracking-[0.15em] text-faint">
+    <div className="space-y-8">
+      <p className="inline-flex rounded-full border border-rule bg-surface px-4 py-1.5 font-mono text-xs uppercase tracking-[0.15em] text-muted">
         {subscriberCount} newsletter subscriber{subscriberCount === 1 ? "" : "s"}
       </p>
 
-      <section>
+      <section className="rounded-xl border border-rule bg-surface p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl font-bold text-ink">Posts</h2>
           <Link href="/blog/admin/posts/new" className="font-mono text-xs uppercase tracking-[0.15em] text-accent hover:underline">+ New</Link>
@@ -72,7 +72,7 @@ export default async function AdminDashboard() {
         )}
       </section>
 
-      <section>
+      <section className="rounded-xl border border-rule bg-surface p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl font-bold text-ink">Categories</h2>
           <Link href="/blog/admin/categories/new" className="font-mono text-xs uppercase tracking-[0.15em] text-accent hover:underline">+ New</Link>
@@ -106,7 +106,7 @@ export default async function AdminDashboard() {
         )}
       </section>
 
-      <section>
+      <section className="rounded-xl border border-rule bg-surface p-6">
         <h2 className="mb-4 font-display text-xl font-bold text-ink">Comments</h2>
         {comments.length === 0 ? (
           <p className="font-mono text-sm text-faint">No comments yet.</p>
