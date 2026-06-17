@@ -2,6 +2,10 @@
 
 ## 2026-06-17
 
+- **11:24 · `365aeb6` · chore:** Favicon is now a lowercase serif "m."
+  Render the favicon monogram in lowercase serif (Fraunces, the site display
+  face) — "m." with the accent period. The serif font is fetched at build time
+  since the icon route is static, with a graceful fallback.
 - **11:12 · `5592cce` · chore:** Favicon monogram is now "M." instead of "o."
   Swap the favicon monogram from "o." to "M." — the period stays the brand accent.
 - **11:08 · `ec0e6f0` · feat:** WYSIWYG MDX post editor (with image upload) + inline category creation
