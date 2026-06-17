@@ -1,7 +1,14 @@
-import { listVisiblePosts, listVisibleCategories } from "@/lib/blog/queries";
+import Link from "next/link";
+import {
+  listVisiblePosts,
+  listVisibleCategories,
+  listFeaturedPosts,
+} from "@/lib/blog/queries";
 import { PostList } from "@/components/blog/post-list";
 import { CategoryTiles } from "@/components/blog/category-tiles";
 import { NewsletterForm } from "@/components/blog/newsletter-form";
+
+const PAGE_SIZE = 9;
 
 export const metadata = {
   title: "Blog",
@@ -17,11 +24,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function BlogIndex() {
-  const [posts, categories] = await Promise.all([
+export default async function BlogIndex({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+
+  const [allPosts, categories, featured] = await Promise.all([
     listVisiblePosts(),
     listVisibleCategories(),
+    listFeaturedPosts(),
   ]);
+
+  const totalPages = Math.max(1, Math.ceil(allPosts.length / PAGE_SIZE));
+  const start = (page - 1) * PAGE_SIZE;
+  const posts = allPosts.slice(start, start + PAGE_SIZE);
+  const showFeatured = page === 1 && featured.length > 0;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 pb-28">
@@ -64,6 +84,13 @@ export default async function BlogIndex() {
         </form>
       </header>
 
+      {showFeatured && (
+        <section className="mb-20">
+          <SectionLabel>Featured</SectionLabel>
+          <PostList posts={featured} />
+        </section>
+      )}
+
       {categories.length > 0 && (
         <section className="reveal mb-20" style={{ "--reveal-delay": "260ms" } as React.CSSProperties}>
           <SectionLabel>Browse</SectionLabel>
@@ -72,8 +99,38 @@ export default async function BlogIndex() {
       )}
 
       <section>
-        <SectionLabel>Latest</SectionLabel>
+        <SectionLabel>{page === 1 ? "Latest" : `Posts — page ${page}`}</SectionLabel>
         <PostList posts={posts} />
+        {totalPages > 1 && (
+          <nav
+            aria-label="Pagination"
+            className="mt-12 flex items-center justify-between font-mono text-xs uppercase tracking-[0.18em]"
+          >
+            {page > 1 ? (
+              <Link
+                href={page === 2 ? "/blog" : `/blog?page=${page - 1}`}
+                className="text-muted transition-colors hover:text-accent"
+              >
+                ← Newer
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-faint">
+              {page} / {totalPages}
+            </span>
+            {page < totalPages ? (
+              <Link
+                href={`/blog?page=${page + 1}`}
+                className="text-muted transition-colors hover:text-accent"
+              >
+                Older →
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
       </section>
 
       <section className="mt-20 border-t border-rule pt-12">

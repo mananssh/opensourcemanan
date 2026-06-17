@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { Session } from "next-auth";
-import { eq, desc, and, or, ne, ilike, inArray } from "drizzle-orm";
+import { eq, desc, and, or, ne, ilike, inArray, isNull, lte } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   posts,
@@ -43,6 +43,19 @@ export interface PostCard {
 export type PostWithCategory = Post & { category: Category | null };
 
 const safe = safeDb;
+
+/**
+ * The SQL predicate for a post that is actually live: published, not
+ * soft-deleted, and past its (possibly scheduled) publish time. Used by every
+ * public/visitor query so scheduled + deleted posts never appear.
+ */
+function livePost() {
+  return and(
+    eq(posts.status, "published"),
+    isNull(posts.deletedAt),
+    lte(posts.publishedAt, new Date()),
+  );
+}
 
 // Columns needed for listings + the visibility filter (no bodyMdx).
 const cardColumns = {
@@ -108,7 +121,7 @@ export const listVisiblePosts = cache(
         .select(cardColumns)
         .from(posts)
         .leftJoin(categories, eq(posts.categoryId, categories.id))
-        .where(eq(posts.status, "published"))
+        .where(livePost())
         .orderBy(desc(posts.publishedAt), desc(posts.createdAt))) as CardRow[];
       return rows
         .filter((r) => (opts?.categorySlug ? r.categorySlug === opts.categorySlug : true))
@@ -120,6 +133,25 @@ export const listVisiblePosts = cache(
     }, []);
   },
 );
+
+/** Featured posts the viewer may see (for the index hero strip). */
+export const listFeaturedPosts = cache(async (): Promise<PostCard[]> => {
+  const session = await auth();
+  return safe(async () => {
+    const rows = (await db
+      .select(cardColumns)
+      .from(posts)
+      .leftJoin(categories, eq(posts.categoryId, categories.id))
+      .where(and(livePost(), eq(posts.featured, true)))
+      .orderBy(desc(posts.publishedAt))) as CardRow[];
+    return rows
+      .filter((r) => {
+        const { post, category } = rowGates(r);
+        return canSeePost(session, post, category);
+      })
+      .map(toCard);
+  }, []);
+});
 
 /** Categories the current viewer may see, in display order. */
 export const listVisibleCategories = cache(async (): Promise<Category[]> => {
@@ -171,7 +203,14 @@ export const getPostAccess = cache(async (slug: string): Promise<PostAccess> => 
     if (rows.length === 0) return { status: "notfound" };
     const post: PostWithCategory = { ...rows[0].posts, category: rows[0].categories };
 
-    if (post.status !== "published") {
+    // Not live = draft, soft-deleted, or scheduled for the future. The owner can
+    // preview it; everyone else gets a 404.
+    const isLive =
+      post.status === "published" &&
+      !post.deletedAt &&
+      !!post.publishedAt &&
+      post.publishedAt.getTime() <= Date.now();
+    if (!isLive) {
       return session?.user?.isOwner ? { status: "ok", post } : { status: "notfound" };
     }
     if (canSeePost(session, post, post.category)) return { status: "ok", post };
@@ -240,7 +279,7 @@ export const listPostsByTag = cache(
         .innerJoin(postTags, eq(postTags.postId, posts.id))
         .innerJoin(tags, eq(tags.id, postTags.tagId))
         .leftJoin(categories, eq(posts.categoryId, categories.id))
-        .where(and(eq(posts.status, "published"), eq(tags.slug, slug)))
+        .where(and(livePost(), eq(tags.slug, slug)))
         .orderBy(desc(posts.publishedAt))) as CardRow[];
       return rows.filter(visibleFilter(session)).map(toCard);
     }, []);
@@ -254,14 +293,16 @@ export const searchVisiblePosts = cache(
     if (!term) return [];
     const session = await auth();
     return safe(async () => {
-      const like = `%${term}%`;
+      // Escape LIKE wildcards so a user's % or _ is matched literally.
+      const escaped = term.replace(/[\\%_]/g, (c) => `\\${c}`);
+      const like = `%${escaped}%`;
       const rows = (await db
         .select(cardColumns)
         .from(posts)
         .leftJoin(categories, eq(posts.categoryId, categories.id))
         .where(
           and(
-            eq(posts.status, "published"),
+            livePost(),
             or(
               ilike(posts.title, like),
               ilike(posts.excerpt, like),
@@ -302,9 +343,7 @@ export const getRelatedPosts = cache(
         .select(cardColumns)
         .from(posts)
         .leftJoin(categories, eq(posts.categoryId, categories.id))
-        .where(
-          and(eq(posts.status, "published"), ne(posts.id, input.id), or(...conds)),
-        )
+        .where(and(livePost(), ne(posts.id, input.id), or(...conds)))
         .orderBy(desc(posts.publishedAt))
         .limit(8)) as CardRow[];
       return rows.filter(visibleFilter(session)).map(toCard).slice(0, 3);
@@ -348,7 +387,7 @@ export async function isPublishedPostId(postId: string): Promise<boolean> {
     const rows = await db
       .select({ id: posts.id })
       .from(posts)
-      .where(and(eq(posts.id, postId), eq(posts.status, "published")))
+      .where(and(eq(posts.id, postId), livePost()))
       .limit(1);
     return rows.length > 0;
   }, false);
@@ -363,7 +402,7 @@ export const listPublicPosts = cache(async (): Promise<
       .select({ ...cardColumns, updatedAt: posts.updatedAt })
       .from(posts)
       .leftJoin(categories, eq(posts.categoryId, categories.id))
-      .where(eq(posts.status, "published"))
+      .where(livePost())
       .orderBy(desc(posts.publishedAt))) as (CardRow & { updatedAt: Date })[];
     return rows
       .filter((r) => {
@@ -395,7 +434,7 @@ export const listPublicPostsForFeed = cache(
         .select({ ...cardColumns, bodyMdx: posts.bodyMdx, updatedAt: posts.updatedAt })
         .from(posts)
         .leftJoin(categories, eq(posts.categoryId, categories.id))
-        .where(eq(posts.status, "published"))
+        .where(livePost())
         .orderBy(desc(posts.publishedAt))) as (CardRow & {
         bodyMdx: string;
         updatedAt: Date;
@@ -450,7 +489,7 @@ export const listPublicTagSlugs = cache(async (): Promise<string[]> => {
       .innerJoin(postTags, eq(postTags.tagId, tags.id))
       .innerJoin(posts, eq(posts.id, postTags.postId))
       .leftJoin(categories, eq(posts.categoryId, categories.id))
-      .where(eq(posts.status, "published"))) as {
+      .where(livePost())) as {
       tagSlug: string;
       postVisibility: Gate["visibility"];
       postAllowedEmails: string[];
