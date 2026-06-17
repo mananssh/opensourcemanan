@@ -1,5 +1,6 @@
 import { saveCategory, deleteCategory } from "@/app/blog/admin/actions";
 import { ImageUpload } from "@/components/image-upload";
+import { SubmitButton } from "@/components/blog/submit-button";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Category } from "@/db/schema";
 
@@ -12,10 +13,11 @@ const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
 
 export function CategoryForm({ category }: { category?: Category }) {
   return (
-    <form
-      action={saveCategory}
-      className="max-w-xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
-    >
+    <>
+      <form
+        action={saveCategory}
+        className="max-w-xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
+      >
       {category && <input type="hidden" name="id" value={category.id} />}
 
       <div className="grid grid-cols-2 gap-4">
@@ -69,16 +71,25 @@ export function CategoryForm({ category }: { category?: Category }) {
         />
       </div>
 
-      <div className="flex items-center gap-3">
-        <button type="submit" className="rounded-full bg-accent px-5 py-2 font-mono text-sm text-white transition-opacity hover:opacity-90">
+        <SubmitButton
+          className="rounded-full bg-accent px-5 py-2 font-mono text-sm text-white transition-opacity hover:opacity-90"
+          pendingLabel="Saving…"
+        >
           Save
-        </button>
-        {category && (
-          <button type="submit" formAction={deleteCategory} className="rounded-full border border-rule px-5 py-2 font-mono text-sm text-muted transition-colors hover:border-accent hover:text-accent">
-            Delete
-          </button>
-        )}
-      </div>
-    </form>
+        </SubmitButton>
+      </form>
+
+      {category && (
+        <form action={deleteCategory} className="mt-4 max-w-xl">
+          <input type="hidden" name="id" value={category.id} />
+          <SubmitButton
+            className="font-mono text-sm text-muted transition-colors hover:text-accent"
+            pendingLabel="Deleting…"
+          >
+            Delete category
+          </SubmitButton>
+        </form>
+      )}
+    </>
   );
 }

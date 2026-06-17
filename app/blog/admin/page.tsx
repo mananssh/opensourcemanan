@@ -6,6 +6,7 @@ import {
   adminCountSubscribers,
 } from "@/lib/blog/admin";
 import { togglePublish, deleteComment } from "./actions";
+import { SubmitButton } from "@/components/blog/submit-button";
 
 export const metadata = { title: "Admin" };
 
@@ -60,9 +61,12 @@ export default async function AdminDashboard() {
                   <td className={`${td} text-right`}>
                     <form action={togglePublish} className="inline">
                       <input type="hidden" name="id" value={p.id} />
-                      <button type="submit" className="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent">
+                      <SubmitButton
+                        className="font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent"
+                        pendingLabel="…"
+                      >
                         {p.status === "published" ? "Unpublish" : "Publish"}
-                      </button>
+                      </SubmitButton>
                     </form>
                   </td>
                 </tr>
@@ -130,9 +134,12 @@ export default async function AdminDashboard() {
                 </div>
                 <form action={deleteComment}>
                   <input type="hidden" name="id" value={c.id} />
-                  <button type="submit" className="shrink-0 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent">
+                  <SubmitButton
+                    className="shrink-0 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-muted hover:text-accent"
+                    pendingLabel="…"
+                  >
                     Delete
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}

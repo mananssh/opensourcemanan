@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Session } from "next-auth";
-import { addComment } from "@/app/blog/engagement-actions";
+import { addComment, deleteOwnComment } from "@/app/blog/engagement-actions";
+import { SubmitButton } from "@/components/blog/submit-button";
 import type { Comment } from "@/db/schema";
 
 function fmt(d: Date): string {
@@ -22,6 +23,11 @@ export function CommentSection({
   comments: Comment[];
   session: Session | null;
 }) {
+  const viewerEmail = session?.user?.email?.toLowerCase() ?? null;
+  const isOwner = session?.user?.isOwner ?? false;
+  const canDelete = (c: Comment) =>
+    !!viewerEmail && (isOwner || c.userEmail.toLowerCase() === viewerEmail);
+
   return (
     <section className="mt-16 border-t border-rule pt-10">
       <p className="mb-6 font-mono text-xs uppercase tracking-[0.25em] text-faint">
@@ -39,6 +45,18 @@ export function CommentSection({
                 <span className="font-mono text-[0.65rem] text-faint">
                   {fmt(c.createdAt)}
                 </span>
+                {canDelete(c) && (
+                  <form action={deleteOwnComment} className="ml-auto">
+                    <input type="hidden" name="commentId" value={c.id} />
+                    <input type="hidden" name="slug" value={slug} />
+                    <SubmitButton
+                      className="font-mono text-[0.65rem] uppercase tracking-[0.1em] text-faint hover:text-accent"
+                      pendingLabel="Deleting…"
+                    >
+                      Delete
+                    </SubmitButton>
+                  </form>
+                )}
               </div>
               <p className="mt-1 whitespace-pre-wrap font-body text-muted">
                 {c.body}
@@ -60,12 +78,12 @@ export function CommentSection({
             placeholder="Add a comment…"
             className="w-full rounded-md border border-rule bg-surface px-3 py-2 font-body text-ink outline-none transition-colors focus:border-accent"
           />
-          <button
-            type="submit"
+          <SubmitButton
             className="mt-3 rounded-full bg-accent px-5 py-2 font-mono text-sm text-white transition-opacity hover:opacity-90"
+            pendingLabel="Posting…"
           >
             Post comment
-          </button>
+          </SubmitButton>
         </form>
       ) : (
         <p className="mt-8 font-mono text-sm text-faint">
