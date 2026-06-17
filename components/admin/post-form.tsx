@@ -14,6 +14,14 @@ const inputCls =
 
 const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
 
+/** Date → value for <input type="datetime-local"> (local time, no seconds). */
+function toLocalInput(d?: Date | null): string {
+  if (!d) return "";
+  const dt = new Date(d);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+
 export function PostForm({
   post,
   categories,
@@ -77,6 +85,30 @@ export function PostForm({
           <label className={labelCls} htmlFor="allowedEmails">Allowed emails (for allowlist)</label>
           <input id="allowedEmails" name="allowedEmails" defaultValue={post?.allowedEmails.join(", ")} placeholder="a@x.com, b@y.com" className={inputCls} />
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls} htmlFor="publishedAt">
+            Publish date (future = scheduled)
+          </label>
+          <input
+            id="publishedAt"
+            name="publishedAt"
+            type="datetime-local"
+            defaultValue={toLocalInput(post?.publishedAt)}
+            className={inputCls}
+          />
+        </div>
+        <label className="flex items-center gap-2 self-end pb-2.5 font-mono text-sm text-ink">
+          <input
+            type="checkbox"
+            name="featured"
+            defaultChecked={post?.featured}
+            className="size-4 accent-[var(--accent)]"
+          />
+          Featured on the index
+        </label>
       </div>
 
       <div>

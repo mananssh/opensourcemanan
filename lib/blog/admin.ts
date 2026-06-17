@@ -1,4 +1,4 @@
-import { desc, eq, count as sqlCount } from "drizzle-orm";
+import { desc, eq, isNull, count as sqlCount } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   posts,
@@ -46,6 +46,7 @@ export async function adminListPosts(): Promise<AdminPostRow[]> {
     })
     .from(posts)
     .leftJoin(categories, eq(posts.categoryId, categories.id))
+    .where(isNull(posts.deletedAt))
     .orderBy(desc(posts.updatedAt));
   return rows as AdminPostRow[];
 }

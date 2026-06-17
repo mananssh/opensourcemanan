@@ -4,8 +4,10 @@ import {
   uuid,
   text,
   integer,
+  boolean,
   timestamp,
   primaryKey,
+  index,
 } from "drizzle-orm/pg-core";
 
 /** Four-mode visibility, shared by posts and categories (most-restrictive wins). */
@@ -32,24 +34,34 @@ export const categories = pgTable("categories", {
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
-export const posts = pgTable("posts", {
-  id: uuid().primaryKey().defaultRandom(),
-  slug: text().notNull().unique(),
-  title: text().notNull(),
-  excerpt: text(),
-  bodyMdx: text().notNull().default(""),
-  coverImageKey: text(), // GCS object key (see lib/storage)
-  categoryId: uuid().references(() => categories.id, { onDelete: "set null" }),
-  visibility: visibility().notNull().default("public"),
-  allowedEmails: text().array().notNull().default([]),
-  status: postStatus().notNull().default("draft"),
-  publishedAt: timestamp({ withTimezone: true }),
-  readingMinutes: integer().notNull().default(1),
-  metaTitle: text(),
-  metaDescription: text(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const posts = pgTable(
+  "posts",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    slug: text().notNull().unique(),
+    title: text().notNull(),
+    excerpt: text(),
+    bodyMdx: text().notNull().default(""),
+    coverImageKey: text(), // GCS object key (see lib/storage)
+    categoryId: uuid().references(() => categories.id, { onDelete: "set null" }),
+    visibility: visibility().notNull().default("public"),
+    allowedEmails: text().array().notNull().default([]),
+    status: postStatus().notNull().default("draft"),
+    featured: boolean().notNull().default(false), // surfaced on the index
+    publishedAt: timestamp({ withTimezone: true }), // future date = scheduled
+    deletedAt: timestamp({ withTimezone: true }), // soft delete (recoverable)
+    readingMinutes: integer().notNull().default(1),
+    metaTitle: text(),
+    metaDescription: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Listings filter status + order by publishedAt; related/category filter by category.
+    index("posts_status_published_idx").on(t.status, t.publishedAt),
+    index("posts_category_idx").on(t.categoryId),
+  ],
+);
 
 export const tags = pgTable("tags", {
   id: uuid().primaryKey().defaultRandom(),
@@ -85,16 +97,20 @@ export const reactions = pgTable(
 );
 
 /** Comments from signed-in users; owner-moderated (delete). Plaintext body. */
-export const comments = pgTable("comments", {
-  id: uuid().primaryKey().defaultRandom(),
-  postId: uuid()
-    .notNull()
-    .references(() => posts.id, { onDelete: "cascade" }),
-  userEmail: text().notNull(),
-  userName: text().notNull(),
-  body: text().notNull(),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const comments = pgTable(
+  "comments",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    postId: uuid()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    userEmail: text().notNull(),
+    userName: text().notNull(),
+    body: text().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("comments_post_created_idx").on(t.postId, t.createdAt)],
+);
 
 /** Per-post view counter. */
 export const postViews = pgTable("post_views", {

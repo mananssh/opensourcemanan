@@ -120,6 +120,15 @@ export async function savePost(
   }
 
   const status = (str(formData, "status") || "draft") as "draft" | "published";
+  // Optional scheduled publish date (datetime-local). A future date with status
+  // "published" keeps the post hidden until then.
+  const publishInput = str(formData, "publishedAt");
+  const scheduledAt = publishInput ? new Date(publishInput) : null;
+  const publishedAt =
+    status === "published"
+      ? (scheduledAt ?? existingPublishedAt ?? new Date())
+      : (scheduledAt ?? existingPublishedAt);
+
   const data = {
     title,
     slug,
@@ -129,12 +138,12 @@ export async function savePost(
     visibility: (str(formData, "visibility") || "public") as Visibility,
     allowedEmails: emailList(formData, "allowedEmails"),
     status,
+    featured: formData.get("featured") === "on",
     coverImageKey: newCoverKey,
     metaTitle: str(formData, "metaTitle") || null,
     metaDescription: str(formData, "metaDescription") || null,
     readingMinutes: readingMinutes(bodyMdx),
-    publishedAt:
-      status === "published" ? (existingPublishedAt ?? new Date()) : existingPublishedAt,
+    publishedAt,
     updatedAt: new Date(),
   };
 
@@ -191,14 +200,13 @@ export async function savePost(
 export async function deletePost(formData: FormData): Promise<void> {
   await requireOwner();
   const id = str(formData, "id");
+  // Soft delete — recoverable, and keeps comments/reactions/views intact. The
+  // cover image is retained too (restoring brings it back).
   if (id) {
-    const [row] = await db
-      .select({ coverImageKey: posts.coverImageKey })
-      .from(posts)
-      .where(eq(posts.id, id))
-      .limit(1);
-    await db.delete(posts).where(eq(posts.id, id));
-    if (row?.coverImageKey) await deleteObject(row.coverImageKey).catch(() => {});
+    await db
+      .update(posts)
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(posts.id, id));
   }
   revalidateBlog();
   redirect("/blog/admin");
