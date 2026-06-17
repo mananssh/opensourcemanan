@@ -26,7 +26,7 @@ export function PostForm({
     <>
       <form
         action={savePost}
-        className="max-w-2xl space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
+        className="w-full space-y-6 rounded-xl border border-rule bg-surface p-6 sm:p-8"
       >
       {post && <input type="hidden" name="id" value={post.id} />}
 
@@ -94,7 +94,7 @@ export function PostForm({
 
       <div>
         <label className={labelCls}>Body (MDX)</label>
-        <MdxEditor name="bodyMdx" defaultValue={post?.bodyMdx ?? ""} />
+        <MdxEditor name="bodyMdx" defaultValue={post?.bodyMdx ?? ""} postId={post?.id} />
       </div>
 
       <details className="rounded-md border border-rule p-3">
@@ -120,7 +120,7 @@ export function PostForm({
       </form>
 
       {post && (
-        <form action={deletePost} className="mt-4 max-w-2xl">
+        <form action={deletePost} className="mt-4">
           <input type="hidden" name="id" value={post.id} />
           <SubmitButton
             className="font-mono text-sm text-muted transition-colors hover:text-accent"

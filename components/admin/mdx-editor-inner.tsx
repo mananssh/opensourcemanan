@@ -1,7 +1,6 @@
 "use client";
 
 import "@mdxeditor/editor/style.css";
-import { useTheme } from "next-themes";
 import {
   MDXEditor,
   headingsPlugin,
@@ -80,13 +79,12 @@ export function MdxEditorInner({
   markdown: string;
   onChange: (value: string) => void;
 }) {
-  const { resolvedTheme } = useTheme();
   return (
     <MDXEditor
       markdown={markdown}
       onChange={onChange}
-      className={`rounded-md border border-rule ${resolvedTheme === "dark" ? "dark-theme dark-editor" : ""}`}
-      contentEditableClassName="min-h-[24rem]"
+      className="rounded-md border border-rule"
+      contentEditableClassName="blog-prose min-h-[26rem]"
       plugins={[
         headingsPlugin(),
         listsPlugin(),
