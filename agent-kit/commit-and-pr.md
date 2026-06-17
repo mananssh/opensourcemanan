@@ -9,19 +9,53 @@
 3. Commit (see below). Push with `-u`.
 4. Open a PR to `main`. Merge only when CI is green.
 
-Branch name prefixes match commit types: `feat/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`, `perf/`, `ci/`.
+Branch name prefixes match commit types: `feat/`, `fix/`, `refactor/`, `perf/`, `style/`, `test/`, `docs/`, `build/`, `ops/`, `chore/`.
 
 The `/ship` skill automates fetch → branch → push → PR.
 
 ## Commit format (Conventional Commits)
 
 ```
-<type>: <description>
+<type>(<optional scope>): <description>
 
 <optional body>
+
+<optional footer>
 ```
 
-Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `ci`.
+### Types
+
+Pick by *what the change affects*, not by how big it is. Based on
+[qoomon's taxonomy](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13#types).
+
+| Type | Use for |
+| ---- | ------- |
+| `feat` | Adds, adjusts, or removes a feature of the API or UI |
+| `fix` | Fixes an API or UI bug of a preceding `feat` |
+| `refactor` | Rewrites/restructures code without changing API or UI behavior |
+| `perf` | A refactor that specifically improves performance |
+| `style` | Code style only (whitespace, formatting, semicolons) — no behavior change |
+| `test` | Adds missing tests or corrects existing ones |
+| `docs` | Documentation only |
+| `build` | Build tooling, dependencies, project version (e.g. `package.json` deps) |
+| `ops` | Infrastructure, deployment scripts, CI/CD, monitoring, backups, recovery |
+| `chore` | Misc tasks: initial commit, `.gitignore`, repo housekeeping |
+
+Quick discriminators for this repo:
+
+- A GitHub workflow, the Vercel build-skip / prune scripts, deployment config → **`ops`**, not `feat`/`chore`.
+- A dependency bump or `package.json` script wiring → **`build`**.
+- Changing what the site *does* for a visitor or the owner → **`feat`** (or **`fix`** if repairing a prior `feat`).
+
+### Scope (optional)
+
+`feat(blog):`, `fix(auth):`, `ops(vercel):`. A short noun for the area touched.
+Project-defined and free-form; **never** an issue identifier.
+
+### Breaking changes
+
+Mark with `!` before the colon: `feat(api)!: remove status endpoint`. Describe
+the break in the commit footer when the subject isn't self-explanatory.
 
 No attribution/co-author trailers (disabled globally).
 

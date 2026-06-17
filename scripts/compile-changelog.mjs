@@ -18,7 +18,19 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const changesetDir = join(root, ".changeset");
 const changelogPath = join(root, "CHANGELOG.md");
 
-const TYPES = new Set(["feat", "fix", "refactor", "docs", "test", "chore", "perf", "ci"]);
+// Commit/changeset type vocabulary — see agent-kit/commit-and-pr.md#types.
+const TYPES = new Set([
+  "feat",
+  "fix",
+  "refactor",
+  "perf",
+  "style",
+  "test",
+  "docs",
+  "build",
+  "ops",
+  "chore",
+]);
 
 /** Parse a tiny `--- key: value --- body` frontmatter document. */
 function parseChangeset(raw, file) {
