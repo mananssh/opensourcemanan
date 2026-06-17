@@ -2,6 +2,12 @@
 
 ## 2026-06-17
 
+- **13:21 · `7f32b61` · feat:** Prune keeps latest 3 production + 5 preview deployments
+  The deployment prune script previously kept every production deployment. It now
+  keeps the latest 3 production (PRUNE_KEEP_PRODUCTION) alongside the latest 5
+  previews (PRUNE_KEEP) and deletes the rest, sorted by recency. The live
+  production deployment is always newest so it's always retained; the rollback
+  window shrinks to the last 3 production builds. ADR 0013 + workflow input updated.
 - **13:07 · `30d9cad` · feat:** Preview-deployment strategy — OAuth redirect proxy, build skip, pruning
   Handle Vercel deployment sprawl + preview sign-in (ADR 0013):
   - NextAuth redirectProxyUrl (AUTH_REDIRECT_PROXY_URL) so one Google redirect URI
