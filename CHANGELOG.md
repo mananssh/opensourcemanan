@@ -2,6 +2,11 @@
 
 ## 2026-06-17
 
+- **13:27 · `ae5cfc0` · feat:** Prune workflow gains a dry_run dispatch input
+  The Prune deployments workflow now has a `dry_run` boolean dispatch input. When
+  checked, it sets DRY_RUN=1 so the run lists what would be deleted and deletes
+  nothing — making it safe to preview the delete list from the Actions tab before
+  a real prune.
 - **13:21 · `7f32b61` · feat:** Prune keeps latest 3 production + 5 preview deployments
   The deployment prune script previously kept every production deployment. It now
   keeps the latest 3 production (PRUNE_KEEP_PRODUCTION) alongside the latest 5
