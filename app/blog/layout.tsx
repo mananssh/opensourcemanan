@@ -48,6 +48,12 @@ export default function BlogLayout({
             <span className="text-accent">/</span>blog
           </Link>
           <div className="flex items-center gap-3">
+            <Link
+              href="/blog/bookmarks"
+              className="font-mono text-[0.7rem] uppercase tracking-[0.15em] text-muted transition-colors hover:text-accent"
+            >
+              Saved
+            </Link>
             <ThemeToggle />
             <AuthButton />
           </div>

@@ -11,11 +11,13 @@ import {
   getReactionState,
   listComments,
   getViewCount,
+  getBookmarkState,
 } from "@/lib/blog/engagement";
 import { auth } from "@/lib/auth";
 import { PostBody, compilePost } from "@/lib/blog/mdx";
 import { PostList } from "@/components/blog/post-list";
 import { ReactionBar } from "@/components/blog/reaction-bar";
+import { BookmarkButton } from "@/components/blog/bookmark-button";
 import { SharePost } from "@/components/blog/share-post";
 import { CommentSection } from "@/components/blog/comment-section";
 import { ViewBeacon } from "@/components/blog/view-beacon";
@@ -82,7 +84,7 @@ export default async function PostPage({ params }: { params: Params }) {
   const { code, toc } = await compilePost(post.bodyMdx);
   const mins = post.readingMinutes;
   const postTags = await getPostTags(post.id);
-  const [related, neighbors, session, reaction, comments, views] =
+  const [related, neighbors, session, reaction, comments, views, bookmark] =
     await Promise.all([
       getRelatedPosts({
         id: post.id,
@@ -94,6 +96,7 @@ export default async function PostPage({ params }: { params: Params }) {
       getReactionState(post.id),
       listComments(post.id),
       getViewCount(post.id),
+      getBookmarkState(post.id),
     ]);
 
   const canonical = `${siteUrl}/blog/${post.slug}`;
@@ -215,12 +218,19 @@ export default async function PostPage({ params }: { params: Params }) {
       </div>
 
       <div className="mt-12 flex flex-wrap items-center justify-between gap-4">
-        <ReactionBar
-          postId={post.id}
-          slug={post.slug}
-          count={reaction.count}
-          reacted={reaction.reacted}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <ReactionBar
+            postId={post.id}
+            slug={post.slug}
+            count={reaction.count}
+            reacted={reaction.reacted}
+          />
+          <BookmarkButton
+            postId={post.id}
+            slug={post.slug}
+            bookmarked={bookmark.bookmarked}
+          />
+        </div>
         <SharePost url={`${siteUrl}/blog/${post.slug}`} title={post.title} />
       </div>
 
