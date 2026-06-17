@@ -107,7 +107,7 @@ function buildWeeks(days: ChangelogDay[]): {
   let end = toUTC(dates[dates.length - 1]);
   end += (6 - new Date(end).getUTCDay()) * DAY_MS; // forward to Saturday
 
-  const weeks: Cell[][] = [];
+  let weeks: Cell[][] = [];
   let col: Cell[] = [];
   for (let t = start; t <= end; t += DAY_MS) {
     const iso = isoOf(t);
@@ -118,6 +118,11 @@ function buildWeeks(days: ChangelogDay[]): {
     }
   }
   if (col.length) weeks.push(col);
+
+  // Cap to the most recent ~year (53 columns) so the grid always fits the text
+  // column without horizontal scrolling; older weeks roll off the left.
+  const MAX_WEEKS = 53;
+  if (weeks.length > MAX_WEEKS) weeks = weeks.slice(-MAX_WEEKS);
 
   // One label per week column: the month name when it changes, else "" — the
   // label text overflows its column to the right (GitHub's trick).
@@ -180,9 +185,9 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
           </p>
         </div>
 
-        {/* No overflow clipping so tooltips show in full; the grid fits the
-            column for a long while. Tooltips align to the edge on the first/last
-            week so they never run off-screen. */}
+        {/* Capped to a year of columns, sized to fit the text column — no
+            scrolling, no overflow clipping, so tooltips show in full. They align
+            to the edge on the first/last week so they never run off-screen. */}
         <div className="mt-3">
           <div className="inline-flex flex-col gap-1">
             {/* Month labels — each sits at its week column and overflows right. */}
@@ -190,7 +195,7 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
               {monthLabels.map((label, i) => (
                 <span
                   key={i}
-                  className="w-3 shrink-0 whitespace-nowrap font-mono text-[0.6rem] leading-none text-faint"
+                  className="w-2.5 shrink-0 whitespace-nowrap font-mono text-[0.6rem] leading-none text-faint"
                 >
                   {label}
                 </span>
@@ -210,7 +215,7 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
                     {week.map((cell) => (
                       <span key={cell.date} className="group relative block">
                         <span
-                          className={`block size-3 rounded-[2px] ${LEVELS[levelOf(cell.count, max)]}`}
+                          className={`block size-2.5 rounded-[2px] ${LEVELS[levelOf(cell.count, max)]}`}
                         />
                         {/* Hover tooltip — date + commit count for that day. */}
                         <span
@@ -232,7 +237,7 @@ export function ChangelogStats({ days }: { days: ChangelogDay[] }) {
         <div className="mt-3 flex items-center gap-1.5 font-mono text-[0.6rem] uppercase tracking-[0.15em] text-faint">
           <span>Less</span>
           {LEVELS.map((c, i) => (
-            <span key={i} className={`size-3 rounded-[2px] ${c}`} />
+            <span key={i} className={`size-2.5 rounded-[2px] ${c}`} />
           ))}
           <span>More</span>
         </div>
