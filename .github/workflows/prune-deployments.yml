@@ -15,6 +15,10 @@ on:
       keep_production:
         description: "How many recent production deployments to keep"
         default: "3"
+      dry_run:
+        description: "Preview only — list what would be deleted, delete nothing"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -38,6 +42,7 @@ jobs:
           VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
           PRUNE_KEEP: ${{ github.event.inputs.keep || '5' }}
           PRUNE_KEEP_PRODUCTION: ${{ github.event.inputs.keep_production || '3' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run == 'true' && '1' || '' }}
         run: |
           if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "VERCEL_TOKEN / VERCEL_PROJECT_ID not set — skipping."
