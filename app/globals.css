@@ -201,6 +201,16 @@ body {
   border-radius: 2px;
 }
 
+/* Tailwind v4's preflight dropped `cursor: pointer` on buttons — restore it for
+   all interactive controls (disabled buttons keep the default arrow). */
+button:not(:disabled),
+[role="button"],
+summary,
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]) {
+  cursor: pointer;
+}
+
 /* Skip-to-content: hidden until focused, then drops into the top-left. */
 .skip-link {
   position: fixed;
