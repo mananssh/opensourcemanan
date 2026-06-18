@@ -1,10 +1,12 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { thoughts } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
+import { deleteObject } from "@/lib/storage/gcs";
 
 export type DumpState = { error?: string; ok?: boolean };
 
@@ -32,6 +34,39 @@ export async function createThought(
   await db.insert(thoughts).values({ body, imageKey, visibility });
   revalidateDump();
   return { ok: true };
+}
+
+/** Edit a thought (owner only). Redirects to its permalink on success. */
+export async function editThought(
+  _prev: DumpState,
+  formData: FormData,
+): Promise<DumpState> {
+  await requireOwner();
+  const id = str(formData, "id");
+  if (!id) return { error: "Missing thought id." };
+  const body = str(formData, "body").slice(0, 4000);
+  const imageKey = str(formData, "imageKey") || null;
+  if (!body && !imageKey) {
+    return { error: "Write something or attach an image." };
+  }
+  const visibility = str(formData, "visibility") === "public" ? "public" : "private";
+
+  const [row] = await db
+    .select({ imageKey: thoughts.imageKey })
+    .from(thoughts)
+    .where(eq(thoughts.id, id))
+    .limit(1);
+  await db
+    .update(thoughts)
+    .set({ body, imageKey, visibility, updatedAt: new Date() })
+    .where(eq(thoughts.id, id));
+  // Clean up a replaced image.
+  if (row?.imageKey && row.imageKey !== imageKey) {
+    await deleteObject(row.imageKey).catch(() => {});
+  }
+  revalidateDump();
+  revalidatePath(`/dump/${id}`);
+  redirect(`/dump/${id}`);
 }
 
 /** Soft-delete a thought (owner only; recoverable). */

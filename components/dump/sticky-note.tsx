@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import {
   deleteThought,
@@ -29,10 +30,12 @@ export function StickyNote({
   thought,
   isOwner,
   linked = true,
+  index,
 }: {
   thought: ThoughtCard;
   isOwner: boolean;
   linked?: boolean;
+  index?: number;
 }) {
   const s = stickyStyle(thought.id);
 
@@ -67,12 +70,17 @@ export function StickyNote({
 
   return (
     <article
-      className="sticky-note relative mb-5 break-inside-avoid p-5"
-      style={{
-        backgroundColor: s.bg,
-        color: s.ink,
-        transform: `rotate(${s.rotate}deg)`,
-      }}
+      className={`sticky-note relative mb-5 break-inside-avoid p-5${typeof index === "number" ? " note-in" : ""}`}
+      style={
+        {
+          backgroundColor: s.bg,
+          color: s.ink,
+          transform: `rotate(${s.rotate}deg)`,
+          ...(typeof index === "number"
+            ? { "--reveal-delay": `${Math.min(index, 12) * 40}ms` }
+            : {}),
+        } as CSSProperties
+      }
     >
       {linked ? (
         <Link
@@ -88,6 +96,9 @@ export function StickyNote({
 
       {isOwner && (
         <div className="mt-3 flex items-center gap-3 border-t border-black/10 pt-2">
+          <Link href={`/dump/${thought.id}/edit`} className={ctrlCls}>
+            Edit
+          </Link>
           <form action={togglePinned}>
             <input type="hidden" name="id" value={thought.id} />
             <SubmitButton className={ctrlCls} pendingLabel="…">
