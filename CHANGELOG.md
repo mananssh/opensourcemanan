@@ -2,6 +2,11 @@
 
 ## 2026-06-18
 
+- **08:05 · `e99687d` · fix:** Stop sticky-note styles leaking onto every navbar
+  The Thought Dump note styles used a `.sticky` class, which collides with
+  Tailwind's `sticky` position utility that every vertical's sticky header uses —
+  so the "tape" pseudo-element and hover/lift transform leaked onto all navbars.
+  Renamed to `.sticky-note` (scoped to the dump notes only).
 - **08:00 · `3c7b30c` · feat:** New vertical — Thought Dump, a sticky-note wall (text + images, public/private)
   The second content collection: a playful corkboard of sticky-note thoughts.
   - Two visibility modes mapped onto the shared gate — public (any signed-in user)
