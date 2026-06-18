@@ -25,7 +25,7 @@ export default async function ThoughtPage({ params }: { params: Params }) {
   return (
     <div className="mx-auto w-full max-w-xl px-6 pb-28 pt-20">
       <div className="mx-auto max-w-sm">
-        <StickyNote thought={access.thought} isOwner={isOwner} />
+        <StickyNote thought={access.thought} isOwner={isOwner} linked={false} />
       </div>
       <div className="mt-12 text-center">
         <Link

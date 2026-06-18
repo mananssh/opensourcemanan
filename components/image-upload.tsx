@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,image/avif";
@@ -24,6 +24,22 @@ export function ImageUpload({
   const [preview, setPreview] = useState(initialUrl ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const hiddenRef = useRef<HTMLInputElement>(null);
+
+  // Clear the key/preview when the surrounding form resets (e.g. after a
+  // successful post) — form.reset() only clears native fields, not this React
+  // state, which is why the image preview lingered after posting.
+  useEffect(() => {
+    const form = hiddenRef.current?.form;
+    if (!form) return;
+    const onReset = () => {
+      setKey(initialKey ?? "");
+      setPreview(initialUrl ?? "");
+      setError("");
+    };
+    form.addEventListener("reset", onReset);
+    return () => form.removeEventListener("reset", onReset);
+  }, [initialKey, initialUrl]);
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -64,7 +80,7 @@ export function ImageUpload({
 
   return (
     <div className="space-y-2">
-      <input type="hidden" name={name} value={key} />
+      <input ref={hiddenRef} type="hidden" name={name} value={key} />
       {preview && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
