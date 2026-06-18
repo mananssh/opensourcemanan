@@ -2,6 +2,9 @@
 
 ## 2026-06-18
 
+- **11:11 · `9edad20` · feat:** Thought Dump composer starts as a single line
+  The composer textarea now defaults to one row (still resizable / auto-grows as
+  you type) instead of three, so an empty composer is compact.
 - **11:02 · `21886cb` · feat:** Retire landing to "coming soon"; /osm index + changelog link; pointer cursors
   - Landing page (/) retired to a tasteful "portfolio on its way" coming-soon —
     with a Meanwhile index so visitors still reach the live blog/dump/changelog
