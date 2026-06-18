@@ -27,3 +27,4 @@
  */
 
 export * from "./blog";
+export * from "./dump";

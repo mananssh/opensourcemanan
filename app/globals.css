@@ -67,6 +67,77 @@ html.dark .vertical-blog {
   --accent-soft: #2a1712;
 }
 
+/*
+ * Thought Dump vertical — "Sticky Desk": a warm corkboard you toss handwritten
+ * sticky notes onto. Handwriting display/body (Caveat), JetBrains Mono for meta.
+ * Both themes (ADR 0005 + 0010); the dump fonts load in app/dump/layout.tsx.
+ * The sticky note colors themselves are intrinsic content colors (see
+ * components/dump/sticky-palette.ts), not tokens.
+ */
+.vertical-dump {
+  --paper: #e7dfcd; /* warm cork desk */
+  --surface: #f4efe3;
+  --ink: #2b2620;
+  --muted: #6b6453;
+  --faint: #6c6452;
+  --rule: #d3cab6;
+  --accent: #d8503f; /* marker red */
+  --accent-soft: #f4ddd6;
+
+  --display-family: var(--font-caveat);
+  --body-family: var(--font-caveat);
+  --mono-family: var(--font-jetbrains);
+}
+
+html.dark .vertical-dump {
+  --paper: #181511; /* dark wood desk */
+  --surface: #221d17;
+  --ink: #ece6da;
+  --muted: #a59c8c;
+  --faint: #97907e;
+  --rule: #352e26;
+  --accent: #ff7a5c;
+  --accent-soft: #2a1d17;
+}
+
+/* A sticky note: colored card, soft shadow, slight tilt; straightens on hover. */
+.sticky {
+  border-radius: 2px;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.12),
+    0 8px 18px -8px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.sticky:hover {
+  transform: rotate(0deg) translateY(-3px) !important;
+  box-shadow:
+    0 2px 2px rgba(0, 0, 0, 0.14),
+    0 16px 28px -10px rgba(0, 0, 0, 0.4);
+}
+/* A bit of "tape" across the top of each note. */
+.sticky::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 64px;
+  height: 18px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 1px;
+}
+html.dark .vertical-dump .sticky {
+  filter: brightness(0.92) saturate(0.92);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sticky:hover {
+    transform: none !important;
+  }
+}
+
 @theme inline {
   --color-paper: var(--paper);
   --color-surface: var(--surface);
