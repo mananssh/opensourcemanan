@@ -31,7 +31,7 @@ export function StickyNote({
   const s = stickyStyle(thought.id);
   return (
     <article
-      className="sticky relative mb-5 break-inside-avoid p-5"
+      className="sticky-note relative mb-5 break-inside-avoid p-5"
       style={{
         backgroundColor: s.bg,
         color: s.ink,
