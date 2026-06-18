@@ -38,10 +38,25 @@ export function StickyComposer({ initial }: { initial?: ComposerInitial }) {
     {},
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Grow the textarea with its content up to a max, then it scrolls.
+  const autosize = (el: HTMLTextAreaElement) => {
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 240)}px`;
+  };
+
+  // Size correctly on mount (e.g. edit mode prefilled with a long body).
+  useEffect(() => {
+    if (taRef.current) autosize(taRef.current);
+  }, []);
 
   useEffect(() => {
     // Only create-mode resets (edit redirects away on success).
-    if (state.ok && !editing) formRef.current?.reset();
+    if (state.ok && !editing) {
+      formRef.current?.reset();
+      if (taRef.current) taRef.current.style.height = "auto"; // back to one line
+    }
   }, [state, editing]);
 
   return (
@@ -52,12 +67,14 @@ export function StickyComposer({ initial }: { initial?: ComposerInitial }) {
     >
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <textarea
+        ref={taRef}
         name="body"
         rows={1}
         maxLength={4000}
         defaultValue={initial?.body ?? ""}
+        onInput={(e) => autosize(e.currentTarget)}
         placeholder="What's on your mind?"
-        className="w-full resize-y bg-transparent font-body text-2xl leading-snug text-ink placeholder:text-faint focus:outline-none"
+        className="block max-h-60 w-full resize-none overflow-y-auto bg-transparent font-body text-2xl leading-snug text-ink placeholder:text-faint focus:outline-none"
       />
       <div className="mt-3 border-t border-rule pt-3">
         <ImageUpload
