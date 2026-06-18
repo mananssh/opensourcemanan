@@ -2,6 +2,10 @@
 
 ## 2026-06-18
 
+- **11:23 · `05ae4c1` · fix:** Fix orphaned sticky-note tape in the masonry wall
+  The note "tape" was a ::before pseudo-element, which Chrome mis-paints/orphans
+  inside CSS multi-column layouts (a stray tape appeared in a column gap). It's now
+  a real child element bound to each card, so the tape only ever sits on its note.
 - **11:19 · `b67df31` · fix:** Dump composer auto-grows with content, then scrolls at a max height
   The single-line composer scrolled instead of expanding when you added lines. It
   now auto-grows with its content up to a max height (~240px) and scrolls beyond
