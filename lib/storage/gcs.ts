@@ -27,20 +27,50 @@ const BUCKET = process.env.GCS_BUCKET ?? "opensourcemanan";
 
 const globalForGcs = globalThis as unknown as { _gcs?: Storage };
 
+/**
+ * Parse the service account from either raw JSON or base64-encoded JSON.
+ * Base64 is the robust form for env UIs (Vercel) and single-line .env files —
+ * no newline/quoting pitfalls with the multi-line `private_key`. We accept both
+ * so existing raw-JSON setups keep working.
+ */
+function parseServiceAccount(raw: string): {
+  project_id?: string;
+  client_email?: string;
+  private_key?: string;
+} {
+  const tryJson = (s: string) => {
+    const t = s.trim();
+    return t.startsWith("{") ? JSON.parse(t) : null;
+  };
+  const direct = (() => {
+    try {
+      return tryJson(raw);
+    } catch {
+      return null;
+    }
+  })();
+  if (direct) return direct;
+  try {
+    const decoded = Buffer.from(raw, "base64").toString("utf8");
+    const fromB64 = tryJson(decoded);
+    if (fromB64) return fromB64;
+  } catch {
+    /* fall through to the thrown error below */
+  }
+  throw new Error(
+    "GCP_SERVICE_ACCOUNT must be the service-account JSON, or that JSON base64-encoded.",
+  );
+}
+
 function getStorage(): Storage {
   if (globalForGcs._gcs) return globalForGcs._gcs;
   const raw = process.env.GCP_SERVICE_ACCOUNT;
   if (!raw) {
     throw new Error(
-      "GCP_SERVICE_ACCOUNT is not set. Add the service-account JSON to .env.local (see .env.example) and the deployment environment.",
+      "GCP_SERVICE_ACCOUNT is not set. Add the service-account JSON (or its base64) to .env.local (see .env.example) and the deployment environment.",
     );
   }
-  let sa: { project_id?: string; client_email?: string; private_key?: string };
-  try {
-    sa = JSON.parse(raw);
-  } catch {
-    throw new Error("GCP_SERVICE_ACCOUNT must be valid service-account JSON.");
-  }
+  const sa = parseServiceAccount(raw);
   const storage = new Storage({
     projectId: sa.project_id,
     credentials: { client_email: sa.client_email, private_key: sa.private_key },
