@@ -34,7 +34,7 @@ export default function BlogLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div
-      className={`vertical-blog ${archivo.variable} ${hanken.variable} flex min-h-full flex-col bg-paper font-body text-ink`}
+      className={`vertical-blog ${archivo.variable} ${hanken.variable} flex min-h-dvh flex-col bg-paper font-body text-ink`}
     >
       <a href="#content" className="skip-link">
         Skip to content

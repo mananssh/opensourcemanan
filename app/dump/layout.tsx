@@ -21,7 +21,7 @@ export default function DumpLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div
-      className={`vertical-dump ${caveat.variable} flex min-h-full flex-col bg-paper font-body text-ink`}
+      className={`vertical-dump ${caveat.variable} flex min-h-dvh flex-col bg-paper font-body text-ink`}
     >
       <a href="#content" className="skip-link">
         Skip to content
