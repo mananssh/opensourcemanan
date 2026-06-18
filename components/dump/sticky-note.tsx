@@ -82,6 +82,7 @@ export function StickyNote({
         } as CSSProperties
       }
     >
+      <span aria-hidden className="sticky-tape" />
       {linked ? (
         <Link
           href={`/dump/${thought.id}`}
