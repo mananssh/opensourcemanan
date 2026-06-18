@@ -2,6 +2,10 @@
 
 ## 2026-06-18
 
+- **11:19 · `b67df31` · fix:** Dump composer auto-grows with content, then scrolls at a max height
+  The single-line composer scrolled instead of expanding when you added lines. It
+  now auto-grows with its content up to a max height (~240px) and scrolls beyond
+  that, and shrinks back to one line after posting.
 - **11:11 · `9edad20` · feat:** Thought Dump composer starts as a single line
   The composer textarea now defaults to one row (still resizable / auto-grows as
   you type) instead of three, so an empty composer is compact.
