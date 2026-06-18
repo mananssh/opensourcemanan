@@ -53,7 +53,7 @@ export function StickyComposer({ initial }: { initial?: ComposerInitial }) {
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <textarea
         name="body"
-        rows={3}
+        rows={1}
         maxLength={4000}
         defaultValue={initial?.body ?? ""}
         placeholder="What's on your mind?"
