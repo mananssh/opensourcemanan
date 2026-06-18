@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { createUploadUrl, type StorageVertical } from "@/lib/storage/gcs";
 
-const VERTICALS = new Set<StorageVertical>(["blog", "projects", "misc"]);
+const VERTICALS = new Set<StorageVertical>(["blog", "dump", "projects", "misc"]);
 
 /**
  * Owner-gated presigned-upload endpoint. Any vertical's admin requests an upload

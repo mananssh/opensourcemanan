@@ -23,6 +23,11 @@ export const siteNav: NavItem[] = [
     description: "Deep dives into current obsessions.",
   },
   {
+    label: "Thought Dump",
+    href: "/dump",
+    description: "Half-formed thoughts, stuck to a wall.",
+  },
+  {
     label: "Changelog",
     href: "/changelog",
     description: "Everything that has shipped, newest first.",
