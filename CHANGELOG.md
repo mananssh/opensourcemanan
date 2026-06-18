@@ -2,6 +2,11 @@
 
 ## 2026-06-18
 
+- **08:38 · `a39bd3f` · chore:** Track .env.example so contributors get the env template
+  `.env.example` was caught by the `.env*` gitignore rule and never committed, so
+  the public repo shipped no env template. Add a `!.env.example` negation and
+  commit the placeholder-only template (documents every required var incl. the
+  base64 GCP_SERVICE_ACCOUNT option). Real `.env*` files stay ignored.
 - **08:32 · `1b73fa1` · fix:** Accept base64-encoded GCP_SERVICE_ACCOUNT (robust across Vercel/.env)
   The GCS service-account env var now accepts EITHER raw JSON or that JSON
   base64-encoded. Base64 avoids the newline/quoting pitfalls of a multi-line
