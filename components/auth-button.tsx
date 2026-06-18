@@ -24,7 +24,7 @@ export function AuthButton() {
     return (
       <button
         type="button"
-        onClick={() => signIn("google")}
+        onClick={() => signIn("google", { callbackUrl: window.location.href })}
         className="inline-flex h-8 items-center rounded-full border border-rule px-3.5 font-mono text-[0.7rem] uppercase tracking-[0.15em] text-ink transition-colors hover:border-accent hover:text-accent"
       >
         Sign in
