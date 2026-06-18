@@ -7,7 +7,18 @@ export const metadata: Metadata = {
   description: "Owner access for OSM.",
 };
 
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  // Where to land after auth: only internal relative paths (block open redirects).
+  const { next } = await searchParams;
+  const dest =
+    typeof next === "string" && next.startsWith("/") && !next.startsWith("//")
+      ? next
+      : "/";
+
   // Degrade gracefully before auth env is configured (e.g. AUTH_SECRET not yet
   // set on the deployment) so this public route never 500s.
   if (!process.env.AUTH_SECRET) {
@@ -76,7 +87,7 @@ export default async function SignInPage() {
           <form
             action={async () => {
               "use server";
-              await signIn("google", { redirectTo: "/sign-in" });
+              await signIn("google", { redirectTo: dest });
             }}
           >
             <SubmitButton

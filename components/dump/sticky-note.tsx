@@ -20,24 +20,24 @@ function fmt(d: Date): string {
 const ctrlCls =
   "font-mono text-[0.6rem] uppercase tracking-[0.1em] opacity-70 transition-opacity hover:opacity-100";
 
-/** A single sticky note. Presentational; owner sees inline controls. */
+/**
+ * A single sticky note. The whole card links to its permalink (`linked`);
+ * owner controls render as separate siblings so they stay clickable (no
+ * interactive elements nested inside the card link).
+ */
 export function StickyNote({
   thought,
   isOwner,
+  linked = true,
 }: {
   thought: ThoughtCard;
   isOwner: boolean;
+  linked?: boolean;
 }) {
   const s = stickyStyle(thought.id);
-  return (
-    <article
-      className="sticky-note relative mb-5 break-inside-avoid p-5"
-      style={{
-        backgroundColor: s.bg,
-        color: s.ink,
-        transform: `rotate(${s.rotate}deg)`,
-      }}
-    >
+
+  const content = (
+    <>
       {thought.imageUrl && (
         // Private signed URL; alt empty (decorative — body carries meaning).
         // eslint-disable-next-line @next/next/no-img-element
@@ -54,19 +54,37 @@ export function StickyNote({
           {thought.body}
         </p>
       )}
-
       <div className="mt-4 flex items-center justify-between">
-        <Link
-          href={`/dump/${thought.id}`}
-          className="font-mono text-[0.65rem] tracking-wide opacity-70 transition-opacity hover:opacity-100"
-          style={{ color: s.ink }}
-        >
+        <span className="font-mono text-[0.65rem] tracking-wide opacity-70">
           {fmt(thought.createdAt)}
-        </Link>
+        </span>
         <span className="font-mono text-[0.6rem] uppercase tracking-[0.12em] opacity-70">
           {thought.visibility === "private" ? "🔒 private" : "public"}
         </span>
       </div>
+    </>
+  );
+
+  return (
+    <article
+      className="sticky-note relative mb-5 break-inside-avoid p-5"
+      style={{
+        backgroundColor: s.bg,
+        color: s.ink,
+        transform: `rotate(${s.rotate}deg)`,
+      }}
+    >
+      {linked ? (
+        <Link
+          href={`/dump/${thought.id}`}
+          aria-label={`Open thought from ${fmt(thought.createdAt)}`}
+          className="block"
+        >
+          {content}
+        </Link>
+      ) : (
+        content
+      )}
 
       {isOwner && (
         <div className="mt-3 flex items-center gap-3 border-t border-black/10 pt-2">
