@@ -5,12 +5,12 @@
  * Assigned deterministically by id so a note keeps its color + tilt forever.
  */
 const STICKIES = [
-  { bg: "#fdf0a8", ink: "#4a3f10" }, // butter
-  { bg: "#ffd7de", ink: "#5a2230" }, // rose
-  { bg: "#c8efd6", ink: "#15452f" }, // mint
-  { bg: "#cfe4ff", ink: "#173557" }, // sky
-  { bg: "#ffdcc0", ink: "#5a3318" }, // peach
-  { bg: "#e6d6fb", ink: "#392159" }, // lilac
+  { bg: "#ffe14d", ink: "#4a3a00" }, // crayon yellow
+  { bg: "#ff8fa3", ink: "#5a1020" }, // crayon pink/red
+  { bg: "#7ee0a0", ink: "#0e4424" }, // crayon green
+  { bg: "#7cc4ff", ink: "#0c3358" }, // crayon blue
+  { bg: "#ffb15c", ink: "#5a3000" }, // crayon orange
+  { bg: "#c4a0ff", ink: "#2c1560" }, // crayon purple
 ] as const;
 
 function hash(s: string): number {

@@ -75,14 +75,14 @@ html.dark .vertical-blog {
  * components/dump/sticky-palette.ts), not tokens.
  */
 .vertical-dump {
-  --paper: #e7dfcd; /* warm cork desk */
-  --surface: #f4efe3;
-  --ink: #2b2620;
-  --muted: #6b6453;
-  --faint: #6c6452;
-  --rule: #d3cab6;
-  --accent: #d8503f; /* marker red */
-  --accent-soft: #f4ddd6;
+  --paper: #eef2fb; /* cool, bright board — deliberately NOT OSM's warm paper */
+  --surface: #ffffff;
+  --ink: #1b2436;
+  --muted: #4f5a72;
+  --faint: #5c6880;
+  --rule: #d2dcef;
+  --accent: #2f6bf2; /* crayon blue */
+  --accent-soft: #dbe7ff;
 
   --display-family: var(--font-caveat);
   --body-family: var(--font-caveat);
@@ -90,14 +90,14 @@ html.dark .vertical-blog {
 }
 
 html.dark .vertical-dump {
-  --paper: #181511; /* dark wood desk */
-  --surface: #221d17;
-  --ink: #ece6da;
-  --muted: #a59c8c;
-  --faint: #97907e;
-  --rule: #352e26;
-  --accent: #ff7a5c;
-  --accent-soft: #2a1d17;
+  --paper: #0f1626; /* deep playful navy (not warm wood) */
+  --surface: #18213a;
+  --ink: #eef2fb;
+  --muted: #9fb0cd;
+  --faint: #8493ad;
+  --rule: #28324c;
+  --accent: #5b8cff;
+  --accent-soft: #1a2540;
 }
 
 /* A sticky note: colored card, soft shadow, slight tilt; straightens on hover. */
