@@ -2,6 +2,13 @@
 
 ## 2026-06-18
 
+- **08:45 · `c9eb3ba` · fix:** Dump composer image reset, whole-note links, sign-in returns to origin
+  - The image preview/key now clears after posting a thought (ImageUpload listens
+    for the form's reset event; form.reset() only clears native fields).
+  - The whole sticky note links to its permalink, not just the date.
+  - Signing in returns you to where you came from: the sign-in page honors a safe
+    internal `?next=` (open-redirect-guarded), and the header sign-in button passes
+    the current page as the callback.
 - **08:38 · `a39bd3f` · chore:** Track .env.example so contributors get the env template
   `.env.example` was caught by the `.env*` gitignore rule and never committed, so
   the public repo shipped no env template. Add a `!.env.example` negation and
