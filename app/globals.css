@@ -118,9 +118,10 @@ html.dark .vertical-dump {
     0 2px 2px rgba(0, 0, 0, 0.14),
     0 16px 28px -10px rgba(0, 0, 0, 0.4);
 }
-/* A bit of "tape" across the top of each note. */
-.sticky-note::before {
-  content: "";
+/* A bit of "tape" across the top of each note. A real child element (not a
+   ::before) — absolutely-positioned generated content gets orphaned/mis-painted
+   inside CSS multi-column layouts in Chrome; a real child stays with its card. */
+.sticky-tape {
   position: absolute;
   top: -9px;
   left: 50%;
@@ -130,6 +131,7 @@ html.dark .vertical-dump {
   background: rgba(255, 255, 255, 0.45);
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 1px;
+  pointer-events: none;
 }
 html.dark .vertical-dump .sticky-note {
   filter: brightness(0.92) saturate(0.92);
