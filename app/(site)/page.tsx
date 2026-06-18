@@ -1,33 +1,37 @@
 import Link from "next/link";
 import { siteNav } from "@/lib/site-nav";
 
+export const metadata = {
+  description:
+    "The OSM front page is becoming a portfolio. In the meantime, the blog, thought dump, and changelog are already open.",
+};
+
 export default function Home() {
-  const sections = siteNav.filter((item) => item.href !== "/");
+  // Everything that's already live (Home excluded — that's this page).
+  const live = siteNav.filter((item) => item.href !== "/");
 
   return (
-    <main className="container-editorial pt-20 sm:pt-28">
-      {/* Masthead */}
-      <p className="label-caps text-faint">Vol. 01 — Open-source almanac</p>
+    <main className="container-editorial pt-24 sm:pt-32">
+      <p className="label-caps text-faint">OSM — Vol. 01</p>
 
-      <h1 className="mt-6 font-display text-5xl font-light leading-[1.05] tracking-tight text-ink sm:text-6xl">
-        An open-source
+      <h1 className="mt-6 font-display text-6xl font-light leading-[1.02] tracking-tight text-ink sm:text-7xl">
+        A portfolio is
         <br />
-        corner of the
-        <br />
-        internet<span className="text-accent">.</span>
+        on its way
+        <span className="accent-pulse text-accent">.</span>
       </h1>
 
       <p className="mt-8 max-w-prose font-body text-lg leading-relaxed text-muted">
-        <span className="font-medium text-ink">OSM</span> is where I keep the
-        things worth keeping in the open — a portfolio, writing, experiments,
-        and a running log of what I ship. One system, built to grow.
+        This front page is being rebuilt into my portfolio. Until it lands,
+        everything else is already open —{" "}
+        <span className="text-ink">have a look around.</span>
       </p>
 
-      {/* Section index — editorial table of contents */}
-      <section className="mt-20">
-        <p className="label-caps text-faint">Index</p>
+      {/* Meanwhile — don't strand visitors; point them at what's live. */}
+      <section className="mt-16">
+        <p className="label-caps text-faint">Meanwhile</p>
         <ul className="mt-5">
-          {sections.map((item, i) => (
+          {live.map((item, i) => (
             <li key={item.href} className="border-t border-rule last:border-b">
               <Link
                 href={item.href}
