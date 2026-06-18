@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import Link from "next/link";
+import { siteNav } from "@/lib/site-nav";
 
 export const metadata: Metadata = {
   title: "OSM",
@@ -10,14 +12,12 @@ export const metadata: Metadata = {
 const delay = (ms: number): CSSProperties =>
   ({ "--reveal-delay": `${ms}ms` }) as CSSProperties;
 
-const ETHOS = [
-  "Systems, not pages",
-  "DRY or don't",
-  "Open by default",
-  "Light & dark, always",
-];
-
 export default function OsmPage() {
+  // The verticals to jump to — exclude Home and this page itself.
+  const sections = siteNav.filter(
+    (item) => item.href !== "/" && item.href !== "/osm",
+  );
+
   return (
     <main className="container-editorial relative overflow-hidden pt-24 sm:pt-32">
       {/* Oversized ghosted wordmark — depth, not decoration. */}
@@ -58,12 +58,28 @@ export default function OsmPage() {
           className="reveal mt-12 flex flex-wrap items-center gap-x-3 gap-y-2"
           style={delay(360)}
         >
-          {ETHOS.map((item, i) => (
-            <li key={item} className="flex items-center gap-3">
-              {i > 0 && <span className="text-accent">·</span>}
-              <span className="label-caps text-muted">{item}</span>
-            </li>
-          ))}
+          <li>
+            <span className="label-caps text-muted">Systems, not pages</span>
+          </li>
+          <li className="flex items-center gap-3">
+            <span className="text-accent">·</span>
+            <span className="label-caps text-muted">Open by default</span>
+          </li>
+          <li className="flex items-center gap-3">
+            <span className="text-accent">·</span>
+            <Link
+              href="/changelog"
+              className="group label-caps inline-flex items-center gap-1.5 text-accent transition-colors hover:text-ink"
+            >
+              View the changelog
+              <span
+                aria-hidden
+                className="transition-transform group-hover:translate-x-0.5"
+              >
+                →
+              </span>
+            </Link>
+          </li>
         </ul>
 
         <p
@@ -73,20 +89,40 @@ export default function OsmPage() {
           If it&rsquo;s worth building, it&rsquo;s worth building in public.
         </p>
 
-        {/* Colophon — the last page of the book. */}
-        <div
-          className="reveal mt-20 border-t border-rule pt-6"
-          style={delay(640)}
-        >
-          <p className="label-caps text-faint">Colophon</p>
-          <p className="mt-3 font-mono text-xs leading-relaxed text-muted">
-            Set in Fraunces, Newsreader &amp; JetBrains Mono.
-            <br />
-            Built with Next.js, shipped on Vercel.
-            <br />
-            The open-source almanac — Vol. 01.
-          </p>
-        </div>
+        {/* Index — editorial table of contents into the verticals. */}
+        <section className="reveal mt-20" style={delay(640)}>
+          <p className="label-caps text-faint">Index</p>
+          <ul className="mt-5">
+            {sections.map((item, i) => (
+              <li key={item.href} className="border-t border-rule last:border-b">
+                <Link
+                  href={item.href}
+                  className="group flex items-baseline gap-5 py-5 transition-colors"
+                >
+                  <span className="font-mono text-xs text-faint tabular-nums">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="flex-1">
+                    <span className="font-display text-2xl text-ink transition-colors group-hover:text-accent">
+                      {item.label}
+                    </span>
+                    {item.description && (
+                      <span className="mt-1 block font-body text-base text-muted">
+                        {item.description}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="font-mono text-muted transition-transform group-hover:translate-x-1 group-hover:text-accent"
+                  >
+                    →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </main>
   );
