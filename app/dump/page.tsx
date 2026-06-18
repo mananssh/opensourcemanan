@@ -38,8 +38,8 @@ export default async function DumpWall() {
 
       {thoughts.length > 0 ? (
         <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
-          {thoughts.map((t) => (
-            <StickyNote key={t.id} thought={t} isOwner={isOwner} />
+          {thoughts.map((t, i) => (
+            <StickyNote key={t.id} thought={t} isOwner={isOwner} index={i} />
           ))}
         </div>
       ) : (

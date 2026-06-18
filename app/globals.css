@@ -139,6 +139,26 @@ html.dark .vertical-dump .sticky-note {
     transform: none !important;
   }
 }
+/* Notes fade in (opacity only — a transform reveal would clobber the tilt). */
+@keyframes note-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.note-in {
+  opacity: 0;
+  animation: note-in 0.5s ease both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-in {
+    animation: none;
+    opacity: 1;
+  }
+}
 
 @theme inline {
   --color-paper: var(--paper);
