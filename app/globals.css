@@ -101,20 +101,20 @@ html.dark .vertical-dump {
 }
 
 /*
- * Portfolio vertical (/) — "Indigo Nebula": indigo-tinted base + a periwinkle
- * accent (deliberately indigo, not slop-purple). Display = Bricolage Grotesque,
- * body = Geist, machine voice = Geist Mono. Both themes (ADR 0005); status
- * colors carry meaning only (mostly the Phase-2 agent telemetry).
+ * Portfolio vertical (/) — "Deep Ocean": navy-tinted base + an electric sky-cyan
+ * accent. Cool, terminal-clean. Display = Bricolage Grotesque, body = Geist,
+ * machine voice = Geist Mono. Both themes (ADR 0005); status colors carry
+ * meaning only (mostly the Phase-2 agent telemetry).
  */
 .vertical-portfolio {
-  --paper: #f4f3fc;
+  --paper: #f4f7fb;
   --surface: #ffffff;
-  --ink: #16132b;
-  --muted: #524d74;
-  --faint: #8a85a6;
-  --rule: #e0def0;
-  --accent: #5b6cff; /* periwinkle-blue */
-  --accent-soft: #e7e8fc;
+  --ink: #0f1a2b;
+  --muted: #4a586e;
+  --faint: #8893a6;
+  --rule: #dce3ee;
+  --accent: #0284c7; /* deep sky-cyan (legible on light) */
+  --accent-soft: #ddeefb;
   --accent-ink: #ffffff;
   --ok: #2f8f63;
   --attention: #b9821c;
@@ -126,15 +126,15 @@ html.dark .vertical-dump {
 }
 
 html.dark .vertical-portfolio {
-  --paper: #0d0b1a; /* deep indigo-black (tinted, not flat gray) */
-  --surface: #171430;
-  --ink: #eceaf7;
-  --muted: #a09bc0;
-  --faint: #645e86;
-  --rule: #2a2650;
-  --accent: #8b9bff; /* periwinkle */
-  --accent-soft: #1e1b40;
-  --accent-ink: #0b0a18;
+  --paper: #0a0f1e; /* deep navy-black (tinted, not flat gray) */
+  --surface: #121a30;
+  --ink: #e7ecf6;
+  --muted: #97a1b8;
+  --faint: #5c6680;
+  --rule: #243150;
+  --accent: #38bdf8; /* electric sky-cyan */
+  --accent-soft: #0f2238;
+  --accent-ink: #06121f;
   --ok: #4fb783;
   --attention: #d6a046;
   --negative: #e0685d;
