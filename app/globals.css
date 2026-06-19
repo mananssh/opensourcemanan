@@ -101,9 +101,9 @@ html.dark .vertical-dump {
 }
 
 /*
- * Portfolio vertical (/) — "Mono + amber": near-grayscale base, one sharp amber
+ * Portfolio vertical (/) — "Mono + coral": near-grayscale base, one sharp coral
  * accent used sparingly. Dark-first. Display = Bricolage Grotesque, body = Geist,
- * machine voice = Geist Mono. Both themes (ADR 0005); the amber darkens in light
+ * machine voice = Geist Mono. Both themes (ADR 0005); the coral darkens in light
  * mode so links stay legible on white.
  */
 .vertical-portfolio {
@@ -113,8 +113,8 @@ html.dark .vertical-dump {
   --muted: #57575c;
   --faint: #6c6c72;
   --rule: #e6e6e3;
-  --accent: #b45309; /* legible deep amber on light */
-  --accent-soft: #fbefd3;
+  --accent: #cc3a2d; /* legible deep coral on light */
+  --accent-soft: #fbe3df;
   --accent-ink: #ffffff;
   --ok: #2f8f63;
   --attention: #b9821c;
@@ -132,9 +132,9 @@ html.dark .vertical-portfolio {
   --muted: #9a9aa0;
   --faint: #7c7c82;
   --rule: #232327;
-  --accent: #ffb020; /* amber */
-  --accent-soft: #241a07;
-  --accent-ink: #1a1304;
+  --accent: #ff5a4d; /* coral red */
+  --accent-soft: #2a0e0a;
+  --accent-ink: #1a0605;
   --ok: #4fb783;
   --attention: #d6a046;
   --negative: #e0685d;
