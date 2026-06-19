@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Experience } from "@/db/schema";
 
 function mon(d: Date | null): string | null {
@@ -22,9 +23,13 @@ export function Timeline({ items }: { items: Experience[] }) {
           </span>
           <div>
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h3 className="font-display text-xl font-medium text-ink">
+              <Link
+                href={`/experience/${e.id}`}
+                scroll={false}
+                className="font-display text-xl font-medium text-ink transition-colors hover:text-accent"
+              >
                 {e.role} · {e.org}
-              </h3>
+              </Link>
               <span className="font-mono text-xs text-faint">
                 {range(e.startedAt, e.endedAt)}
                 {e.location ? ` · ${e.location}` : ""}
