@@ -202,6 +202,31 @@ html.dark .vertical-dump .sticky-note {
   }
 }
 
+/* Gentle floating drift for the portfolio hero's telemetry chips. */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.float-soft {
+  animation: float-soft 5.5s ease-in-out infinite;
+}
+.float-soft.d1 {
+  animation-delay: -1.8s;
+}
+.float-soft.d2 {
+  animation-delay: -3.6s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .float-soft {
+    animation: none;
+  }
+}
+
 @theme inline {
   --color-paper: var(--paper);
   --color-surface: var(--surface);

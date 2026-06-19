@@ -10,6 +10,7 @@ import { publicUrl } from "@/lib/storage/gcs";
 import { SectionHeading } from "@/components/portfolio/ui/section-heading";
 import { Tag, AwardTag } from "@/components/portfolio/ui/tag";
 import { Timeline } from "@/components/portfolio/sections/timeline";
+import { Hero } from "@/components/portfolio/hero/hero";
 
 const wrap = "mx-auto w-full max-w-5xl px-6";
 
@@ -35,44 +36,7 @@ export default async function PortfolioLanding() {
 
   return (
     <div className="pb-28">
-      {/* Hero (skeleton — the photo + particles + agent console land in the next pass) */}
-      <section className={`${wrap} pt-20 sm:pt-28`}>
-        <p className="font-mono text-[0.7rem] uppercase tracking-[0.2em] text-faint">
-          {profile?.tagline || "Software / AI-native engineer"}
-        </p>
-        <h1 className="mt-5 max-w-3xl font-display text-5xl font-semibold leading-[1.02] tracking-tight text-ink sm:text-6xl">
-          {profile?.name || "Manan Shah"}
-          <span className="text-accent">.</span>
-        </h1>
-        {profile?.intro && (
-          <p className="mt-6 max-w-prose font-body text-lg leading-relaxed text-muted">
-            {profile.intro}
-          </p>
-        )}
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {profile?.email && (
-            <a
-              href={`mailto:${profile.email}`}
-              className="inline-flex items-center rounded-lg bg-accent px-4 py-2 font-mono text-sm text-accent-ink transition-opacity hover:opacity-90"
-            >
-              Email Manan
-            </a>
-          )}
-          {resume && (
-            <a
-              href={resume}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-sm text-accent underline underline-offset-4"
-            >
-              Résumé
-            </a>
-          )}
-        </div>
-        <p className="mt-10 max-w-prose rounded-lg border border-dashed border-rule px-4 py-3 font-mono text-xs text-faint">
-          ● reserved — an interactive “assess my fit” console is coming online here.
-        </p>
-      </section>
+      <Hero profile={profile} resume={resume} />
 
       {/* Now */}
       {profile?.now && (
@@ -86,7 +50,7 @@ export default async function PortfolioLanding() {
 
       {/* Selected work */}
       {shownProjects.length > 0 && (
-        <section className={`${wrap} mt-28`}>
+        <section id="work" className={`${wrap} mt-28 scroll-mt-20`}>
           <SectionHeading eyebrow="Selected work" title="Things I've built" />
           <ul className="space-y-10">
             {shownProjects.map((p) => (
@@ -140,7 +104,7 @@ export default async function PortfolioLanding() {
 
       {/* Experience */}
       {experiences.length > 0 && (
-        <section className={`${wrap} mt-28`}>
+        <section id="experience" className={`${wrap} mt-28 scroll-mt-20`}>
           <SectionHeading eyebrow="Experience" title="Where I've worked" />
           <Timeline items={experiences} />
         </section>
