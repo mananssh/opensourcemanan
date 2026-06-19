@@ -27,14 +27,6 @@ export function Hero({ profile }: { profile: Profile | null }) {
               {profile.intro}
             </p>
           )}
-          {profile?.now && (
-            <div className="mt-7 max-w-xl border-l-2 border-accent/60 pl-4">
-              <span className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-faint">
-                now
-              </span>
-              <p className="mt-1 font-body text-ink">{profile.now}</p>
-            </div>
-          )}
         </div>
 
         {/* Big portrait */}

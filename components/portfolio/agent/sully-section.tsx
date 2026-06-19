@@ -4,7 +4,7 @@ import { SullyPanel } from "@/components/portfolio/agent/sully-panel";
 /** Placeholder Sully avatar. TODO: swap to <Image src="/sully.png"> once added to /public. */
 function SullyAvatar() {
   return (
-    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#0a0d0c] font-display text-3xl font-semibold text-[#34f5a0] ring-2 ring-[#34f5a0]/70">
+    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#f0f7f3] font-display text-3xl font-semibold text-[#0a9d6b] ring-2 ring-[#0a9d6b]/50 dark:bg-[#0a0d0c] dark:text-[#34f5a0] dark:ring-[#34f5a0]/70">
       S
     </div>
   );
