@@ -100,6 +100,45 @@ html.dark .vertical-dump {
   --accent-soft: #1a2540;
 }
 
+/*
+ * Portfolio vertical (/) — "aviation instrument" identity: cool neutral paper,
+ * ink-blue accent, warm-slate dark, functional status colors. Display = Bricolage
+ * Grotesque, body = Geist, machine voice = Geist Mono. Both themes (ADR 0005).
+ */
+.vertical-portfolio {
+  --paper: #f1f1ed;
+  --surface: #fbfbf9;
+  --ink: #17181a;
+  --muted: #56585c;
+  --faint: #8a8c90;
+  --rule: #ddddd6;
+  --accent: #2b50e0; /* calm electric ink-blue */
+  --accent-soft: #e3e9fb;
+  --accent-ink: #ffffff;
+  --ok: #2f8f63;
+  --attention: #b9821c;
+  --negative: #bd3d33;
+
+  --display-family: var(--font-bricolage);
+  --body-family: var(--font-geist);
+  --mono-family: var(--font-geist-mono);
+}
+
+html.dark .vertical-portfolio {
+  --paper: #15171b; /* warm slate night deck (not near-black) */
+  --surface: #1d2026;
+  --ink: #ecede9;
+  --muted: #9da0a4;
+  --faint: #6c6f74;
+  --rule: #2a2e35;
+  --accent: #6e8bff;
+  --accent-soft: #1b2438;
+  --accent-ink: #0e1116;
+  --ok: #4fb783;
+  --attention: #d6a046;
+  --negative: #e0685d;
+}
+
 /* A sticky note: colored card, soft shadow, slight tilt; straightens on hover.
    NB: named `.sticky-note`, NOT `.sticky` — `.sticky` is Tailwind's position
    utility used by every navbar, so reusing it leaked the tape + hover onto them. */
@@ -171,6 +210,11 @@ html.dark .vertical-dump .sticky-note {
   --color-rule: var(--rule);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  /* Portfolio extras (fall back to accent/ink where a vertical doesn't set them). */
+  --color-accent-ink: var(--accent-ink, var(--paper));
+  --color-ok: var(--ok, var(--accent));
+  --color-attention: var(--attention, var(--accent));
+  --color-negative: var(--negative, var(--accent));
 
   --font-display: var(--display-family);
   --font-body: var(--body-family);
