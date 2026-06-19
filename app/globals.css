@@ -101,10 +101,10 @@ html.dark .vertical-dump {
 }
 
 /*
- * Portfolio vertical (/) — "Mono + acid lime": near-grayscale base, one sharp
- * acid-lime accent used sparingly. Dark-first. Display = Bricolage Grotesque,
- * body = Geist, machine voice = Geist Mono. Both themes (ADR 0005); the lime
- * darkens to an olive-lime in light mode so links stay legible on white.
+ * Portfolio vertical (/) — "Mono + amber": near-grayscale base, one sharp amber
+ * accent used sparingly. Dark-first. Display = Bricolage Grotesque, body = Geist,
+ * machine voice = Geist Mono. Both themes (ADR 0005); the amber darkens in light
+ * mode so links stay legible on white.
  */
 .vertical-portfolio {
   --paper: #fafaf9;
@@ -113,8 +113,8 @@ html.dark .vertical-dump {
   --muted: #57575c;
   --faint: #6c6c72;
   --rule: #e6e6e3;
-  --accent: #4d7c0f; /* legible lime-green on light */
-  --accent-soft: #eaf7d5;
+  --accent: #b45309; /* legible deep amber on light */
+  --accent-soft: #fbefd3;
   --accent-ink: #ffffff;
   --ok: #2f8f63;
   --attention: #b9821c;
@@ -132,9 +132,9 @@ html.dark .vertical-portfolio {
   --muted: #9a9aa0;
   --faint: #7c7c82;
   --rule: #232327;
-  --accent: #b6ff3c; /* acid lime */
-  --accent-soft: #1a2410;
-  --accent-ink: #0b0b0c;
+  --accent: #ffb020; /* amber */
+  --accent-soft: #241a07;
+  --accent-ink: #1a1304;
   --ok: #4fb783;
   --attention: #d6a046;
   --negative: #e0685d;
