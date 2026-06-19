@@ -18,7 +18,7 @@ export function ImageUpload({
   name: string;
   initialKey?: string | null;
   initialUrl?: string | null;
-  vertical?: "blog" | "dump" | "projects" | "misc";
+  vertical?: "blog" | "dump" | "portfolio" | "projects" | "misc";
 }) {
   const [key, setKey] = useState(initialKey ?? "");
   const [preview, setPreview] = useState(initialUrl ?? "");
