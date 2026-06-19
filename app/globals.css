@@ -101,20 +101,20 @@ html.dark .vertical-dump {
 }
 
 /*
- * Portfolio vertical (/) — "Deep Ocean": navy-tinted base + an electric sky-cyan
- * accent. Cool, terminal-clean. Display = Bricolage Grotesque, body = Geist,
- * machine voice = Geist Mono. Both themes (ADR 0005); status colors carry
- * meaning only (mostly the Phase-2 agent telemetry).
+ * Portfolio vertical (/) — "Mono + acid lime": near-grayscale base, one sharp
+ * acid-lime accent used sparingly. Dark-first. Display = Bricolage Grotesque,
+ * body = Geist, machine voice = Geist Mono. Both themes (ADR 0005); the lime
+ * darkens to an olive-lime in light mode so links stay legible on white.
  */
 .vertical-portfolio {
-  --paper: #f4f7fb;
+  --paper: #fafaf9;
   --surface: #ffffff;
-  --ink: #0f1a2b;
-  --muted: #4a586e;
-  --faint: #8893a6;
-  --rule: #dce3ee;
-  --accent: #0284c7; /* deep sky-cyan (legible on light) */
-  --accent-soft: #ddeefb;
+  --ink: #0b0b0c;
+  --muted: #57575c;
+  --faint: #6c6c72;
+  --rule: #e6e6e3;
+  --accent: #4d7c0f; /* legible lime-green on light */
+  --accent-soft: #eaf7d5;
   --accent-ink: #ffffff;
   --ok: #2f8f63;
   --attention: #b9821c;
@@ -126,15 +126,15 @@ html.dark .vertical-dump {
 }
 
 html.dark .vertical-portfolio {
-  --paper: #0a0f1e; /* deep navy-black (tinted, not flat gray) */
-  --surface: #121a30;
-  --ink: #e7ecf6;
-  --muted: #97a1b8;
-  --faint: #5c6680;
-  --rule: #243150;
-  --accent: #38bdf8; /* electric sky-cyan */
-  --accent-soft: #0f2238;
-  --accent-ink: #06121f;
+  --paper: #0b0b0c; /* near-black monochrome */
+  --surface: #151517;
+  --ink: #fafaf9;
+  --muted: #9a9aa0;
+  --faint: #7c7c82;
+  --rule: #232327;
+  --accent: #b6ff3c; /* acid lime */
+  --accent-soft: #1a2410;
+  --accent-ink: #0b0b0c;
   --ok: #4fb783;
   --attention: #d6a046;
   --negative: #e0685d;
