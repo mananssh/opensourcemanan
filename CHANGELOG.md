@@ -2,6 +2,13 @@
 
 ## 2026-06-19
 
+- **07:52 · `d7d2a52` · feat:** Portfolio admin CMS — owner-gated CRUD for all content
+  An owner-gated admin at /admin to manage every portfolio entity in-browser:
+  profile (singleton), projects, experience, hackathons, capabilities — create,
+  edit, delete, with inline error handling, slug collision checks, and image
+  uploads (photo + covers) straight to GCS under a new `portfolio/` prefix.
+  Reuses the blog admin primitives (AdminForm, ImageUpload, ConfirmSubmit,
+  requireOwner). Now you can manage all content without the seed script.
 - **07:31 · `53fadfe` · feat:** Portfolio data foundation — schema, store, and seed (DB-backed)
   The portfolio's data layer (OSM's third content collection): five DB tables
   (profile · projects · experiences · hackathons · capabilities, migration 0008),
