@@ -100,6 +100,46 @@ html.dark .vertical-dump {
   --accent-soft: #1a2540;
 }
 
+/*
+ * Portfolio vertical (/) — "Mono + coral": near-grayscale base, one sharp coral
+ * accent used sparingly. Dark-first. Display = Bricolage Grotesque, body = Geist,
+ * machine voice = Geist Mono. Both themes (ADR 0005); the coral darkens in light
+ * mode so links stay legible on white.
+ */
+.vertical-portfolio {
+  --paper: #fafaf9;
+  --surface: #ffffff;
+  --ink: #0b0b0c;
+  --muted: #57575c;
+  --faint: #6c6c72;
+  --rule: #e6e6e3;
+  --accent: #cc3a2d; /* legible deep coral on light */
+  --accent-soft: #fbe3df;
+  --accent-ink: #ffffff;
+  --ok: #2f8f63;
+  --attention: #b9821c;
+  --negative: #bd3d33;
+
+  --display-family: var(--font-bricolage);
+  --body-family: var(--font-geist);
+  --mono-family: var(--font-geist-mono);
+}
+
+html.dark .vertical-portfolio {
+  --paper: #0b0b0c; /* near-black monochrome */
+  --surface: #151517;
+  --ink: #fafaf9;
+  --muted: #9a9aa0;
+  --faint: #7c7c82;
+  --rule: #232327;
+  --accent: #ff5a4d; /* coral red */
+  --accent-soft: #2a0e0a;
+  --accent-ink: #1a0605;
+  --ok: #4fb783;
+  --attention: #d6a046;
+  --negative: #e0685d;
+}
+
 /* A sticky note: colored card, soft shadow, slight tilt; straightens on hover.
    NB: named `.sticky-note`, NOT `.sticky` — `.sticky` is Tailwind's position
    utility used by every navbar, so reusing it leaked the tape + hover onto them. */
@@ -171,6 +211,11 @@ html.dark .vertical-dump .sticky-note {
   --color-rule: var(--rule);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  /* Portfolio extras (fall back to accent/ink where a vertical doesn't set them). */
+  --color-accent-ink: var(--accent-ink, var(--paper));
+  --color-ok: var(--ok, var(--accent));
+  --color-attention: var(--attention, var(--accent));
+  --color-negative: var(--negative, var(--accent));
 
   --font-display: var(--display-family);
   --font-body: var(--body-family);
