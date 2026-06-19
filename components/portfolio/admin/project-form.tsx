@@ -1,6 +1,7 @@
 import { saveProject, deleteProject } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
+import { MultiImageUpload } from "@/components/portfolio/admin/multi-image-upload";
 import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { Field, inputCls } from "@/components/portfolio/admin/fields";
 import { publicUrl } from "@/lib/storage/gcs";
@@ -56,6 +57,13 @@ export function ProjectForm({ project }: { project?: Project }) {
             vertical="portfolio"
             initialKey={project?.coverImageKey}
             initialUrl={project?.coverImageKey ? publicUrl(project.coverImageKey) : null}
+          />
+        </Field>
+        <Field label="Detail gallery (multiple)">
+          <MultiImageUpload
+            name="imageKeys"
+            vertical="portfolio"
+            initial={(project?.imageKeys ?? []).map((k) => ({ key: k, url: publicUrl(k) }))}
           />
         </Field>
       </AdminForm>
