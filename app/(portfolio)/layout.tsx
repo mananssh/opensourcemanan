@@ -1,20 +1,8 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Particles } from "@/components/portfolio/hero/particles";
-
-const display = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
-  display: "swap",
-});
-const body = Geist({ variable: "--font-geist", subsets: ["latin"], display: "swap" });
-const mono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+import { portfolioFontVars } from "@/lib/portfolio/fonts";
 
 export const metadata: Metadata = {
   title: { default: "Manan Shah", template: "%s · Manan Shah" },
@@ -27,7 +15,7 @@ export default function PortfolioLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div
-      className={`vertical-portfolio ${display.variable} ${body.variable} ${mono.variable} flex min-h-dvh flex-col bg-paper font-body text-ink`}
+      className={`vertical-portfolio ${portfolioFontVars} flex min-h-dvh flex-col bg-paper font-body text-ink`}
     >
       <a href="#content" className="skip-link">
         Skip to content
