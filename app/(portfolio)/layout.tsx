@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Particles } from "@/components/portfolio/hero/particles";
 
 const display = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -31,6 +32,8 @@ export default function PortfolioLayout({
       <a href="#content" className="skip-link">
         Skip to content
       </a>
+      {/* Full-page signal field — fixed so it persists behind everything as you scroll. */}
+      <Particles className="pointer-events-none fixed inset-0 z-0 h-full w-full" />
       <header className="sticky top-0 z-40 border-b border-rule bg-paper/80 backdrop-blur">
         <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="font-display text-lg font-semibold tracking-tight text-ink">
@@ -48,11 +51,11 @@ export default function PortfolioLayout({
         </nav>
       </header>
 
-      <main id="content" tabIndex={-1} className="flex-1 outline-none">
+      <main id="content" tabIndex={-1} className="relative z-10 flex-1 outline-none">
         {children}
       </main>
 
-      <footer className="border-t border-rule">
+      <footer className="relative z-10 border-t border-rule">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-1 px-6 py-10 font-mono text-[0.7rem] tracking-[0.12em] text-faint sm:flex-row sm:items-center sm:justify-between">
           <span>manan shah — built in the open</span>
           {/* TODO (Phase 2): an MCP endpoint flex for agents — reserved, not built. */}
