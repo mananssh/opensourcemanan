@@ -120,6 +120,11 @@ export default async function PortfolioLanding() {
         <section id="experience" className={`${wrap} mt-28 scroll-mt-20`}>
           <SectionHeading eyebrow="Experience" title="Where I've worked" />
           <Timeline items={experiences} />
+          <div className="mt-8">
+            <Link href="/experience" className="font-mono text-xs uppercase tracking-[0.18em] text-accent">
+              Full timeline →
+            </Link>
+          </div>
         </section>
       )}
 
