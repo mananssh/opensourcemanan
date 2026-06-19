@@ -34,7 +34,7 @@ export default function PortfolioLayout({
       <header className="sticky top-0 z-40 border-b border-rule bg-paper/80 backdrop-blur">
         <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="font-display text-lg font-semibold tracking-tight text-ink">
-            manan shah<span className="text-accent">.</span>
+            mananssh<span className="text-accent">.</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link
@@ -56,7 +56,7 @@ export default function PortfolioLayout({
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-1 px-6 py-10 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-faint sm:flex-row sm:items-center sm:justify-between">
           <span>Manan Shah — built in the open</span>
           {/* TODO (Phase 2): an MCP endpoint flex for agents — reserved, not built. */}
-          <span>Mostly Mumbai · usually building · occasionally airborne</span>
+          <span>Mostly BLR, Maybe BOM</span>
         </div>
       </footer>
     </div>
