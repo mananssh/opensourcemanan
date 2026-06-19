@@ -49,7 +49,12 @@ export default async function PortfolioLanding() {
             {shownProjects.map((p) => (
               <li key={p.id} className="border-t border-rule pt-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-                  <h3 className="font-display text-2xl font-medium text-ink">{p.name}</h3>
+                  <Link
+                    href={`/work/${p.slug}`}
+                    className="font-display text-2xl font-medium text-ink transition-colors hover:text-accent"
+                  >
+                    {p.name}
+                  </Link>
                   {p.award && <AwardTag>{p.award}</AwardTag>}
                 </div>
                 {p.blurb && (
@@ -65,6 +70,11 @@ export default async function PortfolioLanding() {
               </li>
             ))}
           </ul>
+          <div className="mt-8">
+            <Link href="/work" className="font-mono text-xs uppercase tracking-[0.18em] text-accent">
+              All work →
+            </Link>
+          </div>
         </section>
       )}
 
@@ -79,7 +89,12 @@ export default async function PortfolioLanding() {
                 className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-rule pt-4"
               >
                 <div>
-                  <span className="font-display text-lg text-ink">{h.event}</span>
+                  <Link
+                    href={`/hackathons/${h.slug}`}
+                    className="font-display text-lg text-ink transition-colors hover:text-accent"
+                  >
+                    {h.event}
+                  </Link>
                   {h.blurb && (
                     <p className="mt-1 max-w-prose font-body text-sm text-muted">
                       {h.blurb}
@@ -92,6 +107,11 @@ export default async function PortfolioLanding() {
               </li>
             ))}
           </ul>
+          <div className="mt-8">
+            <Link href="/hackathons" className="font-mono text-xs uppercase tracking-[0.18em] text-accent">
+              All hackathons →
+            </Link>
+          </div>
         </section>
       )}
 
