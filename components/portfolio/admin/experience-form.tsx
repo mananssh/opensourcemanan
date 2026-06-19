@@ -1,7 +1,9 @@
 import { saveExperience, deleteExperience } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
+import { ImageUpload } from "@/components/image-upload";
 import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { Field, inputCls } from "@/components/portfolio/admin/fields";
+import { publicUrl } from "@/lib/storage/gcs";
 import type { Experience } from "@/db/schema";
 
 const dateVal = (d?: Date | null) =>
@@ -40,6 +42,14 @@ export function ExperienceForm({ experience }: { experience?: Experience }) {
         </Field>
         <Field label="Body (full detail)" htmlFor="body">
           <textarea id="body" name="body" rows={4} defaultValue={experience?.body} className={inputCls} />
+        </Field>
+        <Field label="Logo">
+          <ImageUpload
+            name="logoKey"
+            vertical="portfolio"
+            initialKey={experience?.logoKey}
+            initialUrl={experience?.logoKey ? publicUrl(experience.logoKey) : null}
+          />
         </Field>
       </AdminForm>
 
