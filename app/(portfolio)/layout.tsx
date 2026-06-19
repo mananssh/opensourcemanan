@@ -53,10 +53,10 @@ export default function PortfolioLayout({
       </main>
 
       <footer className="border-t border-rule">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-1 px-6 py-10 font-mono text-[0.7rem] uppercase tracking-[0.18em] text-faint sm:flex-row sm:items-center sm:justify-between">
-          <span>Manan Shah — built in the open</span>
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-1 px-6 py-10 font-mono text-[0.7rem] tracking-[0.12em] text-faint sm:flex-row sm:items-center sm:justify-between">
+          <span>manan shah — built in the open</span>
           {/* TODO (Phase 2): an MCP endpoint flex for agents — reserved, not built. */}
-          <span>Mostly BLR, Maybe BOM</span>
+          <span>mostly blr, maybe bom · usually building · occasionally airborne</span>
         </div>
       </footer>
     </div>
