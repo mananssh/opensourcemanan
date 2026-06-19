@@ -2,6 +2,13 @@
 
 ## 2026-06-19
 
+- **11:51 · `e40b234` · feat:** Portfolio hero — photo, signal-field particles, scramble text, agent console (stub)
+  The portfolio's signature hero: name + human line, a framed GCS photo with
+  floating telemetry chips, a cursor/scroll-reactive particle field (retokenized,
+  reduced-motion-safe, perf-capped), scramble/decrypt machine text, and the
+  AgentConsole — a self-contained fit-assessment instrument that auto-plays a baked
+  example trace + verdict + evidence behind the Phase-2 runFitAssessment seam (no
+  model yet). next/image wired for GCS photos.
 - **10:03 · `d2756ee` · feat:** Portfolio shell + DB-driven landing (replaces coming-soon)
   The portfolio takes over / as its own vertical: aviation-instrument theme
   (.vertical-portfolio, both light + dark), Bricolage Grotesque / Geist / Geist
