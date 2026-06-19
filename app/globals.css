@@ -227,6 +227,32 @@ html.dark .vertical-dump .sticky-note {
   }
 }
 
+/*
+ * Sully stage — a self-contained modern neon-dark surface for the agent panel +
+ * graph, regardless of the page's light/dark theme. It locally overrides the
+ * semantic tokens to a near-black base + a neon-mint accent, so everything inside
+ * (input, graph nodes/edges, the "Ask Sully" button) inherits the neon look.
+ */
+.sully-stage {
+  --paper: #0c100e;
+  --surface: #121814;
+  --ink: #e9fff4;
+  --muted: #8aa99b;
+  --faint: #5d7468;
+  --rule: #213029;
+  --accent: #34f5a0; /* neon mint-green */
+  --accent-soft: #0f2b20;
+  --accent-ink: #04140d;
+  background: #0a0d0c;
+  border-color: #213029;
+  box-shadow:
+    inset 0 0 0 1px #0f2b2055,
+    0 24px 70px -34px #34f5a040;
+}
+.sully-stage .neon-btn {
+  box-shadow: 0 0 20px -4px var(--accent);
+}
+
 @theme inline {
   --color-paper: var(--paper);
   --color-surface: var(--surface);

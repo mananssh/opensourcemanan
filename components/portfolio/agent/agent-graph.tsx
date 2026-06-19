@@ -4,17 +4,18 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { FitResult, TraceEvent } from "./agent-types";
 
 type Status = "idle" | "running" | "done";
+type Orientation = "h" | "v";
 
-const NODES: { id: string; label: string; x: number; y: number }[] = [
-  { id: "intake", label: "intake", x: 12, y: 32 },
-  { id: "fit", label: "fit gate", x: 33, y: 32 },
-  { id: "plan", label: "plan", x: 54, y: 32 },
-  { id: "work", label: "work", x: 80, y: 13 },
-  { id: "projects", label: "projects", x: 80, y: 32 },
-  { id: "corpus", label: "corpus", x: 80, y: 51 },
-  { id: "synth", label: "synthesize", x: 104, y: 32 },
-  { id: "verdict", label: "verdict", x: 124, y: 32 },
-];
+const LABELS: Record<string, string> = {
+  intake: "intake",
+  fit: "fit gate",
+  plan: "plan",
+  work: "work",
+  projects: "projects",
+  corpus: "corpus",
+  synth: "synthesize",
+  verdict: "verdict",
+};
 const EDGES: [string, string][] = [
   ["intake", "fit"],
   ["fit", "plan"],
@@ -26,7 +27,6 @@ const EDGES: [string, string][] = [
   ["corpus", "synth"],
   ["synth", "verdict"],
 ];
-// graph node → underlying trace node id(s)
 const MAP: Record<string, string[]> = {
   intake: ["intake"],
   fit: ["fit_gate"],
@@ -36,24 +36,63 @@ const MAP: Record<string, string[]> = {
   corpus: ["gather_web"],
   synth: ["synthesize", "critique", "compose"],
 };
-const at = (id: string) => NODES.find((n) => n.id === id)!;
+
+const LAYOUT: Record<
+  Orientation,
+  { viewBox: string; pos: Record<string, [number, number]>; labelDx: number; labelDy: number; anchor: "middle" | "start" }
+> = {
+  h: {
+    viewBox: "0 0 138 64",
+    pos: {
+      intake: [12, 32],
+      fit: [33, 32],
+      plan: [54, 32],
+      work: [80, 13],
+      projects: [80, 32],
+      corpus: [80, 51],
+      synth: [106, 32],
+      verdict: [126, 32],
+    },
+    labelDx: 0,
+    labelDy: 7,
+    anchor: "middle",
+  },
+  v: {
+    viewBox: "0 0 64 196",
+    pos: {
+      intake: [32, 14],
+      fit: [32, 40],
+      plan: [32, 66],
+      work: [14, 100],
+      projects: [32, 100],
+      corpus: [50, 100],
+      synth: [32, 138],
+      verdict: [32, 168],
+    },
+    labelDx: 0,
+    labelDy: 6.5,
+    anchor: "middle",
+  },
+};
 
 export function AgentGraph({
   trace,
   result,
+  orientation = "h",
 }: {
   trace: TraceEvent[];
   result: FitResult | null;
+  orientation?: Orientation;
 }) {
   const reduce = useReducedMotion();
+  const layout = LAYOUT[orientation];
+  const at = (id: string) => layout.pos[id];
+
   const ts: Record<string, Status> = {};
   for (const e of trace) ts[e.node] = e.status === "skipped" ? "done" : e.status;
 
   function statusOf(id: string): Status {
-    if (id === "verdict") {
-      if (result) return "done";
-      return ts["compose"] ? "running" : "idle";
-    }
+    if (id === "verdict") return result ? "done" : ts["compose"] ? "running" : "idle";
     const sts = (MAP[id] ?? []).map((n) => ts[n]).filter(Boolean) as Status[];
     if (sts.includes("running")) return "running";
     if (sts.length && sts.every((s) => s === "done")) return "done";
@@ -61,81 +100,77 @@ export function AgentGraph({
     return "idle";
   }
 
-  const color = (s: Status) =>
-    s === "done" ? "var(--accent)" : s === "running" ? "var(--accent)" : "var(--rule)";
-
   return (
     <svg
-      viewBox="0 0 136 64"
+      viewBox={layout.viewBox}
       className="w-full"
       role="img"
       aria-label="Live agent flow: intake, fit gate, plan, gather work/projects/corpus, synthesize, verdict"
     >
-      {/* edges */}
       {EDGES.map(([from, to], i) => {
-        const a = at(from);
-        const b = at(to);
+        const [ax, ay] = at(from);
+        const [bx, by] = at(to);
         const lit = statusOf(from) === "done";
         return (
           <motion.path
             key={i}
-            d={`M ${a.x} ${a.y} L ${b.x} ${b.y}`}
+            d={`M ${ax} ${ay} L ${bx} ${by}`}
             fill="none"
             stroke={lit ? "var(--accent)" : "var(--rule)"}
-            strokeWidth={0.6}
+            strokeWidth={0.5}
             initial={false}
-            animate={{ pathLength: lit ? 1 : 0.001, opacity: lit ? 0.9 : 0.4 }}
+            animate={{ pathLength: lit ? 1 : 0.001, opacity: lit ? 0.95 : 0.45 }}
             transition={{ duration: reduce ? 0 : 0.5, ease: "easeOut" }}
           />
         );
       })}
 
-      {/* nodes */}
-      {NODES.map((n) => {
-        const s = statusOf(n.id);
+      {Object.keys(LABELS).map((id) => {
+        const [x, y] = at(id);
+        const s = statusOf(id);
         const active = s !== "idle";
         return (
-          <g key={n.id}>
-            {/* glow ring while running */}
+          <g key={id}>
             {s === "running" && !reduce && (
               <motion.circle
-                cx={n.x}
-                cy={n.y}
-                r={4}
+                cx={x}
+                cy={y}
+                r={2.8}
                 fill="none"
                 stroke="var(--accent)"
-                strokeWidth={0.5}
-                initial={{ scale: 1, opacity: 0.6 }}
-                animate={{ scale: [1, 1.9], opacity: [0.6, 0] }}
+                strokeWidth={0.4}
+                initial={{ scale: 1, opacity: 0.7 }}
+                animate={{ scale: [1, 2], opacity: [0.7, 0] }}
                 transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
-                style={{ transformOrigin: `${n.x}px ${n.y}px` }}
+                style={{ transformOrigin: `${x}px ${y}px` }}
               />
             )}
             <motion.circle
-              cx={n.x}
-              cy={n.y}
-              r={3.4}
+              cx={x}
+              cy={y}
+              r={2.4}
               initial={false}
               animate={{
                 fill: s === "done" ? "var(--accent)" : "var(--surface)",
-                scale: s === "running" && !reduce ? [1, 1.14, 1] : 1,
+                scale: s === "running" && !reduce ? [1, 1.18, 1] : 1,
               }}
               transition={{
                 fill: { duration: 0.3 },
                 scale: { duration: 1.1, repeat: s === "running" && !reduce ? Infinity : 0 },
               }}
-              stroke={color(s)}
-              strokeWidth={0.8}
-              style={{ transformOrigin: `${n.x}px ${n.y}px` }}
+              stroke="var(--accent)"
+              strokeWidth={active ? 0.8 : 0.5}
+              strokeOpacity={active ? 1 : 0.45}
+              style={{ transformOrigin: `${x}px ${y}px` }}
             />
             <text
-              x={n.x}
-              y={n.y + 8}
-              textAnchor="middle"
-              style={{ fontSize: 3, fontFamily: "var(--font-mono), monospace" }}
+              x={x + layout.labelDx}
+              y={y + 2.4 + layout.labelDy}
+              textAnchor={layout.anchor}
+              style={{ fontSize: 2.6, fontFamily: "var(--font-mono), monospace" }}
               fill={active ? "var(--ink)" : "var(--faint)"}
             >
-              {n.label}
+              {LABELS[id]}
             </text>
           </g>
         );

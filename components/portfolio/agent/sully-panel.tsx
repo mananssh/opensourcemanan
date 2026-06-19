@@ -6,15 +6,15 @@ import { runFitAssessment } from "./run-fit-assessment";
 import { AgentGraph } from "./agent-graph";
 import type { FitResult, TraceEvent } from "./agent-types";
 
-const AGENT = "Otto";
+const AGENT = "Sully";
 const VERDICT: Record<FitResult["verdict"], string> = {
   strong: "strong fit",
   plausible: "plausible fit",
   not_a_fit: "not a fit",
 };
 
-/** Full-width agent: paste a role, watch Otto's flow light up, get the verdict. */
-export function OttoPanel() {
+/** Full-width neon-dark agent: paste a role, watch Sully's flow, get the verdict. */
+export function SullyPanel() {
   const [input, setInput] = useState("");
   const [trace, setTrace] = useState<TraceEvent[]>([]);
   const [result, setResult] = useState<FitResult | null>(null);
@@ -50,7 +50,7 @@ export function OttoPanel() {
   const latest = trace[trace.length - 1];
 
   return (
-    <div className="rounded-2xl border border-rule bg-surface/50 p-5 backdrop-blur sm:p-7">
+    <div className="sully-stage rounded-2xl border p-5 font-body text-ink sm:p-7">
       <form
         className="flex flex-col gap-3 sm:flex-row"
         onSubmit={(e) => {
@@ -71,18 +71,22 @@ export function OttoPanel() {
         <button
           type="submit"
           disabled={running}
-          className={`shrink-0 rounded-lg bg-accent px-5 py-3 font-mono text-sm font-semibold text-accent-ink transition-opacity hover:opacity-90 ${running ? "cursor-wait opacity-60" : ""}`}
+          className={`neon-btn shrink-0 rounded-lg bg-accent px-5 py-3 font-mono text-sm font-semibold text-accent-ink transition-opacity hover:opacity-90 ${running ? "cursor-wait opacity-60" : ""}`}
         >
           {running ? `${AGENT} is reading…` : `Ask ${AGENT}`}
         </button>
       </form>
 
-      {/* the live flow graph */}
+      {/* the live flow graph — horizontal on desktop, vertical on phones */}
       <div className="mt-7">
-        <AgentGraph trace={trace} result={result} />
+        <div className="hidden sm:block">
+          <AgentGraph trace={trace} result={result} orientation="h" />
+        </div>
+        <div className="mx-auto block max-w-[14rem] sm:hidden">
+          <AgentGraph trace={trace} result={result} orientation="v" />
+        </div>
       </div>
 
-      {/* live status line (reserves height to avoid layout shift) */}
       <div className="mt-1 h-5 text-center font-mono text-[0.7rem] text-faint">
         {!result && latest && (
           <span>
@@ -103,7 +107,7 @@ export function OttoPanel() {
             <span className="inline-flex rounded-full bg-accent-soft px-3 py-0.5 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-accent">
               {VERDICT[result.verdict]}
             </span>
-            <p className="mt-3 max-w-3xl font-body text-[1.02rem] leading-relaxed text-ink">
+            <p className="mt-3 max-w-3xl text-[1.02rem] leading-relaxed text-ink">
               {result.paragraph}
             </p>
             {result.evidence.length > 0 && (

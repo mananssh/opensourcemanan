@@ -11,6 +11,7 @@ import { SectionHeading } from "@/components/portfolio/ui/section-heading";
 import { Tag, AwardTag } from "@/components/portfolio/ui/tag";
 import { Timeline } from "@/components/portfolio/sections/timeline";
 import { Hero } from "@/components/portfolio/hero/hero";
+import { SullySection } from "@/components/portfolio/agent/sully-section";
 
 const wrap = "mx-auto w-full max-w-5xl px-6";
 
@@ -38,15 +39,7 @@ export default async function PortfolioLanding() {
     <div className="pb-28">
       <Hero profile={profile} />
 
-      {/* Now */}
-      {profile?.now && (
-        <section className={`${wrap} mt-28`}>
-          <SectionHeading eyebrow="Now" title="What I'm building" />
-          <p className="max-w-prose font-body text-lg leading-relaxed text-ink">
-            {profile.now}
-          </p>
-        </section>
-      )}
+      <SullySection />
 
       {/* Selected work */}
       {shownProjects.length > 0 && (

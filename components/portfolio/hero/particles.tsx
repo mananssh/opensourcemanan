@@ -29,7 +29,7 @@ export function Particles({ className }: { className?: string }) {
     let pts: P[] = [];
     const mouse = { x: -9999, y: -9999 };
     const R = 130; // cursor influence
-    const LINK = 104; // link distance
+    const LINK = 86; // link distance
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -38,7 +38,7 @@ export function Particles({ className }: { className?: string }) {
       canvas!.width = w * dpr;
       canvas!.height = h * dpr;
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.min(90, Math.round((w * h) / 13000));
+      const count = Math.min(220, Math.round((w * h) / 6000));
       pts = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -83,7 +83,7 @@ export function Particles({ className }: { className?: string }) {
           const dy = rs[i].y - rs[j].y;
           const d = Math.hypot(dx, dy);
           if (d < LINK) {
-            ctx!.globalAlpha = (1 - d / LINK) * 0.22;
+            ctx!.globalAlpha = (1 - d / LINK) * 0.16;
             ctx!.beginPath();
             ctx!.moveTo(rs[i].x, rs[i].y);
             ctx!.lineTo(rs[j].x, rs[j].y);
@@ -95,9 +95,9 @@ export function Particles({ className }: { className?: string }) {
       // dots
       for (const r of rs) {
         ctx!.beginPath();
-        ctx!.arc(r.x, r.y, 1.7 + r.near * 1.8, 0, Math.PI * 2);
+        ctx!.arc(r.x, r.y, 1.3 + r.near * 1.5, 0, Math.PI * 2);
         ctx!.fillStyle = r.near > 0.05 ? accent : dotColor;
-        ctx!.globalAlpha = r.near > 0.05 ? 0.6 + r.near * 0.4 : 0.5;
+        ctx!.globalAlpha = r.near > 0.05 ? 0.65 + r.near * 0.35 : 0.5;
         ctx!.fill();
       }
       ctx!.globalAlpha = 1;
