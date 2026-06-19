@@ -1,6 +1,7 @@
 import { saveHackathon, deleteHackathon } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
+import { MultiImageUpload } from "@/components/portfolio/admin/multi-image-upload";
 import { ConfirmSubmit } from "@/components/admin/confirm-submit";
 import { Field, inputCls } from "@/components/portfolio/admin/fields";
 import { publicUrl } from "@/lib/storage/gcs";
@@ -52,6 +53,13 @@ export function HackathonForm({ hackathon }: { hackathon?: Hackathon }) {
             vertical="portfolio"
             initialKey={hackathon?.coverImageKey}
             initialUrl={hackathon?.coverImageKey ? publicUrl(hackathon.coverImageKey) : null}
+          />
+        </Field>
+        <Field label="Detail gallery (multiple)">
+          <MultiImageUpload
+            name="imageKeys"
+            vertical="portfolio"
+            initial={(hackathon?.imageKeys ?? []).map((k) => ({ key: k, url: publicUrl(k) }))}
           />
         </Field>
       </AdminForm>

@@ -74,9 +74,29 @@ function parseLinks(text: string): { label: string; url: string }[] {
     .filter((x) => x.label && x.url);
 }
 
-/** Portfolio assets are public; make the uploaded object world-readable. */
+/** A hidden field holding a JSON array of object keys (MultiImageUpload). */
+function jsonKeys(fd: FormData, key: string): string[] {
+  try {
+    const v = JSON.parse(str(fd, key) || "[]");
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Portfolio assets are public; make the uploaded object(s) world-readable. */
 async function publishImage(key: string | null): Promise<void> {
   if (key) await makePublic(key);
+}
+async function publishImages(keys: string[]): Promise<void> {
+  await Promise.all(keys.map((k) => makePublic(k)));
+}
+/** Delete objects in `before` that are no longer in `after` (gallery edits). */
+async function cleanupRemoved(before: string[], after: string[]): Promise<void> {
+  const keep = new Set(after);
+  await Promise.all(
+    before.filter((k) => !keep.has(k)).map((k) => deleteObject(k).catch(() => {})),
+  );
 }
 function revalidatePortfolio(): void {
   revalidatePath("/", "layout"); // the portfolio reads at root + galleries
@@ -137,6 +157,7 @@ export async function saveProject(
   const name = str(fd, "name");
   if (!name) return { error: "Name is required." };
   const coverImageKey = str(fd, "coverImageKey") || null;
+  const imageKeys = jsonKeys(fd, "imageKeys");
 
   const explicit = str(fd, "slug");
   const slug = slugify(explicit || name);
@@ -149,18 +170,21 @@ export async function saveProject(
 
   try {
     await publishImage(coverImageKey);
+    await publishImages(imageKeys);
   } catch {
-    return { error: "Couldn't process the cover image. Try again." };
+    return { error: "Couldn't process an image. Try again." };
   }
 
   let oldCover: string | null = null;
+  let oldGallery: string[] = [];
   if (id) {
     const [prev] = await db
-      .select({ coverImageKey: projects.coverImageKey })
+      .select({ coverImageKey: projects.coverImageKey, imageKeys: projects.imageKeys })
       .from(projects)
       .where(eq(projects.id, id))
       .limit(1);
     oldCover = prev?.coverImageKey ?? null;
+    oldGallery = prev?.imageKeys ?? [];
   }
 
   const data = {
@@ -173,6 +197,7 @@ export async function saveProject(
     award: str(fd, "award") || null,
     year: str(fd, "year") || null,
     coverImageKey,
+    imageKeys,
     featured: fd.get("featured") === "on",
     sortOrder: num(fd, "sortOrder"),
     updatedAt: new Date(),
@@ -187,6 +212,7 @@ export async function saveProject(
   if (oldCover && oldCover !== coverImageKey) {
     await deleteObject(oldCover).catch(() => {});
   }
+  await cleanupRemoved(oldGallery, imageKeys);
   revalidatePortfolio();
   redirect("/admin/projects");
 }
@@ -196,12 +222,13 @@ export async function deleteProject(fd: FormData): Promise<void> {
   const id = str(fd, "id");
   if (id) {
     const [row] = await db
-      .select({ coverImageKey: projects.coverImageKey })
+      .select({ coverImageKey: projects.coverImageKey, imageKeys: projects.imageKeys })
       .from(projects)
       .where(eq(projects.id, id))
       .limit(1);
     await db.delete(projects).where(eq(projects.id, id));
     if (row?.coverImageKey) await deleteObject(row.coverImageKey).catch(() => {});
+    await cleanupRemoved(row?.imageKeys ?? [], []);
   }
   revalidatePortfolio();
   redirect("/admin/projects");
@@ -217,6 +244,21 @@ export async function saveExperience(
   const org = str(fd, "org");
   const role = str(fd, "role");
   if (!org || !role) return { error: "Org and role are required." };
+  const logoKey = str(fd, "logoKey") || null;
+  try {
+    await publishImage(logoKey);
+  } catch {
+    return { error: "Couldn't process the logo. Try again." };
+  }
+  let oldLogo: string | null = null;
+  if (id) {
+    const [prev] = await db
+      .select({ logoKey: experiences.logoKey })
+      .from(experiences)
+      .where(eq(experiences.id, id))
+      .limit(1);
+    oldLogo = prev?.logoKey ?? null;
+  }
   const data = {
     org,
     role,
@@ -225,11 +267,13 @@ export async function saveExperience(
     location: str(fd, "location") || null,
     blurb: str(fd, "blurb"),
     body: str(fd, "body"),
+    logoKey,
     sortOrder: num(fd, "sortOrder"),
     updatedAt: new Date(),
   };
   if (id) await db.update(experiences).set(data).where(eq(experiences.id, id));
   else await db.insert(experiences).values(data);
+  if (oldLogo && oldLogo !== logoKey) await deleteObject(oldLogo).catch(() => {});
   revalidatePortfolio();
   redirect("/admin/experience");
 }
@@ -237,7 +281,15 @@ export async function saveExperience(
 export async function deleteExperience(fd: FormData): Promise<void> {
   await requireOwner();
   const id = str(fd, "id");
-  if (id) await db.delete(experiences).where(eq(experiences.id, id));
+  if (id) {
+    const [row] = await db
+      .select({ logoKey: experiences.logoKey })
+      .from(experiences)
+      .where(eq(experiences.id, id))
+      .limit(1);
+    await db.delete(experiences).where(eq(experiences.id, id));
+    if (row?.logoKey) await deleteObject(row.logoKey).catch(() => {});
+  }
   revalidatePortfolio();
   redirect("/admin/experience");
 }
@@ -252,6 +304,7 @@ export async function saveHackathon(
   const event = str(fd, "event");
   if (!event) return { error: "Event is required." };
   const coverImageKey = str(fd, "coverImageKey") || null;
+  const imageKeys = jsonKeys(fd, "imageKeys");
 
   const explicit = str(fd, "slug");
   const slug = slugify(explicit || event);
@@ -264,18 +317,21 @@ export async function saveHackathon(
 
   try {
     await publishImage(coverImageKey);
+    await publishImages(imageKeys);
   } catch {
-    return { error: "Couldn't process the cover image. Try again." };
+    return { error: "Couldn't process an image. Try again." };
   }
 
   let oldCover: string | null = null;
+  let oldGallery: string[] = [];
   if (id) {
     const [prev] = await db
-      .select({ coverImageKey: hackathons.coverImageKey })
+      .select({ coverImageKey: hackathons.coverImageKey, imageKeys: hackathons.imageKeys })
       .from(hackathons)
       .where(eq(hackathons.id, id))
       .limit(1);
     oldCover = prev?.coverImageKey ?? null;
+    oldGallery = prev?.imageKeys ?? [];
   }
 
   const data = {
@@ -288,6 +344,7 @@ export async function saveHackathon(
     projectSlug: str(fd, "projectSlug") || null,
     stack: csv(fd, "stack"),
     coverImageKey,
+    imageKeys,
     sortOrder: num(fd, "sortOrder"),
     updatedAt: new Date(),
   };
@@ -301,6 +358,7 @@ export async function saveHackathon(
   if (oldCover && oldCover !== coverImageKey) {
     await deleteObject(oldCover).catch(() => {});
   }
+  await cleanupRemoved(oldGallery, imageKeys);
   revalidatePortfolio();
   redirect("/admin/hackathons");
 }
@@ -310,12 +368,13 @@ export async function deleteHackathon(fd: FormData): Promise<void> {
   const id = str(fd, "id");
   if (id) {
     const [row] = await db
-      .select({ coverImageKey: hackathons.coverImageKey })
+      .select({ coverImageKey: hackathons.coverImageKey, imageKeys: hackathons.imageKeys })
       .from(hackathons)
       .where(eq(hackathons.id, id))
       .limit(1);
     await db.delete(hackathons).where(eq(hackathons.id, id));
     if (row?.coverImageKey) await deleteObject(row.coverImageKey).catch(() => {});
+    await cleanupRemoved(row?.imageKeys ?? [], []);
   }
   revalidatePortfolio();
   redirect("/admin/hackathons");
