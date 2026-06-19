@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { publicUrl } from "@/lib/storage/gcs";
-import { Particles } from "@/components/portfolio/hero/particles";
 import { ScrambleText } from "@/components/portfolio/hero/scramble-text";
 import type { Profile } from "@/db/schema";
 
@@ -9,10 +8,8 @@ export function Hero({ profile }: { profile: Profile | null }) {
   const first = profile?.name?.split(" ")[0] || "Manan";
 
   return (
-    <section className="relative overflow-hidden border-b border-rule">
-      <Particles className="pointer-events-none absolute inset-0 h-full w-full" />
-
-      <div className="relative z-10 mx-auto grid w-full max-w-5xl items-center gap-12 px-6 pb-20 pt-20 sm:pt-28 lg:grid-cols-[1fr_0.82fr]">
+    <section className="border-b border-rule">
+      <div className="mx-auto grid w-full max-w-5xl items-center gap-12 px-6 pb-20 pt-20 sm:pt-28 lg:grid-cols-[1fr_0.82fr]">
         <div>
           <ScrambleText
             text="● software / ai-native engineer"
