@@ -57,6 +57,13 @@
       "when": 1781768472209,
       "tag": "0007_chief_dreaming_celestial",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781853895069,
+      "tag": "0008_aromatic_patriot",
+      "breakpoints": true
     }
   ]
 }
