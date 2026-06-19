@@ -80,7 +80,7 @@ function getStorage(): Storage {
 }
 
 /** Allowed verticals — keeps keys namespaced and prevents path traversal. */
-export type StorageVertical = "blog" | "dump" | "projects" | "misc";
+export type StorageVertical = "blog" | "dump" | "portfolio" | "projects" | "misc";
 
 function buildKey(vertical: StorageVertical, filename: string): string {
   const safe = filename
@@ -117,7 +117,7 @@ export async function createUploadUrl(opts: {
 }
 
 /** Object-key prefixes we ever mint — used to validate client-supplied keys. */
-const KEY_PREFIX_RE = /^(blog|dump|projects|misc)\/[a-z0-9][a-z0-9./-]*$/;
+const KEY_PREFIX_RE = /^(blog|dump|portfolio|projects|misc)\/[a-z0-9][a-z0-9./-]*$/;
 
 /** True if `key` looks like a key we minted (no traversal, known vertical). */
 export function isManagedKey(key: string): boolean {

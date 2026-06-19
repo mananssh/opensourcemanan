@@ -84,6 +84,33 @@ export const getHackathon = cache(
   },
 );
 
+/** By-id getters for the admin edit pages (content is public; no guard here —
+ *  the admin routes themselves are owner-gated). */
+export async function getProjectById(id: string): Promise<Project | null> {
+  return safeDb(async () => {
+    const rows = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
+    return rows[0] ?? null;
+  }, null);
+}
+export async function getExperienceById(id: string): Promise<Experience | null> {
+  return safeDb(async () => {
+    const rows = await db.select().from(experiences).where(eq(experiences.id, id)).limit(1);
+    return rows[0] ?? null;
+  }, null);
+}
+export async function getHackathonById(id: string): Promise<Hackathon | null> {
+  return safeDb(async () => {
+    const rows = await db.select().from(hackathons).where(eq(hackathons.id, id)).limit(1);
+    return rows[0] ?? null;
+  }, null);
+}
+export async function getCapabilityById(id: string): Promise<Capability | null> {
+  return safeDb(async () => {
+    const rows = await db.select().from(capabilities).where(eq(capabilities.id, id)).limit(1);
+    return rows[0] ?? null;
+  }, null);
+}
+
 export const listCapabilities = cache(async (): Promise<Capability[]> => {
   return safeDb(async () => {
     return db
