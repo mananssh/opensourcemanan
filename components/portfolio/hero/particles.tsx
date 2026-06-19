@@ -3,10 +3,11 @@
 import { useEffect, useRef } from "react";
 
 /**
- * "Signal field" — a faint particle layer that reacts to the cursor (repel +
- * accent tint nearby) and to page scroll (subtle parallax drift). Retokenized to
- * the portfolio palette via CSS vars; static + listener-free under reduced motion;
- * paused when offscreen or the tab is hidden; particle count capped for perf.
+ * "Signal field" — a visible particle network that reacts to the cursor (repel +
+ * accent tint nearby) and to page scroll (parallax drift, wrapping). Lines link
+ * nearby particles so it reads as a network, not stray dots. Retokenized via CSS
+ * vars; static + listener-free under reduced motion; paused offscreen/hidden;
+ * count capped for perf.
  */
 export function Particles({ className }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -18,38 +19,38 @@ export function Particles({ className }: { className?: string }) {
     if (!ctx) return;
 
     const cs = getComputedStyle(canvas);
-    const dot = (cs.getPropertyValue("--faint") || "#7c7c82").trim();
+    const dotColor = (cs.getPropertyValue("--muted") || "#9a9aa0").trim();
     const accent = (cs.getPropertyValue("--accent") || "#ff5a4d").trim();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let w = 0;
     let h = 0;
-    let dpr = 1;
     type P = { x: number; y: number; vx: number; vy: number };
     let pts: P[] = [];
     const mouse = { x: -9999, y: -9999 };
-    const R = 110; // cursor influence radius
+    const R = 130; // cursor influence
+    const LINK = 104; // link distance
 
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = canvas!.clientWidth;
       h = canvas!.clientHeight;
       canvas!.width = w * dpr;
       canvas!.height = h * dpr;
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.min(80, Math.round((w * h) / 14000));
+      const count = Math.min(90, Math.round((w * h) / 13000));
       pts = Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.18,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
       }));
     }
 
     function draw() {
       ctx!.clearRect(0, 0, w, h);
-      const scrollShift = (window.scrollY || 0) * 0.04;
-      for (const p of pts) {
+      const shift = (window.scrollY || 0) * 0.05;
+      const rs = pts.map((p) => {
         if (!reduced) {
           p.x += p.vx;
           p.y += p.vy;
@@ -58,22 +59,45 @@ export function Particles({ className }: { className?: string }) {
           if (p.y < 0) p.y += h;
           if (p.y > h) p.y -= h;
         }
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y + scrollShift;
+        let rx = p.x;
+        let ry = (((p.y - shift) % h) + h) % h;
+        const dx = rx - mouse.x;
+        const dy = ry - mouse.y;
         const d2 = dx * dx + dy * dy;
         let near = 0;
-        let px = p.x;
-        let py = p.y - scrollShift;
         if (d2 < R * R) {
           const d = Math.sqrt(d2) || 1;
           near = 1 - d / R;
-          px += (dx / d) * near * 14; // repel
-          py += (dy / d) * near * 14;
+          rx += (dx / d) * near * 16;
+          ry += (dy / d) * near * 16;
         }
+        return { x: rx, y: ry, near };
+      });
+
+      // links
+      ctx!.lineWidth = 1;
+      ctx!.strokeStyle = dotColor;
+      for (let i = 0; i < rs.length; i++) {
+        for (let j = i + 1; j < rs.length; j++) {
+          const dx = rs[i].x - rs[j].x;
+          const dy = rs[i].y - rs[j].y;
+          const d = Math.hypot(dx, dy);
+          if (d < LINK) {
+            ctx!.globalAlpha = (1 - d / LINK) * 0.22;
+            ctx!.beginPath();
+            ctx!.moveTo(rs[i].x, rs[i].y);
+            ctx!.lineTo(rs[j].x, rs[j].y);
+            ctx!.stroke();
+          }
+        }
+      }
+
+      // dots
+      for (const r of rs) {
         ctx!.beginPath();
-        ctx!.arc(px, py, 1.3 + near * 1.4, 0, Math.PI * 2);
-        ctx!.fillStyle = near > 0.05 ? accent : dot;
-        ctx!.globalAlpha = near > 0.05 ? 0.35 + near * 0.5 : 0.32;
+        ctx!.arc(r.x, r.y, 1.7 + r.near * 1.8, 0, Math.PI * 2);
+        ctx!.fillStyle = r.near > 0.05 ? accent : dotColor;
+        ctx!.globalAlpha = r.near > 0.05 ? 0.6 + r.near * 0.4 : 0.5;
         ctx!.fill();
       }
       ctx!.globalAlpha = 1;
@@ -109,7 +133,6 @@ export function Particles({ className }: { className?: string }) {
       }
     });
     io.observe(canvas);
-
     const ro = new ResizeObserver(() => {
       resize();
       draw();

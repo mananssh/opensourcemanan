@@ -36,7 +36,7 @@ export default async function PortfolioLanding() {
 
   return (
     <div className="pb-28">
-      <Hero profile={profile} resume={resume} />
+      <Hero profile={profile} />
 
       {/* Now */}
       {profile?.now && (
@@ -158,6 +158,11 @@ export default async function PortfolioLanding() {
           {profile?.github && (
             <a href={profile.github} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-4">
               GitHub
+            </a>
+          )}
+          {resume && (
+            <a href={resume} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-4">
+              Résumé
             </a>
           )}
           <Link href="/osm" className="text-muted underline underline-offset-4">
