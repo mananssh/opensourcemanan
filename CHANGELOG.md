@@ -2,6 +2,11 @@
 
 ## 2026-06-19
 
+- **08:05 · `79b2eb3` · feat:** Portfolio admin — multi-image galleries + experience logo
+  Project and hackathon admin forms gain a multi-image detail gallery
+  (MultiImageUpload → imageKeys), and experiences gain a logo upload. New gallery
+  images are published to GCS; images removed on edit (and all on delete) are
+  cleaned up. (Thought Dump remains single-image.)
 - **07:52 · `d7d2a52` · feat:** Portfolio admin CMS — owner-gated CRUD for all content
   An owner-gated admin at /admin to manage every portfolio entity in-browser:
   profile (singleton), projects, experience, hackathons, capabilities — create,
