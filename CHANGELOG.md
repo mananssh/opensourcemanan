@@ -2,6 +2,13 @@
 
 ## 2026-06-19
 
+- **13:27 · `1a5b874` · feat:** Portfolio galleries — /work + /hackathons with expand modals + permalinks
+  Two DB-driven gallery pages with distinct layouts (projects = interactive card
+  grid; hackathons = a stacked wall of wins), each item expanding into an
+  accessible Radix modal via Next intercepting routes — the URL becomes
+  /work/<slug> (shareable, SEO-indexed, full page on direct visit), back closes it.
+  Detail renders cover + image gallery + markdown body + stack + links. Landing's
+  work/proof sections now link into the galleries.
 - **11:51 · `e40b234` · feat:** Portfolio hero — photo, signal-field particles, scramble text, agent console (stub)
   The portfolio's signature hero: name + human line, a framed GCS photo with
   floating telemetry chips, a cursor/scroll-reactive particle field (retokenized,
