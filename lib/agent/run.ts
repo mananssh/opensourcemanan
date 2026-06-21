@@ -18,12 +18,25 @@ export async function* streamFitAssessment(
   const { emit, close, drain } = createEventStream();
   const startedAt = Date.now();
 
+  // Run-scoped model/token telemetry, surfaced as a final `usage` event.
+  let tokens = 0;
+  let calls = 0;
+  const models = new Set<string>();
+  const usage = {
+    add(t: number, model: string) {
+      tokens += t;
+      calls += 1;
+      models.add(model);
+    },
+  };
+
   const run = graph
     .invoke(
       { input },
-      { configurable: { ctx: { emit, corpus, signal, startedAt } }, recursionLimit: 50, signal },
+      { configurable: { ctx: { emit, corpus, signal, startedAt, usage } }, recursionLimit: 50, signal },
     )
     .then((final) => {
+      if (models.size) emit({ type: "usage", model: [...models].join(", "), tokens, calls });
       if (final.result) emit({ type: "result", result: final.result });
       else emit({ type: "error", message: "no result produced" });
     })

@@ -25,6 +25,11 @@
 *.pem
 .scratch/
 
+# Owner's private agent prompts — kept out of the public repo; encoded into
+# AGENT_PROMPTS_B64 via scripts/encode-prompts.mjs (the repo ships only the
+# generic fallbacks in lib/agent/prompts.ts).
+agent.prompts.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
