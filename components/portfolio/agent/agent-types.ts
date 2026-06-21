@@ -49,6 +49,7 @@ export type AgentEvent =
   | { type: "edge"; from: NodeId; to: NodeId } // only for the off-diagram jumps (decline / loop)
   | { type: "loop"; pass: number } // critique → re-gather, 2nd pass etc.
   | { type: "node_error"; node: NodeId; message: string }
+  | { type: "usage"; model: string; tokens: number; calls: number } // run totals
   | { type: "result"; result: FitResult }
   | { type: "error"; message: string };
 

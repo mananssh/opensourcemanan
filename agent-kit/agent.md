@@ -45,8 +45,16 @@ intake → fit_gate ─(not_a_fit)──────────────► 
   `intake`/`fit_gate` degrade biased-yes to keep the demo alive; `synthesize`/
   `compose` are fatal if they fail.
 - `events.ts` — the run-scoped bus (`emit`/`drain`) threaded via `configurable.ctx`.
-- `model-router.ts` — OpenAI-compatible streaming + lane failover. Per-node tier
-  via `TIER`. The `JSON_SENTINEL` splits visible reasoning from a structured tail.
+- `model-router.ts` — OpenAI-compatible streaming + lane failover (idle-timeout +
+  circuit breaker). Per-node tier via `TIER`. The `JSON_SENTINEL` splits visible
+  reasoning from a structured tail. Reports model + token usage via a `UsageSink`
+  (run totals are emitted as a final `usage` event and shown under the verdict).
+- `prompts.ts` — prompt LOADER, not the prompts. Mechanics (`wrapUntrusted`,
+  `withJsonTail`, the sentinel) live in code; the prompt TEXT is loaded from
+  `AGENT_PROMPTS_B64` (base64 of the gitignored `agent.prompts.json`, templates
+  with `{{placeholders}}`). The repo ships only generic fallbacks — the owner's
+  tuned prompts stay private (ADR 0015). Edit `agent.prompts.json`, then
+  `npm run prompts:encode`.
 - `corpus.ts` — the DB store → grounded evidence candidates (real `href`s).
 - `tools/tavily.ts` — degrade-safe company research (cached in `agent_cache`).
 - `rate-limit.ts` — per-IP + global daily caps + run logging on `agent_runs`

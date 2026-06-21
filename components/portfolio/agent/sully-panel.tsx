@@ -40,6 +40,7 @@ interface ViewState {
   mode: "live" | "example";
   resting: boolean;
   result: FitResult | null;
+  usage: { model: string; tokens: number; calls: number } | null;
   error: string | null;
 }
 
@@ -60,6 +61,7 @@ function fresh(mode: "live" | "example", resting = false): ViewState {
     mode,
     resting,
     result: null,
+    usage: null,
     error: null,
   };
 }
@@ -115,6 +117,9 @@ function reducer(state: ViewState, action: Action): ViewState {
           return s;
         case "loop":
           s.pass = ev.pass;
+          return s;
+        case "usage":
+          s.usage = { model: ev.model, tokens: ev.tokens, calls: ev.calls };
           return s;
         default:
           return s; // node_reasoning handled via throttle; edge derived from state
@@ -245,16 +250,20 @@ export function SullyPanel() {
               {state.resting ? "live demo is resting — showing a recent example" : "example run"}
             </p>
           )}
-          <div className="mt-5 grid gap-5 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:gap-7">
-            <div className="self-start">
+          {/* Vertically stacked: the graph on top (large), the thinking below. */}
+          <div className="mt-6">
+            <div className="mx-auto max-w-3xl">
               <div className="hidden sm:block">
                 <AgentGraph nodes={state.nodes} pass={state.pass} orientation="h" />
               </div>
-              <div className="mx-auto block max-w-[14rem] sm:hidden">
+              <div className="mx-auto block max-w-[16rem] sm:hidden">
                 <AgentGraph nodes={state.nodes} pass={state.pass} orientation="v" />
               </div>
             </div>
-            <div className="border-t border-rule pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+            <div className="mt-6 border-t border-rule pt-5">
+              <p className="mb-3 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-faint">
+                {running ? "thinking" : "trace"}
+              </p>
               <ThinkingStream
                 order={state.order}
                 nodes={state.nodes}
@@ -302,19 +311,30 @@ export function SullyPanel() {
             </div>
             <p className="mt-3 max-w-3xl text-[1.02rem] leading-relaxed text-ink">{state.result.paragraph}</p>
             {state.result.evidence.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
-                {state.result.evidence.map((ev) => (
-                  <a key={ev.href} href={ev.href} className="font-mono text-xs text-accent underline underline-offset-2">
-                    {ev.label}
-                  </a>
-                ))}
+              <div className="mt-4">
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-faint">
+                  Evidence — cited from his actual work
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {state.result.evidence.map((ev) => (
+                    <a
+                      key={ev.href}
+                      href={ev.href}
+                      className="rounded-md border border-rule px-2.5 py-1 font-mono text-xs text-accent underline-offset-2 transition-colors hover:border-accent hover:bg-accent-soft"
+                    >
+                      {ev.label} ↗
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
-            {isExample && (
-              <p className="mt-4 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-faint">
-                example output — not a live run
-              </p>
-            )}
+            <p className="mt-4 font-mono text-[0.65rem] uppercase tracking-[0.14em] text-faint">
+              {isExample
+                ? "example output — not a live run"
+                : state.usage
+                  ? `${state.usage.model} · ${state.usage.tokens.toLocaleString()} tokens · ${state.usage.calls} model calls`
+                  : "live run"}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

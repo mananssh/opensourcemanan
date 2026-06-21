@@ -127,6 +127,11 @@ function noteLaneSuccess(name: string): void {
   laneState.delete(name);
 }
 
+/** Run-scoped accumulator for "which model / how many tokens" telemetry. */
+export interface UsageSink {
+  add(tokens: number, model: string): void;
+}
+
 interface StreamArgs {
   node: NodeId;
   system: string;
@@ -138,6 +143,8 @@ interface StreamArgs {
   temperature?: number;
   /** Cap output so a verbose node can't run past its JSON tail or the timeout. */
   maxTokens?: number;
+  /** Run-scoped usage accumulator (model + token totals). */
+  usage?: UsageSink;
 }
 
 export interface StreamResult {
@@ -208,6 +215,7 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
       body: JSON.stringify({
         model: lane.model[tier],
         stream: true,
+        stream_options: { include_usage: true },
         temperature: args.temperature ?? 0.4,
         ...(args.maxTokens ? { max_tokens: args.maxTokens } : {}),
         messages: [
@@ -229,6 +237,8 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
     let buf = "";
     let full = "";
     let emittedVisible = 0;
+    let usageTokens = 0;
+    let respModel = lane.model[tier];
 
     const forward = () => {
       const idx = args.jsonTail ? full.indexOf(JSON_SENTINEL) : -1;
@@ -256,6 +266,8 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
         try {
           const obj = JSON.parse(payload);
           token = obj?.choices?.[0]?.delta?.content ?? "";
+          if (typeof obj?.usage?.total_tokens === "number") usageTokens = obj.usage.total_tokens;
+          if (typeof obj?.model === "string") respModel = obj.model;
         } catch {
           continue; // ignore keep-alives / partial frames
         }
@@ -266,6 +278,8 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
       }
     }
     forward();
+    // Report usage (real if the provider sent it; else a rough token estimate).
+    args.usage?.add(usageTokens || Math.round((args.system.length + args.user.length + full.length) / 4), respModel);
 
     const visible = args.jsonTail
       ? full.slice(0, full.indexOf(JSON_SENTINEL) === -1 ? full.length : full.indexOf(JSON_SENTINEL))
