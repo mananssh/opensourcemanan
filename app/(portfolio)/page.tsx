@@ -80,7 +80,7 @@ export default async function PortfolioLanding() {
 
       {/* Proof */}
       {hackathons.length > 0 && (
-        <section className={`${wrap} mt-28`}>
+        <section id="hackathons" className={`${wrap} mt-28 scroll-mt-20`}>
           <SectionHeading eyebrow="Proof" title="Hackathons & wins" />
           <ul className="space-y-6">
             {hackathons.map((h) => (
@@ -130,7 +130,7 @@ export default async function PortfolioLanding() {
 
       {/* Capabilities */}
       {capabilities.length > 0 && (
-        <section className={`${wrap} mt-28`}>
+        <section id="capabilities" className={`${wrap} mt-28 scroll-mt-20`}>
           <SectionHeading eyebrow="Capabilities" title="The stack" />
           <div className="space-y-6">
             {capabilities.map((c) => (
