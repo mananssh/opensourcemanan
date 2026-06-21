@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { streamFitAssessment } from "@/lib/agent/run";
+import { hasModelLane } from "@/lib/agent/model-router";
 import {
   MAX_INPUT_CHARS,
   checkRateLimit,
@@ -36,6 +37,15 @@ export async function POST(request: NextRequest): Promise<Response> {
   const input = typeof (body as { input?: unknown })?.input === "string" ? (body as { input: string }).input.trim() : "";
   if (!input) return bad("empty input");
   if (input.length > MAX_INPUT_CHARS) return bad(`input too long (max ${MAX_INPUT_CHARS} chars)`);
+
+  // No key configured anywhere → the demo is "resting"; the client shows the
+  // labeled example replay instead of surfacing a raw error.
+  if (!hasModelLane()) {
+    return new Response(
+      JSON.stringify({ error: "capped", reason: "no_model", message: "the live demo is resting" }),
+      { status: 429, headers: { "content-type": "application/json" } },
+    );
+  }
 
   const ipHash = hashIp(clientIp(request.headers));
   const inputHash = hashInput(input);

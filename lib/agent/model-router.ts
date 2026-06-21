@@ -62,6 +62,11 @@ function buildLanes(): Lane[] {
   return lanes;
 }
 
+/** True if at least one model lane has a key — false means no live runs possible. */
+export function hasModelLane(): boolean {
+  return buildLanes().length > 0;
+}
+
 /** Per-node tier: cheap/fast for classification-shaped, stronger for generative. */
 const TIER: Record<NodeId, Tier> = {
   intake: "fast",
