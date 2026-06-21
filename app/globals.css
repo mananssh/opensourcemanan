@@ -244,6 +244,10 @@ html.dark .vertical-dump .sticky-note {
   --accent: #0a9d6b; /* emerald, legible on light */
   --accent-soft: #def1e8;
   --accent-ink: #ffffff;
+  /* Agent state colors (used by the live graph + verdict chip, ~only here). */
+  --ok: #0f9d6b;
+  --attention: #c98a1a;
+  --negative: #d4453a;
   background: #f0f7f3;
   border-color: #d8e8df;
   box-shadow:
@@ -261,6 +265,10 @@ html.dark .sully-stage {
   --accent: #34f5a0; /* neon mint-green */
   --accent-soft: #0f2b20;
   --accent-ink: #04140d;
+  /* Agent state colors (used by the live graph + verdict chip, ~only here). */
+  --ok: #34f5a0;
+  --attention: #f5c451;
+  --negative: #ff6b5d;
   background: #0a0d0c;
   border-color: #213029;
   box-shadow:
