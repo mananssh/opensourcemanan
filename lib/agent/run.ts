@@ -16,11 +16,12 @@ export async function* streamFitAssessment(
 ): AsyncGenerator<AgentEvent, void, void> {
   const corpus = await loadCorpus();
   const { emit, close, drain } = createEventStream();
+  const startedAt = Date.now();
 
   const run = graph
     .invoke(
       { input },
-      { configurable: { ctx: { emit, corpus, signal } }, recursionLimit: 50, signal },
+      { configurable: { ctx: { emit, corpus, signal, startedAt } }, recursionLimit: 50, signal },
     )
     .then((final) => {
       if (final.result) emit({ type: "result", result: final.result });

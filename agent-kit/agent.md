@@ -34,7 +34,7 @@ intake → fit_gate ─(not_a_fit)──────────────► 
             plan ──► ┌ work_history ┐
                      ├ projects     ┤ (parallel) ─► synthesize ─► critique ─► compose
                      └ web_corpus   ┘                                │
-                                         ▲──────── re-gather (≤2) ────┘
+                                         ▲──────── re-gather (≤1) ────┘
 ```
 
 - `graph.ts` — the `StateGraph`. **Node names must not collide with state channel
