@@ -33,6 +33,11 @@ function clean(s: string | null | undefined): string {
   return (s ?? "").replace(/\s+/g, " ").trim();
 }
 
+/** Selection only needs a summary, not the full body — keep prompts small/fast. */
+function clip(s: string, n = 320): string {
+  return s.length > n ? `${s.slice(0, n).trimEnd()}…` : s;
+}
+
 export async function loadCorpus(): Promise<Corpus> {
   const [profile, projects, experiences, hackathons, capabilities] = await Promise.all([
     getProfile(),
@@ -57,7 +62,7 @@ export async function loadCorpus(): Promise<Corpus> {
     id: `work:${e.id}`,
     label: `${e.role} @ ${e.org}`,
     href: `/experience/${e.id}`,
-    text: clean(`${e.role} at ${e.org}. ${e.blurb} ${e.body}`),
+    text: clip(clean(`${e.role} at ${e.org}. ${e.blurb} ${e.body}`)),
   }));
 
   // Projects + hackathons are both "things built / won" — one gather band node.
@@ -65,13 +70,13 @@ export async function loadCorpus(): Promise<Corpus> {
     id: `project:${p.id}`,
     label: p.name,
     href: `/work/${p.slug}`,
-    text: clean(`${p.name}. ${p.blurb} ${p.body} Stack: ${p.stack.join(", ")}. ${p.award ?? ""}`),
+    text: clip(clean(`${p.name}. ${p.blurb} ${p.body} Stack: ${p.stack.join(", ")}. ${p.award ?? ""}`)),
   }));
   const hackItems: CorpusItem[] = hackathons.map((h) => ({
     id: `hack:${h.id}`,
     label: `${h.event} — ${h.result}`,
     href: `/hackathons/${h.slug}`,
-    text: clean(`${h.event} (${h.result}). ${h.blurb} ${h.body} Stack: ${h.stack.join(", ")}`),
+    text: clip(clean(`${h.event} (${h.result}). ${h.blurb} ${h.body} Stack: ${h.stack.join(", ")}`)),
   }));
 
   const corpus: CorpusItem[] = capabilities.map((c) => ({

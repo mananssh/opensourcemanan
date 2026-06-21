@@ -32,8 +32,11 @@ function buildLanes(): Lane[] {
       baseURL: process.env.GEMINI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai",
       apiKey: gemini,
       model: {
+        // Default to non-thinking flash on both tiers: fast, reliable inside the
+        // route's 60s budget, and (unlike 2.5's thinking mode) its visible output
+        // can't be starved by hidden reasoning tokens. Override via env if wanted.
         fast: process.env.GEMINI_MODEL_FAST ?? "gemini-2.0-flash",
-        strong: process.env.GEMINI_MODEL_STRONG ?? "gemini-2.5-flash",
+        strong: process.env.GEMINI_MODEL_STRONG ?? "gemini-2.0-flash",
       },
     });
   }
@@ -67,17 +70,22 @@ export function hasModelLane(): boolean {
   return buildLanes().length > 0;
 }
 
-/** Per-node tier: cheap/fast for classification-shaped, stronger for generative. */
+/**
+ * Per-node tier. Classification- and selection-shaped nodes (intake, gate,
+ * critique, the three gather nodes) use the fast model — on a failover lane that's
+ * the difference between an 8B and a slow 70B, which keeps the run inside budget.
+ * Only the genuinely generative nodes (plan, synthesize, compose) use strong.
+ */
 const TIER: Record<NodeId, Tier> = {
   intake: "fast",
   fit_gate: "fast",
   critique: "fast",
+  work_history: "fast",
+  projects: "fast",
+  web_corpus: "fast",
   plan: "strong",
   synthesize: "strong",
   compose: "strong",
-  work_history: "strong",
-  projects: "strong",
-  web_corpus: "strong",
 };
 
 class RetryableError extends Error {}
@@ -89,7 +97,35 @@ export class AllLanesFailedError extends Error {
   }
 }
 
-const NODE_TIMEOUT_MS = Number(process.env.AGENT_NODE_TIMEOUT_MS ?? 24_000);
+// Idle timeout (no bytes received), not total — see streamOnce.
+const NODE_TIMEOUT_MS = Number(process.env.AGENT_NODE_TIMEOUT_MS ?? 10_000);
+
+/**
+ * Lane circuit breaker. A free tier that stalls (common) would otherwise cost
+ * every node the full idle timeout before failing over — minutes across a run.
+ * Once a lane fails repeatedly we skip it for a cooldown, so the rest of the run
+ * (and the next few) goes straight to a working lane; it's re-probed after.
+ */
+const LANE_FAIL_THRESHOLD = 2;
+const LANE_COOLDOWN_MS = Number(process.env.AGENT_LANE_COOLDOWN_MS ?? 60_000);
+const laneState = new Map<string, { fails: number; until: number }>();
+
+function laneDisabled(name: string): boolean {
+  const s = laneState.get(name);
+  return !!s && s.until > Date.now();
+}
+function noteLaneFailure(name: string): void {
+  const s = laneState.get(name) ?? { fails: 0, until: 0 };
+  s.fails += 1;
+  if (s.fails >= LANE_FAIL_THRESHOLD) {
+    s.until = Date.now() + LANE_COOLDOWN_MS;
+    s.fails = 0;
+  }
+  laneState.set(name, s);
+}
+function noteLaneSuccess(name: string): void {
+  laneState.delete(name);
+}
 
 interface StreamArgs {
   node: NodeId;
@@ -100,6 +136,8 @@ interface StreamArgs {
   /** When true, split reasoning (streamed) from a trailing JSON object (parsed). */
   jsonTail?: boolean;
   temperature?: number;
+  /** Cap output so a verbose node can't run past its JSON tail or the timeout. */
+  maxTokens?: number;
 }
 
 export interface StreamResult {
@@ -125,13 +163,20 @@ export async function streamChat(args: StreamArgs): Promise<StreamResult> {
   const tier = TIER[args.node];
   let lastError: unknown;
 
-  for (const lane of lanes) {
+  // Prefer lanes not in cooldown; if all are cooling down, try them anyway.
+  const enabled = lanes.filter((l) => !laneDisabled(l.name));
+  const tryLanes = enabled.length ? enabled : lanes;
+
+  for (const lane of tryLanes) {
     try {
-      return await streamOnce(lane, tier, args);
+      const result = await streamOnce(lane, tier, args);
+      noteLaneSuccess(lane.name);
+      return result;
     } catch (err) {
       lastError = err;
+      noteLaneFailure(lane.name);
       if (err instanceof RetryableError) continue; // try next lane
-      throw err; // non-retryable (e.g. mid-stream) — surface it
+      throw err; // non-retryable (substantial output already streamed) — surface it
     }
   }
   throw new AllLanesFailedError(lastError);
@@ -139,12 +184,20 @@ export async function streamChat(args: StreamArgs): Promise<StreamResult> {
 
 async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<StreamResult> {
   const timeout = new AbortController();
-  const timer = setTimeout(() => timeout.abort(), NODE_TIMEOUT_MS);
-  // Abort if either the per-node timeout fires or the request is cancelled.
+  // An IDLE timeout: re-armed on every byte received, so a steadily-streaming
+  // long response is never killed, but a STALLED stream (common when a free tier
+  // throttles mid-stream) aborts quickly and we move on.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const arm = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => timeout.abort(), NODE_TIMEOUT_MS);
+  };
+  arm();
+  // Abort if either the idle timeout fires or the request is cancelled.
   const onAbort = () => timeout.abort();
   args.signal?.addEventListener("abort", onAbort);
 
-  let emittedAny = false;
+  let emittedChars = 0;
   try {
     const res = await fetch(`${lane.baseURL}/chat/completions`, {
       method: "POST",
@@ -156,6 +209,7 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
         model: lane.model[tier],
         stream: true,
         temperature: args.temperature ?? 0.4,
+        ...(args.maxTokens ? { max_tokens: args.maxTokens } : {}),
         messages: [
           { role: "system", content: args.system },
           { role: "user", content: args.user },
@@ -165,10 +219,9 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
     });
 
     if (!res.ok || !res.body) {
-      // Before any token: rate-limit / server errors are retryable on the next lane.
-      if (res.status === 429 || res.status >= 500) throw new RetryableError(`${lane.name} ${res.status}`);
-      const body = await res.text().catch(() => "");
-      throw new Error(`${lane.name} ${res.status}: ${body.slice(0, 200)}`);
+      // Any non-2xx (rate limit, auth, server error) is retryable on the next lane.
+      const body = !res.body ? "" : await res.text().catch(() => "");
+      throw new RetryableError(`${lane.name} ${res.status}${body ? `: ${body.slice(0, 160)}` : ""}`);
     }
 
     const reader = res.body.getReader();
@@ -183,13 +236,14 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
       if (visibleEnd > emittedVisible) {
         args.emit({ type: "node_reasoning", node: args.node, delta: full.slice(emittedVisible, visibleEnd) });
         emittedVisible = visibleEnd;
-        emittedAny = true;
+        emittedChars = visibleEnd;
       }
     };
 
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
+      arm(); // bytes arrived — reset the idle timer
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split("\n");
       buf = lines.pop() ?? "";
@@ -217,10 +271,19 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
       ? full.slice(0, full.indexOf(JSON_SENTINEL) === -1 ? full.length : full.indexOf(JSON_SENTINEL))
       : full;
     const json = args.jsonTail ? parseJsonTail(full) : undefined;
+    if (process.env.AGENT_DEBUG && args.jsonTail) {
+      const si = full.indexOf(JSON_SENTINEL);
+      console.warn(
+        `[sully:${args.node}] lane=${lane.name} sentinel=${si !== -1} parsed=${json !== undefined} textLen=${full.length} tail=${JSON.stringify(full.slice(si === -1 ? full.length - 120 : si, (si === -1 ? full.length : si) + 180))}`,
+      );
+    }
     return { text: visible.trim(), json, lane: lane.name };
   } catch (err) {
-    // A timeout/abort before the first token is retryable on the next lane.
-    if (!emittedAny && (timeout.signal.aborted || err instanceof RetryableError)) {
+    // A stall (idle-timeout abort) is retryable on the next lane as long as only
+    // a little was streamed — re-streaming a near-complete answer would duplicate
+    // it in the thinking panel, so a late stall stays non-retryable (node degrades).
+    const stalled = timeout.signal.aborted && !args.signal?.aborted;
+    if ((stalled && emittedChars < 400) || err instanceof RetryableError) {
       throw new RetryableError(`${lane.name}: ${(err as Error).message}`);
     }
     throw err;
