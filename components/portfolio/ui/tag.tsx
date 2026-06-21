@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-/** Mono chip for stack/skills/metadata. */
+/** Mono chip for stack/skills/metadata. Fills with accent glass on hover. */
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex rounded-full border border-rule px-2.5 py-0.5 font-mono text-[0.7rem] text-muted">
+    <span className="tag-chip inline-flex cursor-default rounded-full border border-rule px-2.5 py-0.5 font-mono text-[0.7rem] text-muted">
       {children}
     </span>
   );

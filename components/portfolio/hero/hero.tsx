@@ -3,9 +3,16 @@ import { publicUrl } from "@/lib/storage/gcs";
 import { ScrambleText } from "@/components/portfolio/hero/scramble-text";
 import type { Profile } from "@/db/schema";
 
+/** A résumé value may be a full URL or a GCS key. */
+function resolveUrl(v: string | null | undefined): string | null {
+  if (!v) return null;
+  return /^https?:\/\//.test(v) ? v : publicUrl(v);
+}
+
 export function Hero({ profile }: { profile: Profile | null }) {
   const photo = profile?.photoKey ? publicUrl(profile.photoKey) : null;
   const first = profile?.name?.split(" ")[0] || "Manan";
+  const resume = resolveUrl(profile?.resumeKey);
 
   return (
     <section className="border-b border-rule">
@@ -24,6 +31,24 @@ export function Hero({ profile }: { profile: Profile | null }) {
               {profile.intro}
             </p>
           )}
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            {resume && (
+              <a
+                href={resume}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 font-mono text-sm font-medium text-accent-ink shadow-[0_14px_34px_-16px_var(--accent)] transition-transform hover:-translate-y-0.5"
+              >
+                Résumé <span aria-hidden>↗</span>
+              </a>
+            )}
+            <a
+              href="#sully"
+              className="inline-flex items-center gap-2 rounded-lg border border-rule px-5 py-2.5 font-mono text-sm text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              Ask Sully about a role
+            </a>
+          </div>
         </div>
 
         {/* Big portrait */}
