@@ -6,14 +6,15 @@ import type { NodeId } from "./agent-types";
 export type NodeStatus = "idle" | "running" | "done" | "skipped" | "error";
 type Orientation = "h" | "v";
 
-const LABELS: Record<NodeId, string> = {
+/** Compact labels that fit inside the rounded-rect nodes. */
+const DISPLAY: Record<NodeId, string> = {
   intake: "intake",
-  fit_gate: "fit gate",
+  fit_gate: "gate",
   plan: "plan",
   work_history: "work",
   projects: "projects",
-  web_corpus: "web corpus",
-  synthesize: "synthesize",
+  web_corpus: "corpus",
+  synthesize: "synth",
   critique: "critique",
   compose: "compose",
 };
@@ -34,50 +35,65 @@ const EDGES: Edge[] = [
   { from: "critique", to: "plan", kind: "loop" },
 ];
 
+const HW = 14; // node half-width
+const HH = 4.6; // node half-height
+
 const LAYOUT: Record<
   Orientation,
-  { viewBox: string; pos: Record<NodeId, [number, number]>; font: number; labelDy: number }
+  { viewBox: string; pos: Record<NodeId, [number, number]>; font: number; passAt: [number, number] }
 > = {
   h: {
-    viewBox: "0 0 224 86",
+    viewBox: "0 0 266 104",
     pos: {
-      intake: [16, 44],
-      fit_gate: [46, 44],
-      plan: [78, 44],
-      work_history: [118, 18],
-      projects: [118, 44],
-      web_corpus: [118, 70],
-      synthesize: [156, 44],
-      critique: [186, 44],
-      compose: [212, 44],
+      intake: [24, 50],
+      fit_gate: [60, 50],
+      plan: [96, 50],
+      work_history: [140, 26],
+      projects: [140, 50],
+      web_corpus: [140, 74],
+      synthesize: [186, 50],
+      critique: [220, 50],
+      compose: [248, 50],
     },
-    font: 3.1,
-    labelDy: 7.5,
+    font: 3.2,
+    passAt: [140, 98],
   },
   v: {
-    viewBox: "0 0 72 240",
+    viewBox: "0 0 132 268",
     pos: {
-      intake: [36, 16],
-      fit_gate: [36, 44],
-      plan: [36, 72],
-      work_history: [16, 110],
-      projects: [36, 110],
-      web_corpus: [56, 110],
-      synthesize: [36, 150],
-      critique: [36, 184],
-      compose: [36, 214],
+      intake: [66, 22],
+      fit_gate: [66, 56],
+      plan: [66, 90],
+      work_history: [30, 132],
+      projects: [66, 132],
+      web_corpus: [102, 132],
+      synthesize: [66, 176],
+      critique: [66, 210],
+      compose: [66, 244],
     },
     font: 3.4,
-    labelDy: 7,
+    passAt: [108, 132],
   },
 };
 
-function strokeFor(s: NodeStatus): string {
-  if (s === "done") return "var(--accent)";
-  if (s === "running") return "var(--accent)";
-  if (s === "error") return "var(--negative)";
-  if (s === "skipped") return "var(--faint)";
-  return "var(--rule)";
+function edgePath(o: Orientation, e: Edge, a: [number, number], b: [number, number]): string {
+  const [ax, ay] = a;
+  const [bx, by] = b;
+  if (e.kind === "loop") {
+    // Arc back from critique to plan, bowing out past the flow.
+    return o === "h"
+      ? `M ${ax} ${ay + HH} C ${ax} ${ay + 34}, ${bx} ${by + 34}, ${bx} ${by + HH}`
+      : `M ${ax + HW} ${ay} C ${ax + 52} ${ay}, ${bx + 52} ${by}, ${bx + HW} ${by}`;
+  }
+  if (e.kind === "decline") {
+    return o === "h"
+      ? `M ${ax} ${ay - HH} C ${ax + 30} ${ay - 38}, ${bx - 30} ${by - 38}, ${bx} ${by - HH}`
+      : `M ${ax - HW} ${ay} C ${ax - 54} ${ay}, ${bx - 54} ${by}, ${bx - HW} ${by}`;
+  }
+  if (o === "h") {
+    return `M ${ax + HW} ${ay} C ${ax + HW + 9} ${ay}, ${bx - HW - 9} ${by}, ${bx - HW} ${by}`;
+  }
+  return `M ${ax} ${ay + HH} C ${ax} ${ay + HH + 7}, ${bx} ${by - HH - 7}, ${bx} ${by - HH}`;
 }
 
 export function AgentGraph({
@@ -93,102 +109,155 @@ export function AgentGraph({
   const layout = LAYOUT[orientation];
   const at = (id: NodeId) => layout.pos[id];
 
+  function edgeLit(e: Edge): boolean {
+    if (e.kind === "loop") return pass > 0;
+    if (e.kind === "decline") return nodes.fit_gate === "done" && nodes.plan === "skipped";
+    if (e.from === "fit_gate" && e.to === "plan") return nodes.fit_gate === "done" && nodes.plan !== "skipped";
+    if (e.from === "critique" && e.to === "compose") return nodes.compose !== "idle" && nodes.compose !== "skipped";
+    return nodes[e.from] === "done";
+  }
+
   return (
     <svg
       viewBox={layout.viewBox}
-      className="w-full"
+      className="w-full overflow-visible"
       role="img"
-      aria-label="Live agent flow: intake, fit gate, plan, the parallel gather band, synthesize, critique loop, compose"
+      aria-label="Live agent flow: intake, fit gate, plan, the parallel gather band (work/projects/corpus), synthesize, critique with a re-gather loop, and compose."
     >
+      <defs>
+        <marker id="ar-on" markerWidth="5" markerHeight="5" refX="4.2" refY="2.5" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0.5,0.7 L4.3,2.5 L0.5,4.3 Z" fill="var(--accent)" />
+        </marker>
+        <marker id="ar-off" markerWidth="5" markerHeight="5" refX="4.2" refY="2.5" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0.5,0.7 L4.3,2.5 L0.5,4.3 Z" fill="var(--rule)" />
+        </marker>
+      </defs>
+
+      {/* edges — faint baseline always; accent overlay draws on when taken */}
       {EDGES.map((e, i) => {
-        const [ax, ay] = at(e.from);
-        const [bx, by] = at(e.to);
-        const lit =
-          e.kind === "loop"
-            ? pass > 0
-            : e.kind === "decline"
-              ? nodes.fit_gate === "done" && nodes.plan === "skipped"
-              : nodes[e.from] === "done";
-        const dashed = e.kind === "loop" || e.kind === "decline";
-        // Curve the special off-diagram edges so they read as detours.
-        const d =
-          e.kind === "loop"
-            ? `M ${ax} ${ay} C ${ax} ${ay + 22}, ${bx} ${by + 22}, ${bx} ${by}`
-            : e.kind === "decline"
-              ? `M ${ax} ${ay} C ${ax + 20} ${ay - 30}, ${bx - 20} ${by - 30}, ${bx} ${by}`
-              : `M ${ax} ${ay} L ${bx} ${by}`;
+        const d = edgePath(orientation, e, at(e.from), at(e.to));
+        const lit = edgeLit(e);
+        const special = e.kind === "loop" || e.kind === "decline";
         return (
-          <motion.path
-            key={i}
-            d={d}
-            fill="none"
-            stroke={lit ? "var(--accent)" : "var(--rule)"}
-            strokeWidth={0.5}
-            strokeDasharray={dashed ? "1.6 1.6" : undefined}
-            initial={false}
-            animate={{ opacity: lit ? 0.9 : dashed ? 0.18 : 0.4 }}
-            transition={{ duration: reduce ? 0 : 0.4 }}
-          />
+          <g key={`e${i}`}>
+            <path
+              d={d}
+              fill="none"
+              stroke="var(--rule)"
+              strokeWidth={0.5}
+              strokeDasharray={special ? "1.6 1.6" : undefined}
+              opacity={special ? 0.16 : 0.38}
+              markerEnd={lit ? undefined : "url(#ar-off)"}
+            />
+            {lit && (
+              <motion.path
+                d={d}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth={0.6}
+                strokeDasharray={special ? "1.6 1.6" : undefined}
+                markerEnd="url(#ar-on)"
+                initial={reduce ? { pathLength: 1, opacity: 0.95 } : { pathLength: 0, opacity: 1 }}
+                animate={{ pathLength: 1, opacity: 0.95 }}
+                transition={{ duration: reduce ? 0 : 0.5, ease: "easeOut" }}
+              />
+            )}
+          </g>
         );
       })}
 
-      {(Object.keys(LABELS) as NodeId[]).map((id) => {
-        const [x, y] = at(id);
+      {/* nodes */}
+      {(Object.keys(DISPLAY) as NodeId[]).map((id) => {
+        const [cx, cy] = at(id);
         const s = nodes[id] ?? "idle";
-        const active = s !== "idle";
-        const below = orientation === "h" && (id === "work_history" || id === "projects" || id === "web_corpus");
+        const x = cx - HW;
+        const y = cy - HH;
+        const border =
+          s === "running" || s === "done"
+            ? s === "done"
+              ? "var(--rule)" // done settles to a calm hairline + check
+              : "var(--accent)"
+            : s === "error"
+              ? "var(--negative)"
+              : s === "skipped"
+                ? "var(--faint)"
+                : "var(--rule)";
+        const labelColor =
+          s === "skipped" ? "var(--faint)" : s === "idle" ? "var(--faint)" : "var(--ink)";
         return (
-          <g key={id}>
+          <g key={id} opacity={s === "skipped" ? 0.55 : 1}>
             {s === "running" && !reduce && (
-              <motion.circle
-                cx={x}
-                cy={y}
-                r={2.8}
+              <motion.rect
+                x={x - 1.4}
+                y={y - 1.4}
+                width={HW * 2 + 2.8}
+                height={HH * 2 + 2.8}
+                rx={3.4}
                 fill="none"
                 stroke="var(--accent)"
-                strokeWidth={0.4}
-                initial={{ scale: 1, opacity: 0.7 }}
-                animate={{ scale: [1, 2.1], opacity: [0.7, 0] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
-                style={{ transformOrigin: `${x}px ${y}px` }}
+                strokeWidth={0.5}
+                initial={{ opacity: 0.5 }}
+                animate={{ opacity: [0.5, 0.05, 0.5] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
               />
             )}
-            <motion.circle
-              cx={x}
-              cy={y}
-              r={2.4}
-              initial={false}
-              animate={{ fill: s === "done" ? "var(--accent)" : "var(--surface)" }}
-              transition={{ duration: 0.3 }}
-              stroke={strokeFor(s)}
-              strokeWidth={active ? 0.8 : 0.5}
-              strokeOpacity={s === "skipped" ? 0.5 : active ? 1 : 0.5}
-              strokeDasharray={s === "skipped" ? "0.8 0.8" : undefined}
-            />
-            <text
+            <rect
               x={x}
-              y={below ? y + 2.4 + layout.labelDy : y - 3.4}
+              y={y}
+              width={HW * 2}
+              height={HH * 2}
+              rx={2.6}
+              fill="var(--surface)"
+              stroke={border}
+              strokeWidth={s === "running" ? 0.8 : 0.5}
+              strokeDasharray={s === "skipped" ? "1 1" : undefined}
+            />
+            {/* running dot */}
+            {s === "running" && (
+              <circle cx={x + 3} cy={cy} r={0.9} fill="var(--accent)" />
+            )}
+            {/* done check */}
+            {s === "done" && (
+              <path
+                d={`M ${cx + HW - 5.4} ${cy} l 1.3 1.4 l 2.8 -3.1`}
+                fill="none"
+                stroke="var(--ok)"
+                strokeWidth={0.7}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+            {/* error glyph */}
+            {s === "error" && (
+              <text x={cx + HW - 3.4} y={cy + 1.1} textAnchor="middle" style={{ fontSize: 3.4, fontWeight: 700 }} fill="var(--negative)">
+                !
+              </text>
+            )}
+            <text
+              x={cx - (s === "running" ? 1.4 : 0)}
+              y={cy + 1.15}
               textAnchor="middle"
-              style={{ fontSize: layout.font, fontFamily: "var(--font-mono), monospace" }}
-              fill={active ? (s === "skipped" ? "var(--faint)" : "var(--ink)") : "var(--faint)"}
-              opacity={s === "skipped" ? 0.6 : 1}
+              style={{ fontSize: layout.font, fontFamily: "var(--font-mono), monospace", letterSpacing: "-0.04em" }}
+              fill={labelColor}
             >
-              {LABELS[id]}
+              {DISPLAY[id]}
             </text>
           </g>
         );
       })}
 
       {pass > 0 && (
-        <text
-          x={orientation === "h" ? 132 : 36}
-          y={orientation === "h" ? 84 : 134}
+        <motion.text
+          x={layout.passAt[0]}
+          y={layout.passAt[1]}
           textAnchor="middle"
-          style={{ fontSize: layout.font, fontFamily: "var(--font-mono), monospace" }}
+          style={{ fontSize: layout.font + 0.2, fontFamily: "var(--font-mono), monospace" }}
           fill="var(--accent)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
         >
-          pass {pass}
-        </text>
+          ↻ pass {pass}
+        </motion.text>
       )}
     </svg>
   );
