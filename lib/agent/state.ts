@@ -32,6 +32,11 @@ export const AgentState = Annotation.Root({
     reducer: (_prev, next) => next,
     default: () => [],
   }),
+  seniority: Annotation<string | undefined>(),
+  constraints: Annotation<string[]>({
+    reducer: (_prev, next) => next,
+    default: () => [],
+  }),
   verdict: Annotation<FitVerdict | undefined>(),
   gateReason: Annotation<string | undefined>(),
   // Channel names must NOT collide with node names (LangGraph 1.x), so the
