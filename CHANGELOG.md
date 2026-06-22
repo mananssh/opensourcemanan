@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-06-22
+
+- **08:25 · `2d1c24b` · ops:** Scrub the old (pre-env) agent prompts from git history
+  Rewrote history to drop `lib/agent/prompts.ts` and `lib/agent/nodes.ts` from all
+  prior commits (they carried the tuned prompt text before ADR 0015 moved prompts
+  to `AGENT_PROMPTS_B64`), then re-added their current env-loader versions. The
+  prompts are no longer recoverable from the public history.
+
 ## 2026-06-21
 
 - **23:02 · `abdf4a0` · feat:** Portfolio polish — glass section panels, clickable cards, tag hovers, redesigned contact, résumé in hero
