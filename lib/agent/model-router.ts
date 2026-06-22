@@ -54,7 +54,9 @@ function buildLanes(): Lane[] {
   }
   const zen = process.env.OPENCODE_ZEN_API_KEY;
   if (zen) {
-    const model = process.env.OPENCODE_ZEN_MODEL ?? "glm-5-free";
+    // OpenCode Zen's roster rotates; only the `-free` variants skip billing
+    // (others 401 "No payment method"). Verified working: deepseek-v4-flash-free.
+    const model = process.env.OPENCODE_ZEN_MODEL ?? "deepseek-v4-flash-free";
     lanes.push({
       name: "opencode-zen",
       baseURL: process.env.OPENCODE_ZEN_BASE_URL ?? "https://opencode.ai/zen/v1",
