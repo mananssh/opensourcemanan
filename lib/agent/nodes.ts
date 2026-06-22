@@ -84,10 +84,7 @@ export const intake = defineNode("intake", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
-      user: withJsonTail(
-        fill(getPrompt("intake"), { job: wrapUntrusted("JOB", state.input) }),
-        `{ "company": string|null, "role": string|null, "requirements": string[] }`,
-      ),
+      user: withJsonTail(fill(getPrompt("intake"), { job: wrapUntrusted("JOB", state.input) })),
     });
     const obj = (json ?? {}) as { company?: unknown; role?: unknown; requirements?: unknown };
     const company = typeof obj.company === "string" ? obj.company : undefined;
@@ -122,7 +119,6 @@ export const fitGate = defineNode("fit_gate", async (state, ctx) => {
           role: state.role ?? "(none detected)",
           requirements: state.requirements.join("; ") || "(none detected)",
         }),
-        `{ "verdict": "strong"|"plausible"|"not_a_fit", "reason": string }`,
       ),
     });
     const obj = (json ?? {}) as { verdict?: unknown; reason?: unknown };
@@ -167,7 +163,6 @@ export const plan = defineNode("plan", async (state, ctx) => {
           profile: ctx.corpus.profileSummary,
           gapNote,
         }),
-        `{ "dimensions": string[] }`,
       ),
     });
     dimensions = asStringArray((json as { dimensions?: unknown } | undefined)?.dimensions);
@@ -204,7 +199,6 @@ async function gather(
           company: state.company ?? "(unknown)",
           candidates: renderItems(items),
         }),
-        `{ "picks": [{ "id": string, "claim": string }] }`,
       ),
     });
     picks = asPicks((json as { picks?: unknown } | undefined)?.picks);
@@ -262,11 +256,11 @@ export const webCorpus = defineNode("web_corpus", async (state, ctx) => {
           webFindings: webFindings ?? "(no web data available)",
           candidates: renderItems(ctx.corpus.corpus),
         }),
-        `{ "webFindings": string, "picks": [{ "id": string, "claim": string }] }`,
       ),
     });
-    const obj = (json ?? {}) as { webFindings?: unknown; picks?: unknown };
-    if (!webFindings && typeof obj.webFindings === "string") webFindings = obj.webFindings;
+    // The prompt returns `note` (the company-alignment line) + `picks`.
+    const obj = (json ?? {}) as { note?: unknown; picks?: unknown };
+    if (!webFindings && typeof obj.note === "string" && obj.note.trim()) webFindings = obj.note.trim();
     picks = asPicks(obj.picks);
   } catch {
     return { update: { evidence: [], webFindings }, summary: "model unavailable — skipped" };
@@ -339,7 +333,6 @@ export const critique = defineNode("critique", async (state, ctx) => {
           draft: state.draft ?? "(none)",
           evidence: evidence.map((e) => `- ${e.label} (${e.href})`).join("\n") || "(none)",
         }),
-        `{ "ok": boolean, "gaps": string[] }`,
       ),
     });
     const obj = (json ?? {}) as { ok?: unknown; gaps?: unknown };
@@ -401,30 +394,24 @@ export const compose = defineNode("compose", async (state, ctx) => {
   }
 
   const evidence = dedupe(state.evidence);
-  const allowed = new Map(evidence.map((e) => [e.href, e.label]));
+  // compose now returns the paragraph as PLAIN text (matches the prompt). The
+  // cited evidence shown is the curated set the gather nodes already selected.
   let paragraph: string;
-  let cited: string[] = [];
   try {
-    const { text, json } = await streamChat({
+    const { text } = await streamChat({
       node: "compose",
       system: SYSTEM(),
       temperature: 0.5,
-      jsonTail: true,
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
-      user: withJsonTail(
-        fill(getPrompt("compose"), {
-          verdict,
-          draft: state.draft ?? "(none)",
-          evidence: evidence.map((e) => `- ${e.label} (${e.href}): ${e.claim}`).join("\n") || "(none)",
-        }),
-        `{ "citedHrefs": string[] }`,
-      ),
+      user: fill(getPrompt("compose"), {
+        verdict,
+        draft: state.draft ?? "(none)",
+        evidence: evidence.map((e) => `- ${e.label} (${e.href}): ${e.claim}`).join("\n") || "(none)",
+      }),
     });
-    // Defensive: if the model still appended a "citedHrefs" list to the prose, drop it.
-    paragraph = text.split(/\n+\s*cited\s*hrefs/i)[0].trim();
-    cited = asStringArray((json as { citedHrefs?: unknown } | undefined)?.citedHrefs).filter((h) => allowed.has(h));
+    paragraph = text.trim();
   } catch (err) {
     // Degrade: never let compose kill the run — fall back to the synthesized draft.
     if (process.env.AGENT_DEBUG) console.warn("[sully:compose] threw:", err instanceof Error ? err.message : err);
@@ -433,12 +420,13 @@ export const compose = defineNode("compose", async (state, ctx) => {
         ? state.draft
         : `Manan is a ${verdict} fit for this role, backed by ${evidence.slice(0, 3).map((e) => e.label).join(", ") || "his shipped work"}.`;
   }
-  // Grounding guarantee: only real evidence hrefs survive; fall back to top items.
-  const chosen = (cited.length ? cited : evidence.slice(0, 3).map((e) => e.href)).filter((h) => allowed.has(h));
+  // Grounding by construction: surface the evidence the gather nodes curated
+  // (deduped, capped) — every item is a real, selected corpus pick.
+  const chosen = evidence.slice(0, 6);
   const result: FitResult = {
     verdict,
     paragraph,
-    evidence: chosen.map((href) => ({ label: allowed.get(href)!, href })),
+    evidence: chosen.map((e) => ({ label: e.label, href: e.href })),
     company: state.company,
   };
   return { update: { result }, summary: verdict.replace("_", " ") };
