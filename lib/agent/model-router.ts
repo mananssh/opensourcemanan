@@ -32,11 +32,11 @@ function buildLanes(): Lane[] {
       baseURL: process.env.GEMINI_BASE_URL ?? "https://generativelanguage.googleapis.com/v1beta/openai",
       apiKey: gemini,
       model: {
-        // Default to non-thinking flash on both tiers: fast, reliable inside the
-        // route's 60s budget, and (unlike 2.5's thinking mode) its visible output
-        // can't be starved by hidden reasoning tokens. Override via env if wanted.
-        fast: process.env.GEMINI_MODEL_FAST ?? "gemini-2.0-flash",
-        strong: process.env.GEMINI_MODEL_STRONG ?? "gemini-2.0-flash",
+        // 2.5-flash-lite on both tiers: available + fast + non-thinking, so its
+        // visible output isn't starved by hidden reasoning tokens (2.5-flash
+        // returns empty under a cap; 2.0-flash now 429s). Override via env.
+        fast: process.env.GEMINI_MODEL_FAST ?? "gemini-2.5-flash-lite",
+        strong: process.env.GEMINI_MODEL_STRONG ?? "gemini-2.5-flash-lite",
       },
     });
   }
