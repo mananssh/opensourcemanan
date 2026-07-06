@@ -19,11 +19,23 @@ export interface RunContext {
   corpus: Corpus;
   signal?: AbortSignal;
   startedAt: number; // epoch ms — used to skip the loop when time is short
+  deadlineAt: number; // epoch ms — streamChat stops trying lanes past this
   usage: UsageSink; // model + token telemetry accumulator
 }
 
 /** Don't start a re-gather pass once the run has used most of its time budget. */
 const SOFT_LOOP_BUDGET_MS = 32_000;
+
+/**
+ * Hard ceiling on model-call time across the WHOLE run, well under the route's
+ * `maxDuration = 60`. Without this, each of the 9 nodes could independently
+ * burn up to ~30s (3 lanes x a 10s idle-timeout) failing over, and the
+ * cumulative total across nodes could blow past Vercel's hard kill — an ugly
+ * connection drop instead of the graceful per-node degrade this agent is built
+ * around. `streamChat` refuses new lane attempts once `ctx.deadlineAt` passes,
+ * so every remaining node degrades near-instantly instead.
+ */
+export const RUN_DEADLINE_MS = Number(process.env.AGENT_RUN_DEADLINE_MS ?? 45_000);
 
 function getCtx(config: LangGraphRunnableConfig): RunContext {
   const ctx = (config?.configurable as { ctx?: RunContext } | undefined)?.ctx;
@@ -84,6 +96,7 @@ export const intake = defineNode("intake", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(fill(getPrompt("intake"), { job: wrapUntrusted("JOB", state.input) })),
     });
     const obj = (json ?? {}) as {
@@ -121,6 +134,7 @@ export const fitGate = defineNode("fit_gate", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("fit_gate"), {
           profile: ctx.corpus.profileSummary,
@@ -167,6 +181,7 @@ export const plan = defineNode("plan", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("plan"), {
           requirements: state.requirements.join("; ") || "(see posting)",
@@ -205,6 +220,7 @@ async function gather(
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("gather"), {
           dimensions: state.planDimensions.join("; "),
@@ -262,6 +278,7 @@ export const webCorpus = defineNode("web_corpus", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("web_corpus"), {
           dimensions: state.planDimensions.join("; "),
@@ -310,6 +327,7 @@ export const synthesize = defineNode("synthesize", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: fill(getPrompt("synthesize"), {
         requirements: state.requirements.join("; ") || "(see posting)",
         webFindings: state.webFindings ?? "(none)",
@@ -339,6 +357,7 @@ export const critique = defineNode("critique", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("critique"), {
           requirements: state.requirements.join("; ") || "(see posting)",
@@ -388,6 +407,7 @@ export const compose = defineNode("compose", async (state, ctx) => {
         emit: ctx.emit,
         signal: ctx.signal,
         usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
         user: fill(getPrompt("compose_decline"), {
           reason: state.gateReason ?? "it's outside his technical background",
         }),
@@ -419,6 +439,7 @@ export const compose = defineNode("compose", async (state, ctx) => {
       emit: ctx.emit,
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: fill(getPrompt("compose"), {
         verdict,
         draft: state.draft ?? "(none)",
