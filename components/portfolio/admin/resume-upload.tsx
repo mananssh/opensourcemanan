@@ -3,38 +3,32 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
-const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,image/avif";
 
 /**
- * Owner image picker: uploads straight to GCS via a presigned URL, then writes
- * the object key into a hidden form field. The save action makes it public.
+ * Owner résumé picker — same presigned-upload flow as ImageUpload, but for a
+ * single PDF. Stores the object key (never a raw URL) into a hidden field.
  */
-export function ImageUpload({
+export function ResumeUpload({
   name,
   initialKey,
   initialUrl,
-  vertical = "blog",
 }: {
   name: string;
   initialKey?: string | null;
   initialUrl?: string | null;
-  vertical?: "blog" | "dump" | "portfolio" | "projects" | "misc";
 }) {
   const [key, setKey] = useState(initialKey ?? "");
-  const [preview, setPreview] = useState(initialUrl ?? "");
+  const [url, setUrl] = useState(initialUrl ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const hiddenRef = useRef<HTMLInputElement>(null);
 
-  // Clear the key/preview when the surrounding form resets (e.g. after a
-  // successful post) — form.reset() only clears native fields, not this React
-  // state, which is why the image preview lingered after posting.
   useEffect(() => {
     const form = hiddenRef.current?.form;
     if (!form) return;
     const onReset = () => {
       setKey(initialKey ?? "");
-      setPreview(initialUrl ?? "");
+      setUrl(initialUrl ?? "");
       setError("");
     };
     form.addEventListener("reset", onReset);
@@ -44,8 +38,13 @@ export function ImageUpload({
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.type !== "application/pdf") {
+      setError("Résumé must be a PDF.");
+      e.target.value = "";
+      return;
+    }
     if (file.size > MAX_BYTES) {
-      setError("Image is too large (max 10 MB).");
+      setError("File is too large (max 10 MB).");
       e.target.value = "";
       return;
     }
@@ -56,16 +55,16 @@ export function ImageUpload({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          vertical,
+          vertical: "portfolio",
           filename: file.name,
-          contentType: file.type || "image/jpeg",
+          contentType: file.type,
         }),
       });
       if (!res.ok) throw new Error("Could not get an upload URL.");
-      const { url, key: newKey } = (await res.json()) as { url: string; key: string };
-      const put = await fetch(url, {
+      const { url: putUrl, key: newKey } = (await res.json()) as { url: string; key: string };
+      const put = await fetch(putUrl, {
         method: "PUT",
-        headers: { "Content-Type": file.type || "image/jpeg" },
+        headers: { "Content-Type": file.type },
         body: file,
       });
       if (!put.ok) throw new Error("Upload failed.");
@@ -79,7 +78,7 @@ export function ImageUpload({
         }).catch(() => {});
       }
       setKey(newKey);
-      setPreview(URL.createObjectURL(file));
+      setUrl(URL.createObjectURL(file));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload error.");
     } finally {
@@ -90,26 +89,26 @@ export function ImageUpload({
   return (
     <div className="space-y-2">
       <input ref={hiddenRef} type="hidden" name={name} value={key} />
-      {preview && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={preview}
-          alt=""
-          className="h-28 w-44 rounded-md border border-rule object-cover"
-        />
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block truncate font-mono text-xs text-accent underline underline-offset-2"
+        >
+          View current résumé
+        </a>
       )}
       <input
         type="file"
-        accept={ACCEPT}
+        accept="application/pdf"
         onChange={onFile}
         disabled={busy}
         className="block w-full font-mono text-xs text-muted file:mr-3 file:rounded-full file:border file:border-rule file:bg-surface file:px-3 file:py-1.5 file:font-mono file:text-xs file:text-ink hover:file:border-accent"
       />
       {busy && <p className="font-mono text-xs text-faint">Uploading…</p>}
       {error && <p className="font-mono text-xs text-accent">{error}</p>}
-      {key && !busy && (
-        <p className="truncate font-mono text-[0.7rem] text-faint">{key}</p>
-      )}
+      {key && !busy && <p className="truncate font-mono text-[0.7rem] text-faint">{key}</p>}
     </div>
   );
 }

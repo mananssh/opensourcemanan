@@ -2,6 +2,7 @@ import { saveProfile } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
 import { Field, inputCls } from "@/components/portfolio/admin/fields";
+import { ResumeUpload } from "@/components/portfolio/admin/resume-upload";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Profile } from "@/db/schema";
 
@@ -45,8 +46,12 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
       <Field label="Spoken languages" hint="One per line — “Name: level”">
         <textarea name="languages" rows={5} defaultValue={langs} className={inputCls} />
       </Field>
-      <Field label="Résumé URL" hint="A public link (e.g. a GCS PDF URL)">
-        <input name="resumeKey" defaultValue={profile?.resumeKey ?? ""} className={inputCls} />
+      <Field label="Résumé (PDF)">
+        <ResumeUpload
+          name="resumeKey"
+          initialKey={profile?.resumeKey}
+          initialUrl={profile?.resumeKey ? publicUrl(profile.resumeKey) : null}
+        />
       </Field>
       <Field label="Photo">
         <ImageUpload

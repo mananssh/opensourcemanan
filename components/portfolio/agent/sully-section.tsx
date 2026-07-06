@@ -1,11 +1,29 @@
 import { ScrambleText } from "@/components/portfolio/hero/scramble-text";
 import { SullyPanel } from "@/components/portfolio/agent/sully-panel";
 
-/** Placeholder Sully avatar. TODO: swap to <Image src="/sully.png"> once added to /public. */
+/**
+ * Sully's mark, recolored to the theme's emerald identity via a CSS mask —
+ * /public/sully.svg stays the single source of truth (its own fill is
+ * irrelevant; only the shape's alpha is used), so it never fights ADR 0005's
+ * "no hardcoded hex" rule the way baking a colored asset per theme would.
+ */
 function SullyAvatar() {
   return (
-    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[#f0f7f3] font-display text-3xl font-semibold text-[#0a9d6b] ring-2 ring-[#0a9d6b]/50 dark:bg-[#0a0d0c] dark:text-[#34f5a0] dark:ring-[#34f5a0]/70">
-      S
+    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-sully-accent-bg ring-2 ring-sully-accent/50">
+      <span
+        aria-hidden
+        className="block h-11 w-11 bg-sully-accent"
+        style={{
+          WebkitMaskImage: "url(/sully.svg)",
+          maskImage: "url(/sully.svg)",
+          WebkitMaskSize: "contain",
+          maskSize: "contain",
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+        }}
+      />
     </div>
   );
 }

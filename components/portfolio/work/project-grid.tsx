@@ -33,7 +33,7 @@ export function ProjectGrid({ projects }: { projects: ProjectCard[] }) {
                 <div className="relative aspect-video overflow-hidden border-b border-rule">
                   <Image
                     src={cover}
-                    alt=""
+                    alt={`${p.name} cover`}
                     fill
                     sizes="(max-width: 640px) 92vw, 460px"
                     className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"

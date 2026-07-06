@@ -42,12 +42,12 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  // Allowlist concrete raster image types. SVG is excluded on purpose: an
-  // owner-uploaded SVG served from storage.googleapis.com would be a stored-XSS
-  // vector if ever rendered inline.
-  if (!/^image\/(png|jpe?g|gif|webp|avif)$/.test(contentType)) {
+  // Allowlist concrete raster image types plus PDF (résumé). SVG is excluded on
+  // purpose: an owner-uploaded SVG served from storage.googleapis.com would be a
+  // stored-XSS vector if ever rendered inline.
+  if (!/^image\/(png|jpe?g|gif|webp|avif)$/.test(contentType) && contentType !== "application/pdf") {
     return NextResponse.json(
-      { error: "Allowed image types: png, jpg, gif, webp, avif" },
+      { error: "Allowed types: png, jpg, gif, webp, avif, pdf" },
       { status: 400 },
     );
   }

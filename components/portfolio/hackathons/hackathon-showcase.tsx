@@ -48,7 +48,7 @@ export function HackathonShowcase({ hackathons }: { hackathons: HackathonCard[] 
                 <div className="relative hidden aspect-[4/3] w-40 shrink-0 overflow-hidden rounded-lg border border-rule sm:block">
                   <Image
                     src={cover}
-                    alt=""
+                    alt={`${h.event} cover`}
                     fill
                     sizes="160px"
                     className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"

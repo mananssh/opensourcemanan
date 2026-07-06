@@ -22,7 +22,7 @@ import {
  *               plan ──► ┌ work_history ┐
  *                        ├ projects     ┤ (parallel) ─► synthesize ─► critique ─► compose
  *                        └ web_corpus   ┘                                 │
- *                                            ▲──────── re-gather (≤2) ─────┘
+ *                                            ▲──────── re-gather (≤1) ─────┘
  *
  * Two conditional edges: the gate's decline short-circuit, and the bounded
  * critique loop (back to `plan`, which re-fans the band). The parallel band is a
