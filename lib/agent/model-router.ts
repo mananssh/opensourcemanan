@@ -233,7 +233,11 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
       body: JSON.stringify({
         model: lane.model[tier],
         stream: true,
-        stream_options: { include_usage: true },
+        // NOT `stream_options: { include_usage: true }` — Gemini's OpenAI-compat
+        // shim can't handle it and returns a misleading 503 "high demand"
+        // instead of a clean 400, which silently took the primary lane out on
+        // every run. Token usage falls back to the character-based estimate
+        // below when a provider doesn't include a `usage` object unsolicited.
         temperature: args.temperature ?? 0.4,
         ...(args.maxTokens ? { max_tokens: args.maxTokens } : {}),
         messages: [
