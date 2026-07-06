@@ -108,7 +108,7 @@ const NODE_TIMEOUT_MS = Number(process.env.AGENT_NODE_TIMEOUT_MS ?? 10_000);
  * Once a lane fails repeatedly we skip it for a cooldown, so the rest of the run
  * (and the next few) goes straight to a working lane; it's re-probed after.
  */
-const LANE_FAIL_THRESHOLD = 2;
+const LANE_FAIL_THRESHOLD = 1;
 const LANE_COOLDOWN_MS = Number(process.env.AGENT_LANE_COOLDOWN_MS ?? 60_000);
 const laneState = new Map<string, { fails: number; until: number }>();
 
@@ -147,6 +147,8 @@ interface StreamArgs {
   maxTokens?: number;
   /** Run-scoped usage accumulator (model + token totals). */
   usage?: UsageSink;
+  /** Epoch ms — stop trying lanes and abort in-flight requests past this. */
+  deadlineAt?: number;
 }
 
 export interface StreamResult {
@@ -170,13 +172,19 @@ export async function streamChat(args: StreamArgs): Promise<StreamResult> {
     );
   }
   const tier = TIER[args.node];
-  let lastError: unknown;
+  let lastError: unknown = new Error("run deadline already passed");
 
   // Prefer lanes not in cooldown; if all are cooling down, try them anyway.
   const enabled = lanes.filter((l) => !laneDisabled(l.name));
   const tryLanes = enabled.length ? enabled : lanes;
 
   for (const lane of tryLanes) {
+    // Stop trying new lanes once the run's overall deadline has passed —
+    // otherwise a bad lane roster can cost every remaining node the full
+    // idle-timeout on every lane, easily exceeding the route's maxDuration.
+    if (args.deadlineAt !== undefined && Date.now() >= args.deadlineAt) {
+      throw new AllLanesFailedError(lastError);
+    }
     try {
       const result = await streamOnce(lane, tier, args);
       noteLaneSuccess(lane.name);
@@ -202,7 +210,15 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
     timer = setTimeout(() => timeout.abort(), NODE_TIMEOUT_MS);
   };
   arm();
-  // Abort if either the idle timeout fires or the request is cancelled.
+  // A separate HARD deadline, not re-armed: the idle timer alone only catches a
+  // STALLED stream, but a steadily-trickling-yet-slow response (e.g. a big
+  // model under load) would keep re-arming it forever. This caps total time
+  // spent on this attempt to whatever's left of the run's overall budget.
+  const deadlineTimer =
+    args.deadlineAt !== undefined
+      ? setTimeout(() => timeout.abort(), Math.max(0, args.deadlineAt - Date.now()))
+      : undefined;
+  // Abort if either timer fires or the request is cancelled.
   const onAbort = () => timeout.abort();
   args.signal?.addEventListener("abort", onAbort);
 
@@ -305,6 +321,7 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
     throw err;
   } finally {
     clearTimeout(timer);
+    clearTimeout(deadlineTimer);
     args.signal?.removeEventListener("abort", onAbort);
   }
 }

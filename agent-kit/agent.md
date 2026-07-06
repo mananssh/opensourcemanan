@@ -49,9 +49,14 @@ intake → fit_gate ─(not_a_fit)──────────────► 
   failures, which each node already catches internally.
 - `events.ts` — the run-scoped bus (`emit`/`drain`) threaded via `configurable.ctx`.
 - `model-router.ts` — OpenAI-compatible streaming + lane failover (idle-timeout +
-  circuit breaker). Per-node tier via `TIER`. The `JSON_SENTINEL` splits visible
-  reasoning from a structured tail. Reports model + token usage via a `UsageSink`
-  (run totals are emitted as a final `usage` event and shown under the verdict).
+  circuit breaker), plus a run-wide hard deadline (`ctx.deadlineAt`, set from
+  `RUN_DEADLINE_MS` in `nodes.ts`): once it passes, `streamChat` stops trying
+  further lanes and aborts in-flight requests, so a bad lane roster degrades
+  every remaining node near-instantly instead of the route hitting Vercel's
+  `maxDuration` kill. Per-node tier via `TIER`. The `JSON_SENTINEL` splits
+  visible reasoning from a structured tail. Reports model + token usage via a
+  `UsageSink` (run totals are emitted as a final `usage` event and shown under
+  the verdict).
 - `prompts.ts` — prompt LOADER, not the prompts. Mechanics (`wrapUntrusted`,
   `withJsonTail`, the sentinel) live in code; the prompt TEXT is loaded from
   `AGENT_PROMPTS_B64` (base64 of the gitignored `agent.prompts.json`, templates

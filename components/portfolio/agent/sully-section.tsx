@@ -33,7 +33,7 @@ export function SullySection() {
     <section id="sully" className="mx-auto mt-28 w-full max-w-5xl px-6 scroll-mt-20">
       <ScrambleText
         text="● a (slightly biased) second opinion"
-        className="font-mono text-[0.7rem] uppercase tracking-[0.2em] text-accent"
+        className="font-mono text-[0.7rem] uppercase tracking-[0.2em] text-sully-accent"
       />
       <h2 className="mt-4 font-display text-4xl leading-[1.05] tracking-tight sm:text-5xl">
         <span className="text-muted">Everyone can talk about what they do.</span>
