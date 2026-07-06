@@ -28,6 +28,13 @@ export const AgentState = Annotation.Root({
   input: Annotation<string>(),
   company: Annotation<string | undefined>(),
   role: Annotation<string | undefined>(),
+  // intake's own genuine-role judgment, made with the full raw input in view —
+  // fit_gate defers to it rather than re-guessing blind from the (possibly
+  // sparse) extracted role/requirements alone. Defaults true (biased-yes).
+  looksLikeRole: Annotation<boolean>({
+    reducer: (_prev, next) => next,
+    default: () => true,
+  }),
   requirements: Annotation<string[]>({
     reducer: (_prev, next) => next,
     default: () => [],

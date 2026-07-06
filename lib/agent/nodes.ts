@@ -105,14 +105,21 @@ export const intake = defineNode("intake", async (state, ctx) => {
       requirements?: unknown;
       seniority?: unknown;
       constraints?: unknown;
+      looksLikeRole?: unknown;
     };
     const company = typeof obj.company === "string" ? obj.company : undefined;
     const role = typeof obj.role === "string" ? obj.role : undefined;
     const requirements = asStringArray(obj.requirements);
     const seniority = typeof obj.seniority === "string" ? obj.seniority : undefined;
     const constraints = asStringArray(obj.constraints);
+    // Biased-yes: only distrust genuineness on an explicit false, never on a
+    // missing/malformed field.
+    const looksLikeRole = obj.looksLikeRole !== false;
     if (company) ctx.emit({ type: "node_status", node: "intake", detail: `company: ${company}` });
-    return { update: { company, role, requirements, seniority, constraints }, summary: role ?? "role parsed" };
+    return {
+      update: { company, role, requirements, seniority, constraints, looksLikeRole },
+      summary: role ?? "role parsed",
+    };
   } catch {
     // Degrade: keep the run alive with the raw posting as the requirement.
     return { update: { requirements: [state.input.slice(0, 280)] }, summary: "role parsed (degraded)" };
@@ -142,6 +149,7 @@ export const fitGate = defineNode("fit_gate", async (state, ctx) => {
           requirements: state.requirements.join("; ") || "(none detected)",
           seniority: state.seniority ?? "(unclear)",
           constraints: state.constraints.length ? state.constraints.join("; ") : "(none stated)",
+          looksLikeRole: state.looksLikeRole ? "yes" : "no",
         }),
       ),
     });

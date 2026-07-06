@@ -262,9 +262,20 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
     let usageTokens = 0;
     let respModel = lane.model[tier];
 
-    const forward = () => {
+    // `final` only when the stream has ended: mid-stream, the sentinel can
+    // arrive split across two chunks, so a naive indexOf on each partial
+    // buffer would emit its prefix (e.g. "@@@JSON") as visible reasoning
+    // before the rest arrives to reveal what it was. Hold back the last
+    // (sentinel.length - 1) chars until either the full sentinel resolves or
+    // the stream ends with no sentinel at all (jsonTail model didn't comply).
+    const forward = (final = false) => {
       const idx = args.jsonTail ? full.indexOf(JSON_SENTINEL) : -1;
-      const visibleEnd = idx === -1 ? full.length : idx;
+      const visibleEnd =
+        idx !== -1
+          ? idx
+          : !args.jsonTail || final
+            ? full.length
+            : Math.max(emittedVisible, full.length - (JSON_SENTINEL.length - 1));
       if (visibleEnd > emittedVisible) {
         args.emit({ type: "node_reasoning", node: args.node, delta: full.slice(emittedVisible, visibleEnd) });
         emittedVisible = visibleEnd;
@@ -299,7 +310,7 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
         }
       }
     }
-    forward();
+    forward(true);
     // Report usage (real if the provider sent it; else a rough token estimate).
     args.usage?.add(usageTokens || Math.round((args.system.length + args.user.length + full.length) / 4), respModel);
 
