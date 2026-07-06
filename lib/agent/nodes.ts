@@ -359,7 +359,9 @@ export const critique = defineNode("critique", async (state, ctx) => {
   const elapsed = Date.now() - ctx.startedAt;
   const willLoop = !ok && state.pass < 1 && elapsed < SOFT_LOOP_BUDGET_MS;
   if (willLoop) {
-    ctx.emit({ type: "loop", pass: state.pass + 2 }); // pass label: "2" on the re-gather
+    // state.pass is 0 during the first pass, which we label "pass 1" to the
+    // client; the one allowed re-gather is 0 + 2 = "pass 2".
+    ctx.emit({ type: "loop", pass: state.pass + 2 });
     ctx.emit({ type: "edge", from: "critique", to: "plan" });
   }
   return {

@@ -1,7 +1,6 @@
 import { saveCapability, deleteCapability } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
-import { ConfirmSubmit } from "@/components/admin/confirm-submit";
-import { Field, inputCls } from "@/components/portfolio/admin/fields";
+import { DeleteButton, Field, inputCls } from "@/components/portfolio/admin/fields";
 import type { Capability } from "@/db/schema";
 
 export function CapabilityForm({ capability }: { capability?: Capability }) {
@@ -26,16 +25,13 @@ export function CapabilityForm({ capability }: { capability?: Capability }) {
       </AdminForm>
 
       {capability && (
-        <form action={deleteCapability} className="mt-4 max-w-xl">
-          <input type="hidden" name="id" value={capability.id} />
-          <ConfirmSubmit
-            className="font-mono text-sm text-muted transition-colors hover:text-accent"
-            message="Delete this group?"
-            pendingLabel="Deleting…"
-          >
-            Delete group
-          </ConfirmSubmit>
-        </form>
+        <DeleteButton
+          action={deleteCapability}
+          id={capability.id}
+          message="Delete this group?"
+          label="Delete group"
+          className="mt-4 max-w-xl"
+        />
       )}
     </>
   );

@@ -41,9 +41,12 @@ intake → fit_gate ─(not_a_fit)──────────────► 
   names** (LangGraph 1.x), so the `plan`/`critique` nodes write to
   `planDimensions`/`critiqueResult` (`state.ts`).
 - `nodes.ts` — the nine nodes. Each emits `node_start` → streamed `node_reasoning`
-  → `node_status` (tool actions) → `node_done`. Gather nodes degrade gracefully;
-  `intake`/`fit_gate` degrade biased-yes to keep the demo alive; `synthesize`/
-  `compose` are fatal if they fail.
+  → `node_status` (tool actions) → `node_done`. Every node degrades rather than
+  aborting the run: gather nodes fall back to no evidence, `intake`/`fit_gate`
+  degrade biased-yes, and `synthesize`/`compose` fall back to a plain
+  evidence-join / canned paragraph. `defineNode`'s catch → `node_error` → rethrow
+  path exists for genuinely unexpected throws (e.g. a bug), not for model/tool
+  failures, which each node already catches internally.
 - `events.ts` — the run-scoped bus (`emit`/`drain`) threaded via `configurable.ctx`.
 - `model-router.ts` — OpenAI-compatible streaming + lane failover (idle-timeout +
   circuit breaker). Per-node tier via `TIER`. The `JSON_SENTINEL` splits visible

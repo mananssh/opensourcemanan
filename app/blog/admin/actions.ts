@@ -9,11 +9,13 @@ import { posts, categories, tags, postTags, comments } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
 import { readingMinutes } from "@/lib/blog/reading-time";
 import { makePublic, deleteObject } from "@/lib/storage/gcs";
+import type { FormState } from "@/components/admin/form-state";
 
 type Visibility = "public" | "authed" | "allowlist" | "owner";
 
-/** Result of a form action — `{ error }` is surfaced inline via useActionState. */
-export type ActionState = { error?: string };
+/** Re-exported for existing importers; the canonical type lives in
+ *  components/admin/form-state.ts, shared across every vertical. */
+export type ActionState = FormState;
 
 function str(fd: FormData, key: string): string {
   const v = fd.get(key);

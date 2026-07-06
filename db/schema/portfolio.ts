@@ -59,20 +59,24 @@ export const projects = pgTable(
   (t) => [index("projects_sort_idx").on(t.sortOrder)],
 );
 
-export const experiences = pgTable("experiences", {
-  id: uuid().primaryKey().defaultRandom(),
-  org: text().notNull(),
-  role: text().notNull(),
-  startedAt: timestamp({ withTimezone: true }), // for timeline ordering
-  endedAt: timestamp({ withTimezone: true }), // null = present
-  location: text(),
-  blurb: text().notNull().default(""),
-  body: text().notNull().default(""),
-  logoKey: text(),
-  sortOrder: integer().notNull().default(0),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const experiences = pgTable(
+  "experiences",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    org: text().notNull(),
+    role: text().notNull(),
+    startedAt: timestamp({ withTimezone: true }), // for timeline ordering
+    endedAt: timestamp({ withTimezone: true }), // null = present
+    location: text(),
+    blurb: text().notNull().default(""),
+    body: text().notNull().default(""),
+    logoKey: text(),
+    sortOrder: integer().notNull().default(0),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("experiences_sort_idx").on(t.startedAt)],
+);
 
 export const hackathons = pgTable(
   "hackathons",
@@ -95,14 +99,18 @@ export const hackathons = pgTable(
   (t) => [index("hackathons_sort_idx").on(t.sortOrder)],
 );
 
-export const capabilities = pgTable("capabilities", {
-  id: uuid().primaryKey().defaultRandom(),
-  groupName: text().notNull(),
-  items: text().array().notNull().default([]),
-  sortOrder: integer().notNull().default(0),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const capabilities = pgTable(
+  "capabilities",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    groupName: text().notNull(),
+    items: text().array().notNull().default([]),
+    sortOrder: integer().notNull().default(0),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("capabilities_sort_idx").on(t.sortOrder)],
+);
 
 export type Profile = typeof profile.$inferSelect;
 export type Project = typeof projects.$inferSelect;

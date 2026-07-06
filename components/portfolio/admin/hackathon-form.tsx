@@ -2,15 +2,17 @@ import { saveHackathon, deleteHackathon } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
 import { MultiImageUpload } from "@/components/portfolio/admin/multi-image-upload";
-import { ConfirmSubmit } from "@/components/admin/confirm-submit";
-import { Field, inputCls } from "@/components/portfolio/admin/fields";
+import { DeleteButton, Field, dateVal, inputCls } from "@/components/portfolio/admin/fields";
 import { publicUrl } from "@/lib/storage/gcs";
 import type { Hackathon } from "@/db/schema";
 
-const dateVal = (d?: Date | null) =>
-  d ? new Date(d).toISOString().slice(0, 10) : "";
-
-export function HackathonForm({ hackathon }: { hackathon?: Hackathon }) {
+export function HackathonForm({
+  hackathon,
+  projects,
+}: {
+  hackathon?: Hackathon;
+  projects: { slug: string; name: string }[];
+}) {
   return (
     <>
       <AdminForm
@@ -31,8 +33,15 @@ export function HackathonForm({ hackathon }: { hackathon?: Hackathon }) {
           <Field label="Date" htmlFor="happenedAt">
             <input id="happenedAt" name="happenedAt" type="date" defaultValue={dateVal(hackathon?.happenedAt)} className={inputCls} />
           </Field>
-          <Field label="Related project slug" htmlFor="projectSlug">
-            <input id="projectSlug" name="projectSlug" defaultValue={hackathon?.projectSlug ?? ""} className={inputCls} />
+          <Field label="Related project" htmlFor="projectSlug">
+            <select id="projectSlug" name="projectSlug" defaultValue={hackathon?.projectSlug ?? ""} className={inputCls}>
+              <option value="">(none)</option>
+              {projects.map((p) => (
+                <option key={p.slug} value={p.slug}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Sort order" htmlFor="sortOrder">
             <input id="sortOrder" name="sortOrder" type="number" defaultValue={hackathon?.sortOrder ?? 0} className={inputCls} />
@@ -65,16 +74,12 @@ export function HackathonForm({ hackathon }: { hackathon?: Hackathon }) {
       </AdminForm>
 
       {hackathon && (
-        <form action={deleteHackathon} className="mt-4 max-w-2xl">
-          <input type="hidden" name="id" value={hackathon.id} />
-          <ConfirmSubmit
-            className="font-mono text-sm text-muted transition-colors hover:text-accent"
-            message="Delete this hackathon?"
-            pendingLabel="Deleting…"
-          >
-            Delete hackathon
-          </ConfirmSubmit>
-        </form>
+        <DeleteButton
+          action={deleteHackathon}
+          id={hackathon.id}
+          message="Delete this hackathon?"
+          label="Delete hackathon"
+        />
       )}
     </>
   );

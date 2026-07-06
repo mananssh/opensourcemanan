@@ -71,6 +71,13 @@
       "when": 1782059383808,
       "tag": "0009_complex_dorian_gray",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783345437972,
+      "tag": "0010_material_violations",
+      "breakpoints": true
     }
   ]
 }

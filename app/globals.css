@@ -119,6 +119,11 @@ html.dark .vertical-dump {
   --ok: #2f8f63;
   --attention: #b9821c;
   --negative: #bd3d33;
+  /* Sully's own emerald identity (matches .sully-stage), distinct from the
+     portfolio's coral accent — used by the small avatar badge outside the
+     stage (ADR 0005: still defined for both themes, never a bare hex). */
+  --sully-accent: #0a9d6b;
+  --sully-accent-bg: #f0f7f3;
 
   --display-family: var(--font-bricolage);
   --body-family: var(--font-geist);
@@ -138,6 +143,8 @@ html.dark .vertical-portfolio {
   --ok: #4fb783;
   --attention: #d6a046;
   --negative: #e0685d;
+  --sully-accent: #34f5a0;
+  --sully-accent-bg: #0a0d0c;
 }
 
 /* A sticky note: colored card, soft shadow, slight tilt; straightens on hover.
@@ -351,6 +358,8 @@ html.dark .sully-stage {
   --color-ok: var(--ok, var(--accent));
   --color-attention: var(--attention, var(--accent));
   --color-negative: var(--negative, var(--accent));
+  --color-sully-accent: var(--sully-accent, var(--accent));
+  --color-sully-accent-bg: var(--sully-accent-bg, var(--accent-soft));
 
   --font-display: var(--display-family);
   --font-body: var(--body-family);

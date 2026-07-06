@@ -80,6 +80,15 @@ export function MultiImageUpload({
 
   function remove(key: string) {
     setItems((prev) => prev.filter((i) => i.key !== key));
+    // Best-effort: only clean up if this key wasn't already saved on the row —
+    // an unsaved pick removed before submit would otherwise orphan the object.
+    if (!initial.some((i) => i.key === key)) {
+      fetch("/api/storage/object", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ key }),
+      }).catch(() => {});
+    }
   }
 
   return (

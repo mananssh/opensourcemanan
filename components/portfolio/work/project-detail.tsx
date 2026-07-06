@@ -31,7 +31,13 @@ export function ProjectDetail({ project }: { project: Project }) {
 
       {cover && (
         <div className="relative mt-6 aspect-video overflow-hidden rounded-xl border border-rule">
-          <Image src={cover} alt="" fill sizes="(max-width: 720px) 92vw, 660px" className="object-cover" />
+          <Image
+            src={cover}
+            alt={`${project.name} cover`}
+            fill
+            sizes="(max-width: 720px) 92vw, 660px"
+            className="object-cover"
+          />
         </div>
       )}
 
@@ -43,9 +49,15 @@ export function ProjectDetail({ project }: { project: Project }) {
 
       {gallery.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-3">
-          {gallery.map((src) => (
+          {gallery.map((src, i) => (
             <div key={src} className="relative aspect-[4/3] overflow-hidden rounded-lg border border-rule">
-              <Image src={src} alt="" fill sizes="(max-width: 720px) 45vw, 320px" className="object-cover" />
+              <Image
+                src={src}
+                alt={`${project.name} — screenshot ${i + 1}`}
+                fill
+                sizes="(max-width: 720px) 45vw, 320px"
+                className="object-cover"
+              />
             </div>
           ))}
         </div>

@@ -43,7 +43,7 @@ const LAYOUT: Record<
   { viewBox: string; pos: Record<NodeId, [number, number]>; font: number; passAt: [number, number] }
 > = {
   h: {
-    viewBox: "0 0 266 104",
+    viewBox: "0 0 278 104",
     pos: {
       intake: [24, 50],
       fit_gate: [60, 50],
@@ -53,7 +53,7 @@ const LAYOUT: Record<
       web_corpus: [140, 74],
       synthesize: [186, 50],
       critique: [220, 50],
-      compose: [248, 50],
+      compose: [254, 50],
     },
     font: 3.2,
     passAt: [140, 98],

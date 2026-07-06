@@ -14,9 +14,11 @@ import {
 } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
 import { makePublic, deleteObject } from "@/lib/storage/gcs";
+import type { FormState } from "@/components/admin/form-state";
 
-/** `{ error }` is surfaced inline by AdminForm; identical shape to the blog's. */
-export type PortfolioState = { error?: string };
+/** `{ error }` is surfaced inline by AdminForm — the shared shape every
+ *  vertical's admin actions use (components/admin/form-state.ts). */
+export type PortfolioState = FormState;
 
 function str(fd: FormData, key: string): string {
   const v = fd.get(key);
@@ -46,6 +48,32 @@ function isUniqueViolation(e: unknown): boolean {
     cur = o.cause;
   }
   return false;
+}
+
+/**
+ * Runs a save's insert/update, translating any DB failure into the inline
+ * `{error}` shape instead of letting it throw past the form and into Next's
+ * default (unstyled) error boundary, which would also drop the user's input.
+ */
+async function saveRow(op: () => Promise<unknown>): Promise<PortfolioState | null> {
+  try {
+    await op();
+    return null;
+  } catch (e) {
+    if (isUniqueViolation(e)) return { error: "That slug was just taken." };
+    console.error("[admin] save failed:", e);
+    return { error: "Couldn't save. Try again." };
+  }
+}
+
+/** Best-effort delete: logs but never throws, so a DB hiccup on delete doesn't
+ *  crash the admin panel — consistent with how storage cleanup is handled. */
+async function deleteRow(op: () => Promise<unknown>): Promise<void> {
+  try {
+    await op();
+  } catch (e) {
+    console.error("[admin] delete failed:", e);
+  }
 }
 
 /** "label: level" lines → [{name, level}]. */
@@ -85,10 +113,10 @@ function jsonKeys(fd: FormData, key: string): string[] {
 }
 
 /** Portfolio assets are public; make the uploaded object(s) world-readable. */
-async function publishImage(key: string | null): Promise<void> {
+async function publishAsset(key: string | null): Promise<void> {
   if (key) await makePublic(key);
 }
-async function publishImages(keys: string[]): Promise<void> {
+async function publishAssets(keys: string[]): Promise<void> {
   await Promise.all(keys.map((k) => makePublic(k)));
 }
 /** Delete objects in `before` that are no longer in `after` (gallery edits). */
@@ -109,14 +137,18 @@ export async function saveProfile(
   fd: FormData,
 ): Promise<PortfolioState> {
   await requireOwner();
+  const name = str(fd, "name");
+  if (!name) return { error: "Name is required." };
   const photoKey = str(fd, "photoKey") || null;
+  const resumeKey = str(fd, "resumeKey") || null;
   try {
-    await publishImage(photoKey);
+    await publishAsset(photoKey);
+    await publishAsset(resumeKey);
   } catch {
-    return { error: "Couldn't process the photo. Try again." };
+    return { error: "Couldn't process an uploaded file. Try again." };
   }
   const data = {
-    name: str(fd, "name"),
+    name,
     tagline: str(fd, "tagline"),
     intro: str(fd, "intro"),
     now: str(fd, "now"),
@@ -126,22 +158,27 @@ export async function saveProfile(
     location: str(fd, "location"),
     languages: parseLanguages(str(fd, "languages")),
     photoKey,
-    resumeKey: str(fd, "resumeKey") || null, // a URL or GCS key
+    resumeKey,
     updatedAt: new Date(),
   };
   const [existing] = await db.select({ id: profile.id }).from(profile).limit(1);
+  let prevKeys: { photoKey: string | null; resumeKey: string | null } | undefined;
   if (existing) {
-    const [prev] = await db
-      .select({ photoKey: profile.photoKey })
+    [prevKeys] = await db
+      .select({ photoKey: profile.photoKey, resumeKey: profile.resumeKey })
       .from(profile)
       .where(eq(profile.id, existing.id))
       .limit(1);
-    await db.update(profile).set(data).where(eq(profile.id, existing.id));
-    if (prev?.photoKey && prev.photoKey !== photoKey) {
-      await deleteObject(prev.photoKey).catch(() => {});
-    }
-  } else {
-    await db.insert(profile).values(data);
+  }
+  const err = await saveRow(() =>
+    existing ? db.update(profile).set(data).where(eq(profile.id, existing.id)) : db.insert(profile).values(data),
+  );
+  if (err) return err;
+  if (prevKeys?.photoKey && prevKeys.photoKey !== photoKey) {
+    await deleteObject(prevKeys.photoKey).catch(() => {});
+  }
+  if (prevKeys?.resumeKey && prevKeys.resumeKey !== resumeKey) {
+    await deleteObject(prevKeys.resumeKey).catch(() => {});
   }
   revalidatePortfolio();
   redirect("/admin");
@@ -169,8 +206,8 @@ export async function saveProject(
   if (clash) return { error: `The slug "${slug}" is taken — choose another.` };
 
   try {
-    await publishImage(coverImageKey);
-    await publishImages(imageKeys);
+    await publishAsset(coverImageKey);
+    await publishAssets(imageKeys);
   } catch {
     return { error: "Couldn't process an image. Try again." };
   }
@@ -202,13 +239,10 @@ export async function saveProject(
     sortOrder: num(fd, "sortOrder"),
     updatedAt: new Date(),
   };
-  try {
-    if (id) await db.update(projects).set(data).where(eq(projects.id, id));
-    else await db.insert(projects).values(data);
-  } catch (e) {
-    if (isUniqueViolation(e)) return { error: "That slug was just taken." };
-    throw e;
-  }
+  const err = await saveRow(() =>
+    id ? db.update(projects).set(data).where(eq(projects.id, id)) : db.insert(projects).values(data),
+  );
+  if (err) return err;
   if (oldCover && oldCover !== coverImageKey) {
     await deleteObject(oldCover).catch(() => {});
   }
@@ -226,7 +260,7 @@ export async function deleteProject(fd: FormData): Promise<void> {
       .from(projects)
       .where(eq(projects.id, id))
       .limit(1);
-    await db.delete(projects).where(eq(projects.id, id));
+    await deleteRow(() => db.delete(projects).where(eq(projects.id, id)));
     if (row?.coverImageKey) await deleteObject(row.coverImageKey).catch(() => {});
     await cleanupRemoved(row?.imageKeys ?? [], []);
   }
@@ -246,7 +280,7 @@ export async function saveExperience(
   if (!org || !role) return { error: "Org and role are required." };
   const logoKey = str(fd, "logoKey") || null;
   try {
-    await publishImage(logoKey);
+    await publishAsset(logoKey);
   } catch {
     return { error: "Couldn't process the logo. Try again." };
   }
@@ -271,8 +305,10 @@ export async function saveExperience(
     sortOrder: num(fd, "sortOrder"),
     updatedAt: new Date(),
   };
-  if (id) await db.update(experiences).set(data).where(eq(experiences.id, id));
-  else await db.insert(experiences).values(data);
+  const err = await saveRow(() =>
+    id ? db.update(experiences).set(data).where(eq(experiences.id, id)) : db.insert(experiences).values(data),
+  );
+  if (err) return err;
   if (oldLogo && oldLogo !== logoKey) await deleteObject(oldLogo).catch(() => {});
   revalidatePortfolio();
   redirect("/admin/experience");
@@ -287,7 +323,7 @@ export async function deleteExperience(fd: FormData): Promise<void> {
       .from(experiences)
       .where(eq(experiences.id, id))
       .limit(1);
-    await db.delete(experiences).where(eq(experiences.id, id));
+    await deleteRow(() => db.delete(experiences).where(eq(experiences.id, id)));
     if (row?.logoKey) await deleteObject(row.logoKey).catch(() => {});
   }
   revalidatePortfolio();
@@ -315,9 +351,19 @@ export async function saveHackathon(
     .limit(1);
   if (clash) return { error: `The slug "${slug}" is taken — choose another.` };
 
+  const projectSlug = str(fd, "projectSlug") || null;
+  if (projectSlug) {
+    const [linkedProject] = await db
+      .select({ slug: projects.slug })
+      .from(projects)
+      .where(eq(projects.slug, projectSlug))
+      .limit(1);
+    if (!linkedProject) return { error: `No project with slug "${projectSlug}" exists.` };
+  }
+
   try {
-    await publishImage(coverImageKey);
-    await publishImages(imageKeys);
+    await publishAsset(coverImageKey);
+    await publishAssets(imageKeys);
   } catch {
     return { error: "Couldn't process an image. Try again." };
   }
@@ -341,20 +387,17 @@ export async function saveHackathon(
     happenedAt: date(fd, "happenedAt"),
     blurb: str(fd, "blurb"),
     body: str(fd, "body"),
-    projectSlug: str(fd, "projectSlug") || null,
+    projectSlug,
     stack: csv(fd, "stack"),
     coverImageKey,
     imageKeys,
     sortOrder: num(fd, "sortOrder"),
     updatedAt: new Date(),
   };
-  try {
-    if (id) await db.update(hackathons).set(data).where(eq(hackathons.id, id));
-    else await db.insert(hackathons).values(data);
-  } catch (e) {
-    if (isUniqueViolation(e)) return { error: "That slug was just taken." };
-    throw e;
-  }
+  const err = await saveRow(() =>
+    id ? db.update(hackathons).set(data).where(eq(hackathons.id, id)) : db.insert(hackathons).values(data),
+  );
+  if (err) return err;
   if (oldCover && oldCover !== coverImageKey) {
     await deleteObject(oldCover).catch(() => {});
   }
@@ -372,7 +415,7 @@ export async function deleteHackathon(fd: FormData): Promise<void> {
       .from(hackathons)
       .where(eq(hackathons.id, id))
       .limit(1);
-    await db.delete(hackathons).where(eq(hackathons.id, id));
+    await deleteRow(() => db.delete(hackathons).where(eq(hackathons.id, id)));
     if (row?.coverImageKey) await deleteObject(row.coverImageKey).catch(() => {});
     await cleanupRemoved(row?.imageKeys ?? [], []);
   }
@@ -395,8 +438,10 @@ export async function saveCapability(
     sortOrder: num(fd, "sortOrder"),
     updatedAt: new Date(),
   };
-  if (id) await db.update(capabilities).set(data).where(eq(capabilities.id, id));
-  else await db.insert(capabilities).values(data);
+  const err = await saveRow(() =>
+    id ? db.update(capabilities).set(data).where(eq(capabilities.id, id)) : db.insert(capabilities).values(data),
+  );
+  if (err) return err;
   revalidatePortfolio();
   redirect("/admin/capabilities");
 }
@@ -404,7 +449,7 @@ export async function saveCapability(
 export async function deleteCapability(fd: FormData): Promise<void> {
   await requireOwner();
   const id = str(fd, "id");
-  if (id) await db.delete(capabilities).where(eq(capabilities.id, id));
+  if (id) await deleteRow(() => db.delete(capabilities).where(eq(capabilities.id, id)));
   revalidatePortfolio();
   redirect("/admin/capabilities");
 }

@@ -3,11 +3,11 @@ import { streamFitAssessment } from "@/lib/agent/run";
 import { hasModelLane } from "@/lib/agent/model-router";
 import {
   MAX_INPUT_CHARS,
-  checkRateLimit,
+  checkAndReserve,
   clientIp,
   hashInput,
   hashIp,
-  logRun,
+  finishRun,
 } from "@/lib/agent/rate-limit";
 
 /**
@@ -50,14 +50,15 @@ export async function POST(request: NextRequest): Promise<Response> {
   const ipHash = hashIp(clientIp(request.headers));
   const inputHash = hashInput(input);
 
-  const decision = await checkRateLimit(ipHash);
+  const decision = await checkAndReserve(ipHash, inputHash);
   if (!decision.allowed) {
-    await logRun({ ipHash, inputHash, capped: true });
+    await finishRun(null, { ipHash, inputHash, capped: true });
     return new Response(
       JSON.stringify({ error: "capped", reason: decision.reason, message: "the live demo is resting" }),
       { status: 429, headers: { "content-type": "application/json" } },
     );
   }
+  const { runId } = decision;
 
   const started = Date.now();
   const encoder = new TextEncoder();
@@ -67,10 +68,12 @@ export async function POST(request: NextRequest): Promise<Response> {
   let company: string | null = null;
   let errored: string | null = null;
   let logged = false;
+  // Never throws — finishRun swallows its own errors — so it's always safe to
+  // await before touching the controller.
   const finish = async () => {
     if (logged) return;
     logged = true;
-    await logRun({ ipHash, inputHash, verdict, company, durationMs: Date.now() - started, error: errored });
+    await finishRun(runId, { ipHash, inputHash, verdict, company, durationMs: Date.now() - started, error: errored });
   };
 
   const stream = new ReadableStream<Uint8Array>({
@@ -78,8 +81,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       try {
         const { value, done } = await events.next();
         if (done) {
-          controller.close();
           await finish();
+          controller.close();
           return;
         }
         if (value.type === "result") {
@@ -91,9 +94,9 @@ export async function POST(request: NextRequest): Promise<Response> {
         controller.enqueue(encoder.encode(`${JSON.stringify(value)}\n`));
       } catch (err) {
         errored = err instanceof Error ? err.message : String(err);
+        await finish();
         controller.enqueue(encoder.encode(`${JSON.stringify({ type: "error", message: errored })}\n`));
         controller.close();
-        await finish();
       }
     },
     async cancel() {
