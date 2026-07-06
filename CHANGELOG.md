@@ -2,6 +2,23 @@
 
 ## 2026-07-06
 
+- **14:56 · `d209d7f` · fix:** Clean up the portfolio tab title, nav link, and Sully's accent color
+  The portfolio's browser tab title is now the plain "Manan Shah · Portfolio"
+  instead of a per-page template. The header's "OSM ↗" nav link is now "View
+  my blog", linking to `/blog` instead of `/osm` — clearer for a first-time
+  visitor. The "a (slightly biased) second opinion" line above Sully now uses
+  Sully's own green identity token instead of the portfolio's default coral.
+- **14:56 · `d209d7f` · fix:** Cap Sully's total model-call time so it degrades instead of timing out
+  `/api/fit` hit Vercel's hard 60s `maxDuration` kill in production — each of
+  the graph's 9 nodes could independently spend up to ~30s failing over across
+  model lanes (three lanes x a 10s idle-timeout), and the cumulative total
+  across nodes could exceed the route's budget. `model-router.ts` now takes a
+  run-wide `deadlineAt` (45s by default, `AGENT_RUN_DEADLINE_MS`): once it
+  passes, `streamChat` stops trying further lanes and aborts in-flight
+  requests, so every remaining node degrades near-instantly instead of the
+  whole route dying with an ungraceful connection drop. Also lowered the lane
+  circuit breaker's failure threshold from 2 to 1, so a bad lane stops being
+  retried across nodes sooner.
 - **14:29 · `85a27ca` · docs:** Rewrite the boilerplate README and fix Sully doc/code drift
   `README.md` was still the default `create-next-app` template. It now
   describes the actual project and points to `agent-kit/` for contribution
