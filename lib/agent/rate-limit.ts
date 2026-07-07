@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { and, count, eq, gt } from "drizzle-orm";
+import type { PgColumn, PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "@/db/client";
 import { agentRuns } from "@/db/schema";
 
@@ -52,78 +53,124 @@ export type RateDecision =
   | { allowed: true; runId: string | null }
   | { allowed: false; reason: "daily" | "ip" };
 
-/**
- * Checks both caps AND reserves the slot by inserting the run row in the same
- * transaction, so the count a concurrent request sees already includes this
- * one. This closes the race where the row was previously only written at
- * stream completion (up to `maxDuration` later): concurrent or rapid-fire
- * requests could all read the same pre-increment count and pass.
- *
- * Fails OPEN on any DB error (including if `agent_runs` isn't migrated yet) —
- * `runId: null` tells `finishRun` there's no reservation row to update.
- */
-export async function checkAndReserve(ipHash: string, inputHash: string): Promise<RateDecision> {
-  try {
-    return await db.transaction(async (tx) => {
-      const now = Date.now();
-      const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
-      const hourAgo = new Date(now - 60 * 60 * 1000);
-
-      const [daily] = await tx
-        .select({ n: count() })
-        .from(agentRuns)
-        .where(gt(agentRuns.createdAt, dayAgo));
-      if ((daily?.n ?? 0) >= DAILY_CAP) return { allowed: false, reason: "daily" };
-
-      const [perIp] = await tx
-        .select({ n: count() })
-        .from(agentRuns)
-        .where(and(eq(agentRuns.ipHash, ipHash), gt(agentRuns.createdAt, hourAgo)));
-      if ((perIp?.n ?? 0) >= IP_HOURLY_CAP) return { allowed: false, reason: "ip" };
-
-      const [row] = await tx
-        .insert(agentRuns)
-        .values({ ipHash, inputHash })
-        .returning({ id: agentRuns.id });
-      return { allowed: true, runId: row?.id ?? null };
-    });
-  } catch (error) {
-    console.warn("[sully] rate-limit check failed, failing open:", error);
-    return { allowed: true, runId: null };
-  }
-}
-
 export interface RunOutcome {
   ipHash: string;
   inputHash: string;
-  verdict?: string | null;
-  company?: string | null;
   durationMs?: number | null;
   capped?: boolean;
   error?: string | null;
 }
 
-/**
- * Records the final outcome of a run. If `runId` is set, updates the row that
- * `checkAndReserve` already inserted; otherwise (reservation failed, or this
- * is a capped request that never reserved a slot) inserts a fresh row.
- * Never throws — telemetry must not be able to break the stream.
- */
-export async function finishRun(runId: string | null, entry: RunOutcome): Promise<void> {
-  try {
-    const patch = {
-      verdict: entry.verdict ?? null,
-      company: entry.company ?? null,
-      durationMs: entry.durationMs ?? null,
-      capped: entry.capped ?? false,
-      error: entry.error ?? null,
-    };
-    if (runId) {
-      await db.update(agentRuns).set(patch).where(eq(agentRuns.id, runId));
-    } else {
-      await db.insert(agentRuns).values({ ipHash: entry.ipHash, inputHash: entry.inputHash, ...patch });
-    }
-  } catch (error) {
-    console.error("[sully] failed to record run outcome:", error);
-  }
+/** The column shape every rate-limited run table must expose (see `db/schema/agent.ts`, `db/schema/ask.ts`). */
+interface RunColumns extends Record<string, PgColumn> {
+  id: PgColumn;
+  ipHash: PgColumn;
+  inputHash: PgColumn;
+  durationMs: PgColumn;
+  capped: PgColumn;
+  error: PgColumn;
+  createdAt: PgColumn;
 }
+// `agentRuns` and `askRuns` are two distinct Drizzle table types with extra columns
+// beyond this common shape (agentRuns has verdict/company); every read/write below
+// only ever touches RunColumns, so callers bridge with `asRunTable` at the instantiation site.
+export type RunTable = PgTableWithColumns<{ name: string; schema: undefined; columns: RunColumns; dialect: "pg" }>;
+
+/** The exact columns the factory reads/writes — spelled out, since `keyof RunColumns` widens to `string`. */
+type RequiredRunColumn = "id" | "ipHash" | "inputHash" | "durationMs" | "capped" | "error" | "createdAt";
+
+/**
+ * Bridge a concrete table to `RunTable` WITH a compile-time guard that it still
+ * carries every column the factory touches. A bare `as unknown as RunTable`
+ * would silently accept a table that later drops/renames one of these columns —
+ * and since the limiter fails OPEN, that would disable the cap in prod with only
+ * a console warning. This turns such drift into a CI type error instead.
+ */
+export function asRunTable<T extends Record<RequiredRunColumn, PgColumn>>(table: T): RunTable {
+  return table as unknown as RunTable;
+}
+
+/**
+ * A reserve-then-finish rate limiter, shared by any run table with the common
+ * `RunColumns` shape. A global daily cap protects shared infra (DB, free model
+ * tiers) from being drained; a per-IP hourly window blunts single-source abuse.
+ *
+ * `checkAndReserve` checks both caps AND reserves the slot by inserting the run
+ * row in the same transaction, so the count a concurrent request sees already
+ * includes this one — closing the race where a row is only written at stream
+ * completion (up to a route's `maxDuration` later), which would let concurrent
+ * or rapid-fire requests all read the same pre-increment count and pass.
+ *
+ * Fails OPEN on any DB error (including an unmigrated table) — a rate limiter
+ * guards a public demo, not correctness-critical data, so a DB hiccup should
+ * degrade the cap rather than break the route.
+ *
+ * `toPatch` lets a feature persist columns beyond the common shape (e.g. the
+ * fit-agent's `verdict`/`company`) without the shared factory knowing about them.
+ */
+export function createRateLimiter<E extends RunOutcome>(opts: {
+  table: RunTable;
+  dailyCap: number;
+  ipHourlyCap: number;
+  toPatch?: (entry: E) => Record<string, unknown>;
+}) {
+  const { table, dailyCap, ipHourlyCap, toPatch = () => ({}) } = opts;
+
+  async function checkAndReserve(ipHash: string, inputHash: string): Promise<RateDecision> {
+    try {
+      return await db.transaction(async (tx) => {
+        const now = Date.now();
+        const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
+        const hourAgo = new Date(now - 60 * 60 * 1000);
+
+        const [daily] = await tx.select({ n: count() }).from(table).where(gt(table.createdAt, dayAgo));
+        if ((daily?.n ?? 0) >= dailyCap) return { allowed: false, reason: "daily" };
+
+        const [perIp] = await tx
+          .select({ n: count() })
+          .from(table)
+          .where(and(eq(table.ipHash, ipHash), gt(table.createdAt, hourAgo)));
+        if ((perIp?.n ?? 0) >= ipHourlyCap) return { allowed: false, reason: "ip" };
+
+        const [row] = await tx.insert(table).values({ ipHash, inputHash }).returning({ id: table.id });
+        return { allowed: true, runId: (row?.id as string | undefined) ?? null };
+      });
+    } catch (error) {
+      console.warn("[rate-limit] check failed, failing open:", error);
+      return { allowed: true, runId: null };
+    }
+  }
+
+  /** Never throws — telemetry must not be able to break the stream. */
+  async function finishRun(runId: string | null, entry: E): Promise<void> {
+    try {
+      const patch = {
+        durationMs: entry.durationMs ?? null,
+        capped: entry.capped ?? false,
+        error: entry.error ?? null,
+        ...toPatch(entry),
+      };
+      if (runId) {
+        await db.update(table).set(patch).where(eq(table.id, runId));
+      } else {
+        await db.insert(table).values({ ipHash: entry.ipHash, inputHash: entry.inputHash, ...patch });
+      }
+    } catch (error) {
+      console.error("[rate-limit] failed to record run outcome:", error);
+    }
+  }
+
+  return { checkAndReserve, finishRun };
+}
+
+export interface FitRunOutcome extends RunOutcome {
+  verdict?: string | null;
+  company?: string | null;
+}
+
+export const { checkAndReserve, finishRun } = createRateLimiter<FitRunOutcome>({
+  table: asRunTable(agentRuns),
+  dailyCap: DAILY_CAP,
+  ipHourlyCap: IP_HOURLY_CAP,
+  toPatch: (entry) => ({ verdict: entry.verdict ?? null, company: entry.company ?? null }),
+});

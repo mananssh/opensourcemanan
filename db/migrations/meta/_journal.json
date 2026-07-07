@@ -78,6 +78,13 @@
       "when": 1783345437972,
       "tag": "0010_material_violations",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783355284880,
+      "tag": "0011_nebulous_living_tribunal",
+      "breakpoints": true
     }
   ]
 }
