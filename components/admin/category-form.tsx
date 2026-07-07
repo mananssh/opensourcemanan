@@ -2,7 +2,7 @@ import { saveCategory, deleteCategory } from "@/app/blog/admin/actions";
 import { ImageUpload } from "@/components/image-upload";
 import { AdminForm } from "@/components/admin/admin-form";
 import { SubmitButton } from "@/components/blog/submit-button";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Category } from "@/db/schema";
 
 const labelCls =

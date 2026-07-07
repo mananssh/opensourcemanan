@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Tag, AwardTag } from "@/components/portfolio/ui/tag";
 import type { Hackathon } from "@/db/schema";
 
-// coverUrl resolved server-side (publicUrl pulls the GCS SDK — not client-safe).
+// coverUrl resolved server-side (publicUrl comes from the storage module, which pulls the S3 SDK — not client-safe).
 export type HackathonCard = Hackathon & { coverUrl: string | null };
 
 /** A bold stacked "wall of wins" — deliberately different from the project grid. */

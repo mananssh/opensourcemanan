@@ -13,7 +13,7 @@ import {
   capabilities,
 } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
-import { makePublic, deleteObject } from "@/lib/storage/gcs";
+import { makePublic, deleteObject } from "@/lib/storage/object-store";
 import type { FormState } from "@/components/admin/form-state";
 
 /** `{ error }` is surfaced inline by AdminForm — the shared shape every
@@ -112,7 +112,7 @@ function jsonKeys(fd: FormData, key: string): string[] {
   }
 }
 
-/** Portfolio assets are public; make the uploaded object(s) world-readable. */
+/** Portfolio assets are public; they resolve via the R2 public domain (makePublic is a no-op on R2). */
 async function publishAsset(key: string | null): Promise<void> {
   if (key) await makePublic(key);
 }

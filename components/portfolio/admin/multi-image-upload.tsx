@@ -8,11 +8,11 @@ const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,image/avif";
 type Item = { key: string; url: string };
 
 /**
- * Multi-image gallery uploader for the portfolio admin. Uploads each file to GCS
+ * Multi-image gallery uploader for the portfolio admin. Uploads each file to R2
  * via a presigned URL and stores the ordered list of object keys as a JSON array
  * in a hidden field (the save action publishes them + cleans up removed ones).
  * Initial previews are passed in from the server (publicUrl can't be imported
- * client-side — it pulls the GCS SDK).
+ * client-side — it pulls the S3 SDK).
  */
 export function MultiImageUpload({
   name,

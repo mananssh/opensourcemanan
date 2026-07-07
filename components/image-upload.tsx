@@ -6,7 +6,7 @@ const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,image/avif";
 
 /**
- * Owner image picker: uploads straight to GCS via a presigned URL, then writes
+ * Owner image picker: uploads straight to R2 via a presigned URL, then writes
  * the object key into a hidden form field. The save action makes it public.
  */
 export function ImageUpload({

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Category } from "@/db/schema";
 
 /**

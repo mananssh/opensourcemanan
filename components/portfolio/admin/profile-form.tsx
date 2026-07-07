@@ -3,7 +3,7 @@ import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
 import { Field, inputCls } from "@/components/portfolio/admin/fields";
 import { ResumeUpload } from "@/components/portfolio/admin/resume-upload";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Profile } from "@/db/schema";
 
 export function ProfileForm({ profile }: { profile: Profile | null }) {

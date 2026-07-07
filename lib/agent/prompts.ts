@@ -75,12 +75,13 @@ const FALLBACK: Record<PromptKey, string> = {
 };
 
 /**
- * Prompt source priority: a GCS object (AGENT_PROMPTS_KEY) → AGENT_PROMPTS_B64
- * → the generic fallbacks above. GCS is the production path: prompts can be
- * edited and re-uploaded (`npm run prompts:upload`) with NO redeploy, and don't
- * bloat the env (a 26KB base64 blob was ~40% of Vercel's env budget). The env
- * blob stays a valid, zero-dependency fallback for local/forks and for a GCS
- * blip. A short TTL means an edit propagates within minutes on a warm instance.
+ * Prompt source priority: an object-store object (AGENT_PROMPTS_KEY) →
+ * AGENT_PROMPTS_B64 → the generic fallbacks above. The object store (R2) is the
+ * production path: prompts can be edited and re-uploaded (`npm run prompts:upload`)
+ * with NO redeploy, and don't bloat the env (a 26KB base64 blob was ~40% of
+ * Vercel's env budget). The env blob stays a valid, zero-dependency fallback for
+ * local/forks and for a storage blip. A short TTL means an edit propagates within
+ * minutes on a warm instance.
  */
 const TTL_MS = 5 * 60 * 1000;
 let cache: { map: Record<string, string>; expiresAt: number } | null = null;
@@ -103,16 +104,16 @@ function fromEnv(): Record<string, string> {
   return envBaseline;
 }
 
-async function fromGcs(): Promise<Record<string, string> | null> {
+async function fromObjectStore(): Promise<Record<string, string> | null> {
   const key = process.env.AGENT_PROMPTS_KEY;
   if (!key) return null;
   try {
-    const { downloadText } = await import("@/lib/storage/gcs");
+    const { downloadText } = await import("@/lib/storage/object-store");
     const parsed = JSON.parse(await downloadText(key)) as Record<string, string>;
     return { ...FALLBACK, ...parsed };
   } catch (err) {
     console.warn(
-      `[sully] failed to load prompts from GCS (${key}) — falling back to env/defaults:`,
+      `[sully] failed to load prompts from the object store (${key}) — falling back to env/defaults:`,
       err instanceof Error ? err.message : err,
     );
     return null;
@@ -127,7 +128,7 @@ async function fromGcs(): Promise<Record<string, string> | null> {
 export async function warmPrompts(): Promise<void> {
   const now = Date.now();
   if (cache && cache.expiresAt > now) return;
-  const map = (await fromGcs()) ?? fromEnv();
+  const map = (await fromObjectStore()) ?? fromEnv();
   cache = { map, expiresAt: now + TTL_MS };
 }
 

@@ -3,7 +3,7 @@ import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
 import { MultiImageUpload } from "@/components/portfolio/admin/multi-image-upload";
 import { DeleteButton, Field, dateVal, inputCls } from "@/components/portfolio/admin/fields";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Hackathon } from "@/db/schema";
 
 export function HackathonForm({

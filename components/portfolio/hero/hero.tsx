@@ -1,9 +1,9 @@
 import Image from "next/image";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import { ScrambleText } from "@/components/portfolio/hero/scramble-text";
 import type { Profile } from "@/db/schema";
 
-/** A résumé value may be a full URL or a GCS key. */
+/** A résumé value may be a full URL or an object-storage key. */
 function resolveUrl(v: string | null | undefined): string | null {
   if (!v) return null;
   return /^https?:\/\//.test(v) ? v : publicUrl(v);

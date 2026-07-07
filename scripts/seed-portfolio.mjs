@@ -8,7 +8,7 @@
  *   node --env-file=.env scripts/seed-portfolio.mjs
  *   node --env-file=.env scripts/seed-portfolio.mjs --force
  *
- * Photo / résumé are uploaded via the admin (they live on GCS, not here).
+ * Photo / résumé are uploaded via the admin (they live on R2, not here).
  * Copy marked TODO is placeholder — refine it in the admin once it's built.
  */
 import postgres from "postgres";

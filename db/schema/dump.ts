@@ -25,7 +25,7 @@ export const thoughts = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     body: text().notNull().default(""), // plain text, rendered escaped
-    imageKey: text(), // optional single GCS object key (private; signed reads)
+    imageKey: text(), // optional single R2 object key (private; signed reads)
     visibility: thoughtVisibility().notNull().default("private"),
     pinned: boolean().notNull().default(false),
     deletedAt: timestamp({ withTimezone: true }), // soft delete (recoverable)

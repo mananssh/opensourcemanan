@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { makePublic, isManagedKey } from "@/lib/storage/gcs";
+import { makePublic, isManagedKey } from "@/lib/storage/object-store";
 
 /** Owner-gated: make an uploaded object world-readable; returns its public URL.
  *  Used after an in-editor image upload so the image renders on the post. */

@@ -5,7 +5,7 @@ import { thoughts, type Thought } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { canSee } from "@/lib/content/visibility";
 import { thoughtGate } from "@/lib/dump/visibility";
-import { getReadUrl } from "@/lib/storage/gcs";
+import { getReadUrl } from "@/lib/storage/object-store";
 import { safeDb } from "@/lib/blog/safe-db";
 
 /**

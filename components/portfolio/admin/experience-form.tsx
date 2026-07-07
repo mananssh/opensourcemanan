@@ -2,7 +2,7 @@ import { saveExperience, deleteExperience } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
 import { DeleteButton, Field, dateVal, inputCls } from "@/components/portfolio/admin/fields";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Experience } from "@/db/schema";
 
 export function ExperienceForm({ experience }: { experience?: Experience }) {

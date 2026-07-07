@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { thoughts } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
-import { deleteObject } from "@/lib/storage/gcs";
+import { deleteObject } from "@/lib/storage/object-store";
 
 export type DumpState = { error?: string; ok?: boolean };
 

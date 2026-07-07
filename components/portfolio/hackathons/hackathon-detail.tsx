@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import { Tag, AwardTag } from "@/components/portfolio/ui/tag";
 import { Prose } from "@/components/portfolio/ui/prose";
 import type { Hackathon } from "@/db/schema";
