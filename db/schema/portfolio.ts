@@ -12,7 +12,7 @@ import {
 /**
  * Portfolio — the root vertical (/), and OSM's third content collection. All
  * content is DB-backed (no hardcoded profile.ts) and public; the owner authors
- * it via the owner-gated admin. Images (photo, résumé, covers) are GCS object
+ * it via the owner-gated admin. Images (photo, résumé, covers) are R2 object
  * keys under the `portfolio/` prefix, served public via publicUrl(key).
  */
 
@@ -31,8 +31,8 @@ export const profile = pgTable("profile", {
     .$type<{ name: string; level: string }[]>()
     .notNull()
     .default([]),
-  photoKey: text(), // GCS key for the hero portrait
-  resumeKey: text(), // GCS key for the résumé PDF
+  photoKey: text(), // object-storage key for the hero portrait
+  resumeKey: text(), // object-storage key for the résumé PDF
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });

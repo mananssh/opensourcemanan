@@ -4,7 +4,7 @@ import { MdxEditor } from "@/components/admin/mdx-editor";
 import { CategorySelect } from "@/components/admin/category-select";
 import { AdminForm } from "@/components/admin/admin-form";
 import { SubmitButton } from "@/components/blog/submit-button";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Post, Category } from "@/db/schema";
 
 const labelCls =

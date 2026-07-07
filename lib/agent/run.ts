@@ -16,7 +16,7 @@ export async function* streamFitAssessment(
   input: string,
   signal?: AbortSignal,
 ): AsyncGenerator<AgentEvent, void, void> {
-  // Warm the prompt cache (GCS/env) alongside the corpus so getPrompt is sync in the graph.
+  // Warm the prompt cache (R2/env) alongside the corpus so getPrompt is sync in the graph.
   const [corpus] = await Promise.all([loadCorpus(), warmPrompts()]);
   const { emit, close, drain } = createEventStream();
   const startedAt = Date.now();

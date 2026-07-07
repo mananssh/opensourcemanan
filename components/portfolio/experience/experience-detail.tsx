@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import { Prose } from "@/components/portfolio/ui/prose";
 import type { Experience } from "@/db/schema";
 

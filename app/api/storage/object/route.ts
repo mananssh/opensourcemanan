@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { deleteObject, isManagedKey } from "@/lib/storage/gcs";
+import { deleteObject, isManagedKey } from "@/lib/storage/object-store";
 
 /**
  * Owner-gated: delete an uploaded-but-not-yet-saved object. Used by the upload

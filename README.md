@@ -12,7 +12,7 @@ pre-scripted.
 ## Stack
 
 Next.js 16 (App Router) · React 19 · Tailwind 4 · TypeScript · Drizzle ORM on
-CockroachDB · Google Cloud Storage · NextAuth v5 (Google) · Vercel.
+CockroachDB · Cloudflare R2 · NextAuth v5 (Google) · Vercel.
 
 **This Next.js diverges from training-data assumptions** — see
 [`AGENTS.md`](./AGENTS.md) before writing Next.js code here.

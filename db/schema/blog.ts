@@ -30,7 +30,7 @@ export const categories = pgTable("categories", {
   name: text().notNull(),
   description: text(),
   accentColor: text().notNull().default("#3b3b3b"), // tile background (Spotify-style)
-  coverImageKey: text(), // GCS key for the tile's merged background image
+  coverImageKey: text(), // object-storage key for the tile's merged background image
   visibility: visibility().notNull().default("public"),
   allowedEmails: text().array().notNull().default([]),
   sortOrder: integer().notNull().default(0),
@@ -46,7 +46,7 @@ export const posts = pgTable(
     title: text().notNull(),
     excerpt: text(),
     bodyMdx: text().notNull().default(""),
-    coverImageKey: text(), // GCS object key (see lib/storage)
+    coverImageKey: text(), // object-storage key (see lib/storage)
     categoryId: uuid().references(() => categories.id, { onDelete: "set null" }),
     visibility: visibility().notNull().default("public"),
     allowedEmails: text().array().notNull().default([]),
