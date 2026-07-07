@@ -65,14 +65,15 @@ when a call actually needs R2 and the R2 env is unset.
 ## Setup (one-time)
 
 1. **Create two buckets** in the Cloudflare dashboard → R2:
-   - `opensourcemanan` (private — the default; or set `R2_BUCKET`).
-   - `opensourcemanan-public` (public — or set `R2_PUBLIC_BUCKET`).
+   - the **private** bucket, `osmprivate` (or set `R2_BUCKET`) — no custom domain.
+   - the **public** bucket, `opensourcemanan` (or set `R2_PUBLIC_BUCKET`) — gets the
+     custom domain. These MUST be two different buckets.
 2. **API token**: R2 → *Manage R2 API Tokens* → create a token scoped to
    **Object Read & Write** on **both** buckets. Put its Access Key ID / Secret
    Access Key and your account id in `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` /
    `R2_ACCOUNT_ID` — `.env.local` (dev) and Vercel (prod).
-3. **Custom domain on the PUBLIC bucket only**: `opensourcemanan-public` → Settings
-   → *Public access* → *Connect a custom domain* (e.g. `assets.<your-domain>`). Set
+3. **Custom domain on the PUBLIC bucket only**: the public bucket → Settings →
+   *Public access* → *Connect a custom domain* (e.g. `assets.<your-domain>`). Set
    `R2_PUBLIC_BASE_URL` to `https://<that-domain>` (no trailing slash); its
    hostname flows into `next.config.ts` `images.remotePatterns` automatically.
    **Do NOT** connect a custom domain (or enable the `*.r2.dev` URL) on the

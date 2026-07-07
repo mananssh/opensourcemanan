@@ -37,10 +37,10 @@ import { randomUUID } from "node:crypto";
  * Lazy singleton — importing this never connects or throws, so it's build-safe
  * without credentials; the first call that needs R2 throws if the R2 env is unset.
  */
-const BUCKET = process.env.R2_BUCKET ?? "opensourcemanan";
+const BUCKET = process.env.R2_BUCKET ?? "osmprivate";
 
 /** Public bucket — bound to the R2 custom domain; only holds objects made public. */
-const PUBLIC_BUCKET = process.env.R2_PUBLIC_BUCKET ?? "opensourcemanan-public";
+const PUBLIC_BUCKET = process.env.R2_PUBLIC_BUCKET ?? "opensourcemanan";
 
 /** Stable public base URL — the R2 custom domain bound to the PUBLIC bucket (no trailing slash). */
 const PUBLIC_BASE_URL = (process.env.R2_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");

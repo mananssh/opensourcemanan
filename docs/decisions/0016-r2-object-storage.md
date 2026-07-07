@@ -16,8 +16,8 @@ this changes only the object-storage backend and the public asset host.
 
 ## Decision
 
-**Move object storage to a single Cloudflare R2 bucket (`opensourcemanan`)**,
-spoken to via the AWS S3 SDK (`@aws-sdk/client-s3` +
+**Move object storage to Cloudflare R2** (two buckets — a private default and a
+public one, see below), spoken to via the AWS S3 SDK (`@aws-sdk/client-s3` +
 `@aws-sdk/s3-request-presigner`) pointed at
 `https://<account>.r2.cloudflarestorage.com` (region `auto`, path-style).
 

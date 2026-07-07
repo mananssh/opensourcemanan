@@ -19,7 +19,7 @@ import { resolve } from "node:path";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const SRC = resolve(process.cwd(), "agent.prompts.json");
-const BUCKET = process.env.R2_BUCKET ?? "opensourcemanan";
+const BUCKET = process.env.R2_BUCKET ?? "osmprivate"; // prompts are PRIVATE → private bucket
 const KEY = process.env.AGENT_PROMPTS_KEY ?? "misc/agent-prompts.json";
 
 if (!existsSync(SRC)) {

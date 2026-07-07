@@ -30,8 +30,8 @@ import { S3Client, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s
 const DRY_RUN = process.argv.includes("--dry-run");
 
 const GCS_BUCKET = process.env.GCS_BUCKET ?? "opensourcemanan";
-const R2_BUCKET = process.env.R2_BUCKET ?? "opensourcemanan";
-const R2_PUBLIC_BUCKET = process.env.R2_PUBLIC_BUCKET ?? "opensourcemanan-public";
+const R2_BUCKET = process.env.R2_BUCKET ?? "osmprivate";
+const R2_PUBLIC_BUCKET = process.env.R2_PUBLIC_BUCKET ?? "opensourcemanan";
 
 // --- source: GCS ---
 const saRaw = process.env.GCP_SERVICE_ACCOUNT;
