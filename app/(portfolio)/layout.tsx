@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Particles } from "@/components/portfolio/hero/particles";
 import { portfolioFontVars } from "@/lib/portfolio/fonts";
+import { AskSullyProvider } from "@/components/portfolio/ask-sully/ask-sully-provider";
 
 export const metadata: Metadata = {
   title: "Manan Shah · Portfolio",
@@ -50,6 +51,8 @@ export default function PortfolioLayout({
           <span>mostly blr, maybe bom · usually building · occasionally airborne</span>
         </div>
       </footer>
+
+      <AskSullyProvider />
     </div>
   );
 }

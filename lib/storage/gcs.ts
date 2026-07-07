@@ -158,3 +158,19 @@ export async function getReadUrl(
 export async function deleteObject(key: string): Promise<void> {
   await getStorage().bucket(BUCKET).file(key).delete({ ignoreNotFound: true });
 }
+
+/**
+ * Read a PRIVATE object's contents as a UTF-8 string, server-side via the
+ * service account (never a public URL). For small config-style objects — e.g.
+ * the owner's agent prompts — not user media. Throws if the object is missing
+ * or GCS is unreachable; callers should fall back rather than fail hard.
+ */
+export async function downloadText(key: string): Promise<string> {
+  const [buf] = await getStorage().bucket(BUCKET).file(key).download();
+  return buf.toString("utf8");
+}
+
+/** Upload a UTF-8 string to a key as a PRIVATE object (no makePublic). */
+export async function uploadText(key: string, text: string, contentType = "application/json"): Promise<void> {
+  await getStorage().bucket(BUCKET).file(key).save(text, { contentType, resumable: false });
+}

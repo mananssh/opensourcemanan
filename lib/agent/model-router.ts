@@ -1,6 +1,4 @@
 import "server-only";
-import type { NodeId } from "@/components/portfolio/agent/agent-types";
-import type { Emit } from "./events";
 import { JSON_SENTINEL } from "./prompts";
 
 /**
@@ -14,7 +12,7 @@ import { JSON_SENTINEL } from "./prompts";
  * anything sensitive — NIM (trial) and OpenCode (free) may train on / log data.
  */
 
-type Tier = "fast" | "strong";
+export type Tier = "fast" | "strong";
 
 interface Lane {
   name: string;
@@ -73,22 +71,23 @@ export function hasModelLane(): boolean {
 }
 
 /**
- * Per-node tier. Classification- and selection-shaped nodes (intake, gate,
- * critique, the three gather nodes) use the fast model — on a failover lane that's
- * the difference between an 8B and a slow 70B, which keeps the run inside budget.
- * Only the genuinely generative nodes (plan, synthesize, compose) use strong.
+ * Optional per-tier failover order (comma-separated lane names). Which lane
+ * deserves first shot shifts as free tiers throttle and rosters rotate — that's
+ * env policy, like the model ids. Unlisted lanes keep their default position
+ * at the end; unknown names are ignored.
  */
-const TIER: Record<NodeId, Tier> = {
-  intake: "fast",
-  fit_gate: "fast",
-  critique: "fast",
-  work_history: "fast",
-  projects: "fast",
-  web_corpus: "fast",
-  plan: "strong",
-  synthesize: "strong",
-  compose: "strong",
-};
+function orderLanes(lanes: Lane[], tier: Tier): Lane[] {
+  const spec = process.env[tier === "strong" ? "AGENT_LANE_ORDER_STRONG" : "AGENT_LANE_ORDER_FAST"];
+  if (!spec) return lanes;
+  const byName = new Map(lanes.map((l) => [l.name, l]));
+  const ordered: Lane[] = [];
+  for (const name of spec.split(",").map((s) => s.trim())) {
+    const lane = byName.get(name);
+    if (lane && !ordered.includes(lane)) ordered.push(lane);
+  }
+  for (const lane of lanes) if (!ordered.includes(lane)) ordered.push(lane);
+  return ordered;
+}
 
 class RetryableError extends Error {}
 
@@ -99,8 +98,12 @@ export class AllLanesFailedError extends Error {
   }
 }
 
-// Idle timeout (no bytes received), not total — see streamOnce.
+// Idle timeout (no bytes received), not total — see streamOnce. Strong-tier
+// models routinely take >10s to first byte under load, which read as "stalled"
+// and burned every strong lane; they get a longer leash (the run's hard
+// deadline still caps total time).
 const NODE_TIMEOUT_MS = Number(process.env.AGENT_NODE_TIMEOUT_MS ?? 10_000);
+const NODE_TIMEOUT_STRONG_MS = Number(process.env.AGENT_NODE_TIMEOUT_STRONG_MS ?? 20_000);
 
 /**
  * Lane circuit breaker. A free tier that stalls (common) would otherwise cost
@@ -110,23 +113,26 @@ const NODE_TIMEOUT_MS = Number(process.env.AGENT_NODE_TIMEOUT_MS ?? 10_000);
  */
 const LANE_FAIL_THRESHOLD = 1;
 const LANE_COOLDOWN_MS = Number(process.env.AGENT_LANE_COOLDOWN_MS ?? 60_000);
+// Keyed by lane AND tier: a lane's slow/failing strong model must not take its
+// (healthy) fast model out of rotation for every other node in the run.
 const laneState = new Map<string, { fails: number; until: number }>();
 
-function laneDisabled(name: string): boolean {
-  const s = laneState.get(name);
+function laneDisabled(name: string, tier: Tier): boolean {
+  const s = laneState.get(`${name}:${tier}`);
   return !!s && s.until > Date.now();
 }
-function noteLaneFailure(name: string): void {
-  const s = laneState.get(name) ?? { fails: 0, until: 0 };
+function noteLaneFailure(name: string, tier: Tier): void {
+  const key = `${name}:${tier}`;
+  const s = laneState.get(key) ?? { fails: 0, until: 0 };
   s.fails += 1;
   if (s.fails >= LANE_FAIL_THRESHOLD) {
     s.until = Date.now() + LANE_COOLDOWN_MS;
     s.fails = 0;
   }
-  laneState.set(name, s);
+  laneState.set(key, s);
 }
-function noteLaneSuccess(name: string): void {
-  laneState.delete(name);
+function noteLaneSuccess(name: string, tier: Tier): void {
+  laneState.delete(`${name}:${tier}`);
 }
 
 /** Run-scoped accumulator for "which model / how many tokens" telemetry. */
@@ -134,11 +140,17 @@ export interface UsageSink {
   add(tokens: number, model: string): void;
 }
 
+/** Forwards a streamed reasoning delta; the caller owns wrapping it into its own event shape. */
+export type ReasoningEmit = (delta: string) => void;
+
 interface StreamArgs {
-  node: NodeId;
+  /** Caller-chosen label for debug logging only — model-router has no node registry of its own. */
+  node: string;
+  /** Caller-chosen tier (fast vs strong) — model-router has no per-node policy of its own. */
+  tier: Tier;
   system: string;
   user: string;
-  emit: Emit;
+  emit: ReasoningEmit;
   signal?: AbortSignal;
   /** When true, split reasoning (streamed) from a trailing JSON object (parsed). */
   jsonTail?: boolean;
@@ -165,17 +177,17 @@ export interface StreamResult {
  * Once tokens flow we commit to that lane (so the visible thinking stays honest).
  */
 export async function streamChat(args: StreamArgs): Promise<StreamResult> {
-  const lanes = buildLanes();
+  const lanes = orderLanes(buildLanes(), args.tier);
   if (lanes.length === 0) {
     throw new Error(
       "No model lane configured. Set GEMINI_API_KEY (and optionally NVIDIA_NIM_API_KEY / OPENCODE_ZEN_API_KEY).",
     );
   }
-  const tier = TIER[args.node];
+  const tier = args.tier;
   let lastError: unknown = new Error("run deadline already passed");
 
   // Prefer lanes not in cooldown; if all are cooling down, try them anyway.
-  const enabled = lanes.filter((l) => !laneDisabled(l.name));
+  const enabled = lanes.filter((l) => !laneDisabled(l.name, tier));
   const tryLanes = enabled.length ? enabled : lanes;
 
   for (const lane of tryLanes) {
@@ -187,11 +199,15 @@ export async function streamChat(args: StreamArgs): Promise<StreamResult> {
     }
     try {
       const result = await streamOnce(lane, tier, args);
-      noteLaneSuccess(lane.name);
+      noteLaneSuccess(lane.name, tier);
       return result;
     } catch (err) {
       lastError = err;
-      noteLaneFailure(lane.name);
+      noteLaneFailure(lane.name, tier);
+      if (process.env.AGENT_DEBUG)
+        console.warn(
+          `[sully:${args.node}] lane=${lane.name} tier=${tier} failed: ${err instanceof Error ? err.message : err}`,
+        );
       if (err instanceof RetryableError) continue; // try next lane
       throw err; // non-retryable (substantial output already streamed) — surface it
     }
@@ -205,9 +221,10 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
   // long response is never killed, but a STALLED stream (common when a free tier
   // throttles mid-stream) aborts quickly and we move on.
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const idleMs = tier === "strong" ? NODE_TIMEOUT_STRONG_MS : NODE_TIMEOUT_MS;
   const arm = () => {
     clearTimeout(timer);
-    timer = setTimeout(() => timeout.abort(), NODE_TIMEOUT_MS);
+    timer = setTimeout(() => timeout.abort(), idleMs);
   };
   arm();
   // A separate HARD deadline, not re-armed: the idle timer alone only catches a
@@ -277,7 +294,7 @@ async function streamOnce(lane: Lane, tier: Tier, args: StreamArgs): Promise<Str
             ? full.length
             : Math.max(emittedVisible, full.length - (JSON_SENTINEL.length - 1));
       if (visibleEnd > emittedVisible) {
-        args.emit({ type: "node_reasoning", node: args.node, delta: full.slice(emittedVisible, visibleEnd) });
+        args.emit(full.slice(emittedVisible, visibleEnd));
         emittedVisible = visibleEnd;
         emittedChars = visibleEnd;
       }

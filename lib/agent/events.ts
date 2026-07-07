@@ -10,20 +10,20 @@ import type { AgentEvent } from "@/components/portfolio/agent/agent-types";
  * `drain()` is an async generator the route iterates; `emit()` pushes events
  * from inside nodes (threaded via the graph's `configurable`); `close()` ends it.
  */
-export type Emit = (ev: AgentEvent) => void;
+export type Emit<T = AgentEvent> = (ev: T) => void;
 
-export interface EventStream {
-  emit: Emit;
+export interface EventStream<T = AgentEvent> {
+  emit: Emit<T>;
   close: () => void;
-  drain: () => AsyncGenerator<AgentEvent, void, void>;
+  drain: () => AsyncGenerator<T, void, void>;
 }
 
-export function createEventStream(): EventStream {
-  const queue: AgentEvent[] = [];
+export function createEventStream<T = AgentEvent>(): EventStream<T> {
+  const queue: T[] = [];
   let wake: (() => void) | null = null;
   let closed = false;
 
-  const emit: Emit = (ev) => {
+  const emit: Emit<T> = (ev) => {
     if (closed) return;
     queue.push(ev);
     wake?.();
@@ -36,7 +36,7 @@ export function createEventStream(): EventStream {
     wake = null;
   };
 
-  async function* drain(): AsyncGenerator<AgentEvent, void, void> {
+  async function* drain(): AsyncGenerator<T, void, void> {
     for (;;) {
       if (queue.length) {
         yield queue.shift()!;
