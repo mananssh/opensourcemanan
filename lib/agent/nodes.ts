@@ -9,7 +9,7 @@ import {
 import type { AgentStateType, EvidenceItem } from "./state";
 import type { Emit } from "./events";
 import { type Corpus, indexById, renderItems } from "./corpus";
-import { streamChat, type UsageSink } from "./model-router";
+import { streamChat, type ReasoningEmit, type Tier, type UsageSink } from "./model-router";
 import { researchCompany } from "./tools/tavily";
 import { fill, getPrompt, withJsonTail, wrapUntrusted } from "./prompts";
 
@@ -21,6 +21,29 @@ export interface RunContext {
   startedAt: number; // epoch ms — used to skip the loop when time is short
   deadlineAt: number; // epoch ms — streamChat stops trying lanes past this
   usage: UsageSink; // model + token telemetry accumulator
+}
+
+/**
+ * Per-node tier. Classification- and selection-shaped nodes (intake, gate,
+ * critique, the three gather nodes) use the fast model — on a failover lane that's
+ * the difference between an 8B and a slow 70B, which keeps the run inside budget.
+ * Only the genuinely generative nodes (plan, synthesize, compose) use strong.
+ */
+export const NODE_TIER: Record<NodeId, Tier> = {
+  intake: "fast",
+  fit_gate: "fast",
+  critique: "fast",
+  work_history: "fast",
+  projects: "fast",
+  web_corpus: "fast",
+  plan: "strong",
+  synthesize: "strong",
+  compose: "strong",
+};
+
+/** Wraps a node's raw streamed text back into the run's `node_reasoning` event shape. */
+function reasoningEmit(ctx: RunContext, node: NodeId): ReasoningEmit {
+  return (delta) => ctx.emit({ type: "node_reasoning", node, delta });
 }
 
 /** Don't start a re-gather pass once the run has used most of its time budget. */
@@ -35,7 +58,10 @@ const SOFT_LOOP_BUDGET_MS = 32_000;
  * around. `streamChat` refuses new lane attempts once `ctx.deadlineAt` passes,
  * so every remaining node degrades near-instantly instead.
  */
-export const RUN_DEADLINE_MS = Number(process.env.AGENT_RUN_DEADLINE_MS ?? 45_000);
+// 52s: healthy runs finish far earlier; the extra headroom is for degraded mode
+// (a primary lane 429ing), where each tier pays one failed probe before its
+// failover — still leaves stream-flush + DB-write slack under maxDuration=60.
+export const RUN_DEADLINE_MS = Number(process.env.AGENT_RUN_DEADLINE_MS ?? 52_000);
 
 function getCtx(config: LangGraphRunnableConfig): RunContext {
   const ctx = (config?.configurable as { ctx?: RunContext } | undefined)?.ctx;
@@ -90,10 +116,11 @@ export const intake = defineNode("intake", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "intake",
+      tier: NODE_TIER.intake,
       system: SYSTEM(),
       temperature: 0.2,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "intake"),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -128,10 +155,11 @@ export const fitGate = defineNode("fit_gate", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "fit_gate",
+      tier: NODE_TIER.fit_gate,
       system: SYSTEM(),
       temperature: 0.2,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "fit_gate"),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -175,10 +203,11 @@ export const plan = defineNode("plan", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "plan",
+      tier: NODE_TIER.plan,
       system: SYSTEM(),
       temperature: 0.5,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "plan"),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -214,10 +243,11 @@ async function gather(
   try {
     const { json } = await streamChat({
       node,
+      tier: NODE_TIER[node],
       system: SYSTEM(),
       temperature: 0.4,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, node),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -272,10 +302,11 @@ export const webCorpus = defineNode("web_corpus", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "web_corpus",
+      tier: NODE_TIER.web_corpus,
       system: SYSTEM(),
       temperature: 0.4,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "web_corpus"),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -322,9 +353,10 @@ export const synthesize = defineNode("synthesize", async (state, ctx) => {
   try {
     const { text } = await streamChat({
       node: "synthesize",
+      tier: NODE_TIER.synthesize,
       system: SYSTEM(),
       temperature: 0.5,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "synthesize"),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -351,10 +383,11 @@ export const critique = defineNode("critique", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "critique",
+      tier: NODE_TIER.critique,
       system: SYSTEM(),
       temperature: 0.3,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "critique"),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -402,9 +435,10 @@ export const compose = defineNode("compose", async (state, ctx) => {
     try {
       const { text } = await streamChat({
         node: "compose",
+        tier: NODE_TIER.compose,
         system: SYSTEM(),
         temperature: 0.5,
-        emit: ctx.emit,
+        emit: reasoningEmit(ctx, "compose"),
         signal: ctx.signal,
         usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,
@@ -434,9 +468,10 @@ export const compose = defineNode("compose", async (state, ctx) => {
   try {
     const { text } = await streamChat({
       node: "compose",
+      tier: NODE_TIER.compose,
       system: SYSTEM(),
       temperature: 0.5,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "compose"),
       signal: ctx.signal,
       usage: ctx.usage,
       deadlineAt: ctx.deadlineAt,

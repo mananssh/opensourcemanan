@@ -1,32 +1,6 @@
 import { ScrambleText } from "@/components/portfolio/hero/scramble-text";
 import { SullyPanel } from "@/components/portfolio/agent/sully-panel";
-
-/**
- * Sully's mark, recolored to the theme's emerald identity via a CSS mask —
- * /public/sully.svg stays the single source of truth (its own fill is
- * irrelevant; only the shape's alpha is used), so it never fights ADR 0005's
- * "no hardcoded hex" rule the way baking a colored asset per theme would.
- */
-function SullyAvatar() {
-  return (
-    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-sully-accent-bg ring-2 ring-sully-accent/50">
-      <span
-        aria-hidden
-        className="block h-11 w-11 bg-sully-accent"
-        style={{
-          WebkitMaskImage: "url(/sully.svg)",
-          maskImage: "url(/sully.svg)",
-          WebkitMaskSize: "contain",
-          maskSize: "contain",
-          WebkitMaskRepeat: "no-repeat",
-          maskRepeat: "no-repeat",
-          WebkitMaskPosition: "center",
-          maskPosition: "center",
-        }}
-      />
-    </div>
-  );
-}
+import { SullyAvatar } from "@/components/portfolio/agent/sully-avatar";
 
 export function SullySection() {
   return (
@@ -42,7 +16,9 @@ export function SullySection() {
       </h2>
 
       <div className="mt-7 flex items-start gap-5">
-        <SullyAvatar />
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-sully-accent-bg ring-2 ring-sully-accent/50">
+          <SullyAvatar />
+        </div>
         <p className="max-w-2xl font-body text-lg leading-relaxed text-muted">
           Meet <span className="font-medium text-ink">Sully</span>, my autopilot —
           he&rsquo;s read everything I&rsquo;ve built. Paste a role you&rsquo;re
