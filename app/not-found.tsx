@@ -8,7 +8,7 @@ export default function NotFound() {
         This page wandered off<span className="text-accent">.</span>
       </h1>
       <Link
-        href="/"
+        href="/osm"
         className="label-caps text-accent transition-opacity hover:opacity-70"
       >
         ← back to OSM

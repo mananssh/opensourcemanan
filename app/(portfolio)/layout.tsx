@@ -31,9 +31,15 @@ export default function PortfolioLayout({
           <div className="flex items-center gap-4">
             <Link
               href="/blog"
-              className="font-mono text-[0.7rem] uppercase tracking-[0.15em] text-muted transition-colors hover:text-accent"
+              className="group inline-flex items-center gap-1.5 font-mono text-[0.7rem] uppercase tracking-[0.15em] text-muted transition-colors hover:text-accent"
             >
               View my blog
+              <span
+                aria-hidden
+                className="transition-transform group-hover:translate-x-0.5"
+              >
+                →
+              </span>
             </Link>
             <ThemeToggle />
           </div>

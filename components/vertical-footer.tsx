@@ -18,7 +18,7 @@ export function VerticalFooter({ tagline }: { tagline: string }) {
           {tagline}
         </span>
         <nav className="flex items-center gap-2.5">
-          <Link href="/" className={linkClass}>
+          <Link href="/osm" className={linkClass}>
             ← OSM
           </Link>
           <Link href="/changelog" className={linkClass}>

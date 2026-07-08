@@ -167,7 +167,7 @@ export default async function PortfolioLanding() {
                   <ContactRow label="Email" value={profile.email} href={`mailto:${profile.email}`} />
                 )}
                 {profile?.linkedin && (
-                  <ContactRow label="LinkedIn" value="in/manan" href={profile.linkedin} external />
+                  <ContactRow label="LinkedIn" value="in/manan-shah-0918" href={profile.linkedin} external />
                 )}
                 {profile?.github && (
                   <ContactRow label="GitHub" value="@mananssh" href={profile.github} external />

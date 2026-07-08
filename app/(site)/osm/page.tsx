@@ -53,6 +53,21 @@ export default function OsmPage() {
           default, private only by exception.
         </p>
 
+        <p
+          className="reveal mt-6 max-w-prose font-body text-lg leading-relaxed text-muted"
+          style={delay(300)}
+        >
+          Each vertical wears its own skin — different type, different rhythm,
+          different mood. That&rsquo;s deliberate, not drift: every one is its
+          own space for its own kind of thinking, free to take creative risks on
+          its own terms.{" "}
+          <span className="text-ink">
+            They&rsquo;re not meant to match.
+          </span>{" "}
+          What links them is OSM and the shared machinery underneath — not a
+          single template.
+        </p>
+
         {/* Ethos strip */}
         <ul
           className="reveal mt-12 flex flex-wrap items-center gap-x-3 gap-y-2"
