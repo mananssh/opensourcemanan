@@ -19,8 +19,10 @@ export function Particles({ className }: { className?: string }) {
     if (!ctx) return;
 
     const cs = getComputedStyle(canvas);
-    const dotColor = (cs.getPropertyValue("--muted") || "#9a9aa0").trim();
-    const accent = (cs.getPropertyValue("--accent") || "#ff5a4d").trim();
+    // Fallbacks match the light-theme values (the safer default if the CSS
+    // var ever fails to resolve) — never a dark-only color, per ADR 0005.
+    const dotColor = (cs.getPropertyValue("--muted") || "#57575c").trim();
+    const accent = (cs.getPropertyValue("--accent") || "#cc3a2d").trim();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let w = 0;

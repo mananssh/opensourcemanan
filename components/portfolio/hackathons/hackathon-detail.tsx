@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import { Tag, AwardTag } from "@/components/portfolio/ui/tag";
 import { Prose } from "@/components/portfolio/ui/prose";
 import type { Hackathon } from "@/db/schema";
@@ -36,7 +36,13 @@ export function HackathonDetail({ hackathon }: { hackathon: Hackathon }) {
 
       {cover && (
         <div className="relative mt-6 aspect-video overflow-hidden rounded-xl border border-rule">
-          <Image src={cover} alt="" fill sizes="(max-width: 720px) 92vw, 660px" className="object-cover" />
+          <Image
+            src={cover}
+            alt={`${hackathon.event} cover`}
+            fill
+            sizes="(max-width: 720px) 92vw, 660px"
+            className="object-cover"
+          />
         </div>
       )}
 
@@ -48,9 +54,15 @@ export function HackathonDetail({ hackathon }: { hackathon: Hackathon }) {
 
       {gallery.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-3">
-          {gallery.map((src) => (
+          {gallery.map((src, i) => (
             <div key={src} className="relative aspect-[4/3] overflow-hidden rounded-lg border border-rule">
-              <Image src={src} alt="" fill sizes="(max-width: 720px) 45vw, 320px" className="object-cover" />
+              <Image
+                src={src}
+                alt={`${hackathon.event} — screenshot ${i + 1}`}
+                fill
+                sizes="(max-width: 720px) 45vw, 320px"
+                className="object-cover"
+              />
             </div>
           ))}
         </div>

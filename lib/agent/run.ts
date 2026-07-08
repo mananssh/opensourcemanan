@@ -3,6 +3,8 @@ import type { AgentEvent } from "@/components/portfolio/agent/agent-types";
 import { graph } from "./graph";
 import { loadCorpus } from "./corpus";
 import { createEventStream } from "./events";
+import { RUN_DEADLINE_MS } from "./nodes";
+import { warmPrompts } from "./prompts";
 
 /**
  * Run the real agent and yield its events as they happen. The graph runs
@@ -14,9 +16,11 @@ export async function* streamFitAssessment(
   input: string,
   signal?: AbortSignal,
 ): AsyncGenerator<AgentEvent, void, void> {
-  const corpus = await loadCorpus();
+  // Warm the prompt cache (R2/env) alongside the corpus so getPrompt is sync in the graph.
+  const [corpus] = await Promise.all([loadCorpus(), warmPrompts()]);
   const { emit, close, drain } = createEventStream();
   const startedAt = Date.now();
+  const deadlineAt = startedAt + RUN_DEADLINE_MS;
 
   // Run-scoped model/token telemetry, surfaced as a final `usage` event.
   let tokens = 0;
@@ -33,7 +37,7 @@ export async function* streamFitAssessment(
   const run = graph
     .invoke(
       { input },
-      { configurable: { ctx: { emit, corpus, signal, startedAt, usage } }, recursionLimit: 50, signal },
+      { configurable: { ctx: { emit, corpus, signal, startedAt, deadlineAt, usage } }, recursionLimit: 50, signal },
     )
     .then((final) => {
       if (models.size) emit({ type: "usage", model: [...models].join(", "), tokens, calls });

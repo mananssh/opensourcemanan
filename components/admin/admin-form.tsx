@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { SubmitButton } from "@/components/blog/submit-button";
-import type { ActionState } from "@/app/blog/admin/actions";
+import type { FormState } from "@/components/admin/form-state";
 
 /**
  * Client shell for the admin save forms. Wraps the server action in
@@ -17,7 +17,7 @@ export function AdminForm({
   submitLabel = "Save",
   pendingLabel = "Saving…",
 }: {
-  action: (prev: ActionState, fd: FormData) => Promise<ActionState>;
+  action: (prev: FormState, fd: FormData) => Promise<FormState>;
   className?: string;
   children: React.ReactNode;
   submitLabel?: string;

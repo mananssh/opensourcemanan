@@ -1,7 +1,192 @@
 # Changelog
 
+## 2026-07-07
+
+- **18:59 · `91f8595` · refactor:** Move object storage from Google Cloud Storage to Cloudflare R2
+  Swaps the object-storage backend behind `lib/storage` from GCS to Cloudflare R2
+  (S3-compatible, zero egress). The public API is unchanged — `createUploadUrl`,
+  `getReadUrl`, `deleteObject`, `makePublic`, `publicUrl`, `isManagedKey`,
+  `downloadText`, `uploadText`, and `StorageVertical` keep their exact shapes, so
+  no consumer changed and the DB (which stores keys, not URLs) needs no migration.
+  
+  The module is renamed `gcs.ts` → `object-store.ts` and uses the AWS S3 SDK against
+  the R2 endpoint. Because R2 has no per-object ACL, the per-object public/private
+  model (ADR 0009/0015) is kept with **two buckets**: a private default bucket for
+  every upload, and a public bucket (bound to the `R2_PUBLIC_BASE_URL` custom domain)
+  that `makePublic` copies objects into. Private objects — including Sully's prompts
+  and gated dump images — never enter the public bucket. Adds a dry-runnable,
+  idempotent `scripts/migrate-storage-to-r2.mjs` to copy existing objects preserving
+  keys (see ADR 0016).
+- **17:17 · `41ffaf5` · fix:** Fix a JSON-sentinel leak into the thinking stream and an over-eager fit_gate decline
+  Two bugs found from a live trace ("Cloud Engineer at naabhik technologies"
+  declined as "not a job description"):
+  
+  1. **Sentinel leak.** The streamed reasoning could show a fragment of the
+     internal `@@@JSON@@@` marker (e.g. a literal "@@@JSON" in the visible
+     text) when it arrived split across two stream chunks — the naive
+     `indexOf` search only catches a *complete* marker already in the buffer.
+     `model-router.ts` now holds back a lookback window equal to the marker's
+     length until either the full marker resolves or the stream ends, so a
+     split marker can never leak a partial prefix into what the reader sees.
+  2. **Over-eager `fit_gate` decline.** `fit_gate` only ever saw the *already-
+     extracted* `role`/`requirements`, never the raw pasted text — so a short,
+     perfectly legitimate posting (just a title + company, no elaborated
+     requirements) could read as "not a genuine role" once reduced to an empty
+     requirements list, and the model sometimes hallucinated a specific wrong
+     reason ("appears to be a prompt or instruction"). Meanwhile `intake`
+     already computes its own `looksLikeRole` judgment (with the full raw text
+     in view) but the graph silently discarded it. `looksLikeRole` is now
+     threaded through `AgentState` from `intake` to `fit_gate`, and both the
+     private and public fallback prompts defer to that earlier judgment and
+     explicitly note that brevity alone isn't disqualifying.
+- **16:55 · `26849f6` · feat:** Ask Sully — a portfolio-wide AI chat overlay, scoped to Manan
+  A floating "Ask Sully" trigger on every portfolio page opens a Gemini-style
+  bottom-sheet chat overlay (the live page stays visible, blurred, above it), and
+  selecting any text surfaces an "Ask Sully" popup that pre-fills the same panel.
+  Answers are grounded strictly in Manan's live, DB-backed portfolio corpus —
+  judgment/fit questions get a confident opinion, on-screen content is explained
+  from a viewport-aware page snapshot, and anything genuinely off-topic is
+  declined without leaking outside facts.
+  
+  The feature composes existing machinery rather than duplicating it. The
+  model-router, event bus, and rate-limiter were generalized (not forked) so both
+  the fit agent and this chat share one implementation; a single scoped
+  `streamChat` per turn (no LangGraph) keeps it cheap. A new `ask_runs` table
+  provides its own rate-limit bookkeeping.
+  
+  Also hardens the shared agent infrastructure surfaced while building this:
+  
+  - Prompts now load from a private GCS object (`AGENT_PROMPTS_KEY`) with a TTL
+    cache, falling back to `AGENT_PROMPTS_B64` then generic defaults — edit and
+    re-upload (`npm run prompts:upload`) with no redeploy, and no 26KB env blob.
+  - Model-router: per-tier circuit breaker (a dead strong model no longer
+    benches its healthy fast sibling), a longer idle timeout for slower strong
+    models, env-configurable per-tier lane order, and per-lane failure logging.
+  - Fit-agent `plan`/`fit_gate` prompts now actually receive the seniority and
+    hard-constraint signals the intake node was already extracting.
+
+## 2026-07-06
+
+- **15:19 · `4295f24` · fix:** Stop sending stream_options to model lanes — it silently killed Gemini
+  Every Sully run was falling over from Gemini (the primary, fastest, cheapest
+  lane) to NVIDIA NIM/OpenCode Zen, even though Gemini worked fine on its own.
+  Root cause: `stream_options: { include_usage: true }` in every model-router
+  request. Gemini's OpenAI-compat shim can't handle that field and returns a
+  misleading `503 UNAVAILABLE ("high demand")` instead of a clean 400 — which
+  the router correctly (but uselessly) treats as a retryable failure and fails
+  over on every single call. Confirmed by direct testing: identical requests
+  succeed at 200 without `stream_options` and fail at 503 with it, on both
+  non-streaming and streaming calls. Token usage now always uses the existing
+  character-based estimate instead of a provider-reported exact count, which
+  was already the graceful fallback for lanes that don't return usage.
+- **14:56 · `d209d7f` · fix:** Clean up the portfolio tab title, nav link, and Sully's accent color
+  The portfolio's browser tab title is now the plain "Manan Shah · Portfolio"
+  instead of a per-page template. The header's "OSM ↗" nav link is now "View
+  my blog", linking to `/blog` instead of `/osm` — clearer for a first-time
+  visitor. The "a (slightly biased) second opinion" line above Sully now uses
+  Sully's own green identity token instead of the portfolio's default coral.
+- **14:56 · `d209d7f` · fix:** Cap Sully's total model-call time so it degrades instead of timing out
+  `/api/fit` hit Vercel's hard 60s `maxDuration` kill in production — each of
+  the graph's 9 nodes could independently spend up to ~30s failing over across
+  model lanes (three lanes x a 10s idle-timeout), and the cumulative total
+  across nodes could exceed the route's budget. `model-router.ts` now takes a
+  run-wide `deadlineAt` (45s by default, `AGENT_RUN_DEADLINE_MS`): once it
+  passes, `streamChat` stops trying further lanes and aborts in-flight
+  requests, so every remaining node degrades near-instantly instead of the
+  whole route dying with an ungraceful connection drop. Also lowered the lane
+  circuit breaker's failure threshold from 2 to 1, so a bad lane stops being
+  retried across nodes sooner.
+- **14:29 · `85a27ca` · docs:** Rewrite the boilerplate README and fix Sully doc/code drift
+  `README.md` was still the default `create-next-app` template. It now
+  describes the actual project and points to `agent-kit/` for contribution
+  conventions. `agent-kit/agent.md` claimed `synthesize`/`compose` were
+  "fatal if they fail," but both nodes always degrade gracefully in code
+  (a deliberate hardening) — the doc now matches. A graph-diagram comment also
+  said the bounded re-gather loop allows up to 2 extra passes; the code only
+  ever allows 1.
+- **14:29 · `85a27ca` · fix:** Close storage and validation gaps in the portfolio admin CMS
+  The résumé field was documented and typed as a GCS object key but was
+  actually entered as a raw URL, since the upload endpoint only allowed image
+  MIME types — the one place in the portfolio that broke the "store a key,
+  never a URL" storage convention. Résumés now upload as a real PDF through the
+  same presigned-upload flow as images.
+  
+  Also: a hackathon's "related project" was a free-text field with no
+  validation, so a typo or a later project rename/delete silently produced a
+  dead link — it's now a `<select>` of real projects, validated server-side
+  too. `saveProfile` gained the same required-field check its sibling actions
+  already had. Every admin save/delete action now handles a DB failure the
+  same way (an inline error instead of crashing past the form into Next's
+  default error page), and the upload widgets now delete a replaced or
+  removed-before-save file instead of leaving it orphaned in the bucket.
+- **14:29 · `85a27ca` · fix:** Add portfolio loading/error/404 states, real alt text, indexes
+  The portfolio route group had no `loading.tsx`, `error.tsx`, or scoped
+  `not-found.tsx`, so a slow fetch showed nothing and a failure or 404 fell
+  through to the site's unbranded root pages. All three now render inside the
+  portfolio's own theme and chrome.
+  
+  Also: project/hackathon cover and gallery images had `alt=""` despite being
+  real content, not decoration — they now carry descriptive alt text. A
+  particle-canvas color fallback is now sourced from a semantic token instead
+  of a single hardcoded hex. `experiences` and `capabilities` gained the same
+  `sortOrder`/`startedAt` indexes `projects` and `hackathons` already had.
+- **14:29 · `85a27ca` · fix:** Fix the Sully graph's critique→compose overlap and add its real icon
+  In the live agent graph, `critique` and `compose` sat exactly one node-width
+  apart, leaving zero room for the connector between them (every other
+  transition has 6–18 units of gap). `compose` is now spaced consistently with
+  the rest of the flow. The Sully avatar also went from a placeholder "S"
+  badge to the real mark (`public/sully.svg`), recolored to the theme's
+  emerald identity via a CSS mask.
+- **14:29 · `85a27ca` · fix:** Harden Sully's rate limiting, stream handling, and IP privacy
+  The public `/api/fit` route's abuse guard only recorded a run when the stream
+  finished, so concurrent or rapid-fire requests could all read the same
+  pre-increment count and blow past both the per-IP and global daily caps.
+  `checkAndReserve` now checks the caps and inserts the run row in one
+  transaction, closing the race, and `finishRun` updates that same row instead
+  of writing a second one.
+  
+  Also fixes: an enqueue-after-close bug in the stream handler if logging the
+  run outcome failed after the controller closed; the rate limiter's claimed
+  "fails open on any DB error" behavior, which previously only held for a
+  narrow set of pre-migration errors; and a hardcoded IP-hashing salt fallback
+  (a known constant in this public repo) that silently degraded the
+  never-store-a-raw-IP guarantee — it now falls back to a random per-boot salt
+  with a startup warning.
+- **14:29 · `85a27ca` · refactor:** Dedupe admin form boilerplate and decouple the shared form-state type
+  The delete-confirmation form and a `dateVal` date formatter were copy-pasted
+  across all four portfolio admin forms; both now live once in
+  `components/portfolio/admin/fields.tsx` as `DeleteButton` and `dateVal`.
+  `AdminForm`'s shared `{error}` state type also imported from the blog
+  vertical's action module even though the portfolio vertical defined an
+  identical type of its own — both now source it from a new
+  `components/admin/form-state.ts`, so the shared form shell isn't coupled to
+  any one vertical.
+
 ## 2026-06-22
 
+- **10:21 · `480a3f3` · feat:** Wire intake's seniority + hard constraints through to the gate and plan
+  intake already extracts `seniority` and `constraints` (location / work-auth /
+  clearance / required degree); they were computed then dropped. Now they're stored
+  in state and provided to the fit_gate and plan prompts as `{{seniority}}` /
+  `{{constraints}}`, so the gate can treat a seniority gap or hard constraint as a
+  named "plausible" stretch (not a decline) and plan can ensure a dimension speaks
+  to it. Public fallback prompts use the new fields; tuned prompts opt in by adding
+  the placeholders.
+- **09:39 · `66f9bd8` · fix:** Make prompts the single source of truth for agent output shape
+  The prompts now each declare their own `Return: {…}` spec, but the code was also
+  appending its own (sometimes conflicting) JSON shape via `withJsonTail`. Removed
+  the duplication so the prompt owns the shape:
+  
+  - `withJsonTail` appends only the reason-then-JSON protocol (points at the prompt's
+    own Return spec); the hardcoded per-node shapes are gone.
+  - `compose` now returns the paragraph as plain text (matching the prompt's "output
+    nothing else"); the displayed evidence is the gather-curated set (deduped, capped)
+    rather than a separate `citedHrefs` round-trip.
+  - `web_corpus` reads the prompt's `note` field for the company-alignment line.
+  - Public fallback prompts carry `Return:` specs too, so the OSS build still works.
+  
+  Verified live: all six JSON nodes parse, compose is clean plain text, evidence is
+  grounded.
 - **08:40 · `fd6f743` · fix:** Fix the Gemini + OpenCode Zen model ids (verified each lane with a direct call)
   Tested every model lane with a direct API call and corrected two stale defaults:
   

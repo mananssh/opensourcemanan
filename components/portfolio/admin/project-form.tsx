@@ -2,9 +2,8 @@ import { saveProject, deleteProject } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
 import { MultiImageUpload } from "@/components/portfolio/admin/multi-image-upload";
-import { ConfirmSubmit } from "@/components/admin/confirm-submit";
-import { Field, inputCls } from "@/components/portfolio/admin/fields";
-import { publicUrl } from "@/lib/storage/gcs";
+import { DeleteButton, Field, inputCls } from "@/components/portfolio/admin/fields";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Project } from "@/db/schema";
 
 export function ProjectForm({ project }: { project?: Project }) {
@@ -69,16 +68,12 @@ export function ProjectForm({ project }: { project?: Project }) {
       </AdminForm>
 
       {project && (
-        <form action={deleteProject} className="mt-4 max-w-2xl">
-          <input type="hidden" name="id" value={project.id} />
-          <ConfirmSubmit
-            className="font-mono text-sm text-muted transition-colors hover:text-accent"
-            message="Delete this project?"
-            pendingLabel="Deleting…"
-          >
-            Delete project
-          </ConfirmSubmit>
-        </form>
+        <DeleteButton
+          action={deleteProject}
+          id={project.id}
+          message="Delete this project?"
+          label="Delete project"
+        />
       )}
     </>
   );

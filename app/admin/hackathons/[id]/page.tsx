@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getHackathonById } from "@/lib/portfolio/queries";
+import { getHackathonById, listProjects } from "@/lib/portfolio/queries";
 import { HackathonForm } from "@/components/portfolio/admin/hackathon-form";
 
 export default async function AdminHackathonEdit({
@@ -8,11 +8,12 @@ export default async function AdminHackathonEdit({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const projectOptions = (await listProjects()).map((p) => ({ slug: p.slug, name: p.name }));
   if (id === "new") {
     return (
       <div>
         <h1 className="mb-6 font-display text-3xl font-semibold text-ink">New hackathon</h1>
-        <HackathonForm />
+        <HackathonForm projects={projectOptions} />
       </div>
     );
   }
@@ -23,7 +24,7 @@ export default async function AdminHackathonEdit({
       <h1 className="mb-6 font-display text-3xl font-semibold text-ink">
         Edit {hackathon.event}
       </h1>
-      <HackathonForm hackathon={hackathon} />
+      <HackathonForm hackathon={hackathon} projects={projectOptions} />
     </div>
   );
 }

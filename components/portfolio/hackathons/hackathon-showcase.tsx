@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Tag, AwardTag } from "@/components/portfolio/ui/tag";
 import type { Hackathon } from "@/db/schema";
 
-// coverUrl resolved server-side (publicUrl pulls the GCS SDK — not client-safe).
+// coverUrl resolved server-side (publicUrl comes from the storage module, which pulls the S3 SDK — not client-safe).
 export type HackathonCard = Hackathon & { coverUrl: string | null };
 
 /** A bold stacked "wall of wins" — deliberately different from the project grid. */
@@ -48,7 +48,7 @@ export function HackathonShowcase({ hackathons }: { hackathons: HackathonCard[] 
                 <div className="relative hidden aspect-[4/3] w-40 shrink-0 overflow-hidden rounded-lg border border-rule sm:block">
                   <Image
                     src={cover}
-                    alt=""
+                    alt={`${h.event} cover`}
                     fill
                     sizes="160px"
                     className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"

@@ -1,13 +1,9 @@
 import { saveExperience, deleteExperience } from "@/app/admin/actions";
 import { AdminForm } from "@/components/admin/admin-form";
 import { ImageUpload } from "@/components/image-upload";
-import { ConfirmSubmit } from "@/components/admin/confirm-submit";
-import { Field, inputCls } from "@/components/portfolio/admin/fields";
-import { publicUrl } from "@/lib/storage/gcs";
+import { DeleteButton, Field, dateVal, inputCls } from "@/components/portfolio/admin/fields";
+import { publicUrl } from "@/lib/storage/object-store";
 import type { Experience } from "@/db/schema";
-
-const dateVal = (d?: Date | null) =>
-  d ? new Date(d).toISOString().slice(0, 10) : "";
 
 export function ExperienceForm({ experience }: { experience?: Experience }) {
   return (
@@ -54,16 +50,12 @@ export function ExperienceForm({ experience }: { experience?: Experience }) {
       </AdminForm>
 
       {experience && (
-        <form action={deleteExperience} className="mt-4 max-w-2xl">
-          <input type="hidden" name="id" value={experience.id} />
-          <ConfirmSubmit
-            className="font-mono text-sm text-muted transition-colors hover:text-accent"
-            message="Delete this experience?"
-            pendingLabel="Deleting…"
-          >
-            Delete experience
-          </ConfirmSubmit>
-        </form>
+        <DeleteButton
+          action={deleteExperience}
+          id={experience.id}
+          message="Delete this experience?"
+          label="Delete experience"
+        />
       )}
     </>
   );

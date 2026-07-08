@@ -30,3 +30,4 @@ export * from "./blog";
 export * from "./dump";
 export * from "./portfolio";
 export * from "./agent";
+export * from "./ask";

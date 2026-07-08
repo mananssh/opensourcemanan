@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listHackathons } from "@/lib/portfolio/queries";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import { SectionHeading } from "@/components/portfolio/ui/section-heading";
 import { HackathonShowcase } from "@/components/portfolio/hackathons/hackathon-showcase";
 

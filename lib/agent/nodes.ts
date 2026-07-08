@@ -9,7 +9,7 @@ import {
 import type { AgentStateType, EvidenceItem } from "./state";
 import type { Emit } from "./events";
 import { type Corpus, indexById, renderItems } from "./corpus";
-import { streamChat, type UsageSink } from "./model-router";
+import { streamChat, type ReasoningEmit, type Tier, type UsageSink } from "./model-router";
 import { researchCompany } from "./tools/tavily";
 import { fill, getPrompt, withJsonTail, wrapUntrusted } from "./prompts";
 
@@ -19,11 +19,49 @@ export interface RunContext {
   corpus: Corpus;
   signal?: AbortSignal;
   startedAt: number; // epoch ms — used to skip the loop when time is short
+  deadlineAt: number; // epoch ms — streamChat stops trying lanes past this
   usage: UsageSink; // model + token telemetry accumulator
+}
+
+/**
+ * Per-node tier. Classification- and selection-shaped nodes (intake, gate,
+ * critique, the three gather nodes) use the fast model — on a failover lane that's
+ * the difference between an 8B and a slow 70B, which keeps the run inside budget.
+ * Only the genuinely generative nodes (plan, synthesize, compose) use strong.
+ */
+export const NODE_TIER: Record<NodeId, Tier> = {
+  intake: "fast",
+  fit_gate: "fast",
+  critique: "fast",
+  work_history: "fast",
+  projects: "fast",
+  web_corpus: "fast",
+  plan: "strong",
+  synthesize: "strong",
+  compose: "strong",
+};
+
+/** Wraps a node's raw streamed text back into the run's `node_reasoning` event shape. */
+function reasoningEmit(ctx: RunContext, node: NodeId): ReasoningEmit {
+  return (delta) => ctx.emit({ type: "node_reasoning", node, delta });
 }
 
 /** Don't start a re-gather pass once the run has used most of its time budget. */
 const SOFT_LOOP_BUDGET_MS = 32_000;
+
+/**
+ * Hard ceiling on model-call time across the WHOLE run, well under the route's
+ * `maxDuration = 60`. Without this, each of the 9 nodes could independently
+ * burn up to ~30s (3 lanes x a 10s idle-timeout) failing over, and the
+ * cumulative total across nodes could blow past Vercel's hard kill — an ugly
+ * connection drop instead of the graceful per-node degrade this agent is built
+ * around. `streamChat` refuses new lane attempts once `ctx.deadlineAt` passes,
+ * so every remaining node degrades near-instantly instead.
+ */
+// 52s: healthy runs finish far earlier; the extra headroom is for degraded mode
+// (a primary lane 429ing), where each tier pays one failed probe before its
+// failover — still leaves stream-flush + DB-write slack under maxDuration=60.
+export const RUN_DEADLINE_MS = Number(process.env.AGENT_RUN_DEADLINE_MS ?? 52_000);
 
 function getCtx(config: LangGraphRunnableConfig): RunContext {
   const ctx = (config?.configurable as { ctx?: RunContext } | undefined)?.ctx;
@@ -78,23 +116,37 @@ export const intake = defineNode("intake", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "intake",
+      tier: NODE_TIER.intake,
       system: SYSTEM(),
       temperature: 0.2,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "intake"),
       signal: ctx.signal,
       usage: ctx.usage,
-      user: withJsonTail(
-        fill(getPrompt("intake"), { job: wrapUntrusted("JOB", state.input) }),
-        `{ "company": string|null, "role": string|null, "requirements": string[] }`,
-      ),
+      deadlineAt: ctx.deadlineAt,
+      user: withJsonTail(fill(getPrompt("intake"), { job: wrapUntrusted("JOB", state.input) })),
     });
-    const obj = (json ?? {}) as { company?: unknown; role?: unknown; requirements?: unknown };
+    const obj = (json ?? {}) as {
+      company?: unknown;
+      role?: unknown;
+      requirements?: unknown;
+      seniority?: unknown;
+      constraints?: unknown;
+      looksLikeRole?: unknown;
+    };
     const company = typeof obj.company === "string" ? obj.company : undefined;
     const role = typeof obj.role === "string" ? obj.role : undefined;
     const requirements = asStringArray(obj.requirements);
+    const seniority = typeof obj.seniority === "string" ? obj.seniority : undefined;
+    const constraints = asStringArray(obj.constraints);
+    // Biased-yes: only distrust genuineness on an explicit false, never on a
+    // missing/malformed field.
+    const looksLikeRole = obj.looksLikeRole !== false;
     if (company) ctx.emit({ type: "node_status", node: "intake", detail: `company: ${company}` });
-    return { update: { company, role, requirements }, summary: role ?? "role parsed" };
+    return {
+      update: { company, role, requirements, seniority, constraints, looksLikeRole },
+      summary: role ?? "role parsed",
+    };
   } catch {
     // Degrade: keep the run alive with the raw posting as the requirement.
     return { update: { requirements: [state.input.slice(0, 280)] }, summary: "role parsed (degraded)" };
@@ -110,19 +162,23 @@ export const fitGate = defineNode("fit_gate", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "fit_gate",
+      tier: NODE_TIER.fit_gate,
       system: SYSTEM(),
       temperature: 0.2,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "fit_gate"),
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("fit_gate"), {
           profile: ctx.corpus.profileSummary,
           role: state.role ?? "(none detected)",
           requirements: state.requirements.join("; ") || "(none detected)",
+          seniority: state.seniority ?? "(unclear)",
+          constraints: state.constraints.length ? state.constraints.join("; ") : "(none stated)",
+          looksLikeRole: state.looksLikeRole ? "yes" : "no",
         }),
-        `{ "verdict": "strong"|"plausible"|"not_a_fit", "reason": string }`,
       ),
     });
     const obj = (json ?? {}) as { verdict?: unknown; reason?: unknown };
@@ -155,19 +211,22 @@ export const plan = defineNode("plan", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "plan",
+      tier: NODE_TIER.plan,
       system: SYSTEM(),
       temperature: 0.5,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "plan"),
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("plan"), {
           requirements: state.requirements.join("; ") || "(see posting)",
           profile: ctx.corpus.profileSummary,
           gapNote,
+          seniority: state.seniority ?? "(unclear)",
+          constraints: state.constraints.length ? state.constraints.join("; ") : "(none stated)",
         }),
-        `{ "dimensions": string[] }`,
       ),
     });
     dimensions = asStringArray((json as { dimensions?: unknown } | undefined)?.dimensions);
@@ -192,19 +251,20 @@ async function gather(
   try {
     const { json } = await streamChat({
       node,
+      tier: NODE_TIER[node],
       system: SYSTEM(),
       temperature: 0.4,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, node),
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("gather"), {
           dimensions: state.planDimensions.join("; "),
           company: state.company ?? "(unknown)",
           candidates: renderItems(items),
         }),
-        `{ "picks": [{ "id": string, "claim": string }] }`,
       ),
     });
     picks = asPicks((json as { picks?: unknown } | undefined)?.picks);
@@ -250,23 +310,25 @@ export const webCorpus = defineNode("web_corpus", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "web_corpus",
+      tier: NODE_TIER.web_corpus,
       system: SYSTEM(),
       temperature: 0.4,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "web_corpus"),
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("web_corpus"), {
           dimensions: state.planDimensions.join("; "),
           webFindings: webFindings ?? "(no web data available)",
           candidates: renderItems(ctx.corpus.corpus),
         }),
-        `{ "webFindings": string, "picks": [{ "id": string, "claim": string }] }`,
       ),
     });
-    const obj = (json ?? {}) as { webFindings?: unknown; picks?: unknown };
-    if (!webFindings && typeof obj.webFindings === "string") webFindings = obj.webFindings;
+    // The prompt returns `note` (the company-alignment line) + `picks`.
+    const obj = (json ?? {}) as { note?: unknown; picks?: unknown };
+    if (!webFindings && typeof obj.note === "string" && obj.note.trim()) webFindings = obj.note.trim();
     picks = asPicks(obj.picks);
   } catch {
     return { update: { evidence: [], webFindings }, summary: "model unavailable — skipped" };
@@ -299,11 +361,13 @@ export const synthesize = defineNode("synthesize", async (state, ctx) => {
   try {
     const { text } = await streamChat({
       node: "synthesize",
+      tier: NODE_TIER.synthesize,
       system: SYSTEM(),
       temperature: 0.5,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "synthesize"),
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: fill(getPrompt("synthesize"), {
         requirements: state.requirements.join("; ") || "(see posting)",
         webFindings: state.webFindings ?? "(none)",
@@ -327,19 +391,20 @@ export const critique = defineNode("critique", async (state, ctx) => {
   try {
     const { json } = await streamChat({
       node: "critique",
+      tier: NODE_TIER.critique,
       system: SYSTEM(),
       temperature: 0.3,
       jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "critique"),
       signal: ctx.signal,
       usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
       user: withJsonTail(
         fill(getPrompt("critique"), {
           requirements: state.requirements.join("; ") || "(see posting)",
           draft: state.draft ?? "(none)",
           evidence: evidence.map((e) => `- ${e.label} (${e.href})`).join("\n") || "(none)",
         }),
-        `{ "ok": boolean, "gaps": string[] }`,
       ),
     });
     const obj = (json ?? {}) as { ok?: unknown; gaps?: unknown };
@@ -354,7 +419,9 @@ export const critique = defineNode("critique", async (state, ctx) => {
   const elapsed = Date.now() - ctx.startedAt;
   const willLoop = !ok && state.pass < 1 && elapsed < SOFT_LOOP_BUDGET_MS;
   if (willLoop) {
-    ctx.emit({ type: "loop", pass: state.pass + 2 }); // pass label: "2" on the re-gather
+    // state.pass is 0 during the first pass, which we label "pass 1" to the
+    // client; the one allowed re-gather is 0 + 2 = "pass 2".
+    ctx.emit({ type: "loop", pass: state.pass + 2 });
     ctx.emit({ type: "edge", from: "critique", to: "plan" });
   }
   return {
@@ -376,11 +443,13 @@ export const compose = defineNode("compose", async (state, ctx) => {
     try {
       const { text } = await streamChat({
         node: "compose",
+        tier: NODE_TIER.compose,
         system: SYSTEM(),
         temperature: 0.5,
-        emit: ctx.emit,
+        emit: reasoningEmit(ctx, "compose"),
         signal: ctx.signal,
         usage: ctx.usage,
+      deadlineAt: ctx.deadlineAt,
         user: fill(getPrompt("compose_decline"), {
           reason: state.gateReason ?? "it's outside his technical background",
         }),
@@ -401,30 +470,26 @@ export const compose = defineNode("compose", async (state, ctx) => {
   }
 
   const evidence = dedupe(state.evidence);
-  const allowed = new Map(evidence.map((e) => [e.href, e.label]));
+  // compose now returns the paragraph as PLAIN text (matches the prompt). The
+  // cited evidence shown is the curated set the gather nodes already selected.
   let paragraph: string;
-  let cited: string[] = [];
   try {
-    const { text, json } = await streamChat({
+    const { text } = await streamChat({
       node: "compose",
+      tier: NODE_TIER.compose,
       system: SYSTEM(),
       temperature: 0.5,
-      jsonTail: true,
-      emit: ctx.emit,
+      emit: reasoningEmit(ctx, "compose"),
       signal: ctx.signal,
       usage: ctx.usage,
-      user: withJsonTail(
-        fill(getPrompt("compose"), {
-          verdict,
-          draft: state.draft ?? "(none)",
-          evidence: evidence.map((e) => `- ${e.label} (${e.href}): ${e.claim}`).join("\n") || "(none)",
-        }),
-        `{ "citedHrefs": string[] }`,
-      ),
+      deadlineAt: ctx.deadlineAt,
+      user: fill(getPrompt("compose"), {
+        verdict,
+        draft: state.draft ?? "(none)",
+        evidence: evidence.map((e) => `- ${e.label} (${e.href}): ${e.claim}`).join("\n") || "(none)",
+      }),
     });
-    // Defensive: if the model still appended a "citedHrefs" list to the prose, drop it.
-    paragraph = text.split(/\n+\s*cited\s*hrefs/i)[0].trim();
-    cited = asStringArray((json as { citedHrefs?: unknown } | undefined)?.citedHrefs).filter((h) => allowed.has(h));
+    paragraph = text.trim();
   } catch (err) {
     // Degrade: never let compose kill the run — fall back to the synthesized draft.
     if (process.env.AGENT_DEBUG) console.warn("[sully:compose] threw:", err instanceof Error ? err.message : err);
@@ -433,12 +498,13 @@ export const compose = defineNode("compose", async (state, ctx) => {
         ? state.draft
         : `Manan is a ${verdict} fit for this role, backed by ${evidence.slice(0, 3).map((e) => e.label).join(", ") || "his shipped work"}.`;
   }
-  // Grounding guarantee: only real evidence hrefs survive; fall back to top items.
-  const chosen = (cited.length ? cited : evidence.slice(0, 3).map((e) => e.href)).filter((h) => allowed.has(h));
+  // Grounding by construction: surface the evidence the gather nodes curated
+  // (deduped, capped) — every item is a real, selected corpus pick.
+  const chosen = evidence.slice(0, 6);
   const result: FitResult = {
     verdict,
     paragraph,
-    evidence: chosen.map((href) => ({ label: allowed.get(href)!, href })),
+    evidence: chosen.map((e) => ({ label: e.label, href: e.href })),
     company: state.company,
   };
   return { update: { result }, summary: verdict.replace("_", " ") };

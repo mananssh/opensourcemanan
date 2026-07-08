@@ -6,7 +6,7 @@ const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,image/avif";
 
 /**
- * Owner image picker: uploads straight to GCS via a presigned URL, then writes
+ * Owner image picker: uploads straight to R2 via a presigned URL, then writes
  * the object key into a hidden form field. The save action makes it public.
  */
 export function ImageUpload({
@@ -69,6 +69,15 @@ export function ImageUpload({
         body: file,
       });
       if (!put.ok) throw new Error("Upload failed.");
+      // If we're replacing a file uploaded earlier THIS session (not the
+      // originally-saved one), clean it up so it doesn't linger unreferenced.
+      if (key && key !== initialKey) {
+        fetch("/api/storage/object", {
+          method: "DELETE",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ key }),
+        }).catch(() => {});
+      }
       setKey(newKey);
       setPreview(URL.createObjectURL(file));
     } catch (err) {

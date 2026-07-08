@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# opensourcemanan
 
-## Getting Started
+Manan Shah's all-in-one personal site — portfolio, blog, and whatever comes
+next — deployed to Vercel, built entirely in the open. Live at
+[opensourcemanan.vercel.app](https://opensourcemanan.vercel.app).
 
-First, run the development server:
+The centerpiece is **Sully**: paste a job description into the portfolio and a
+real, streaming [LangGraph.js](https://langchain-ai.github.io/langgraphjs/)
+agent assesses the fit against Manan's actual work — live, node by node, never
+pre-scripted.
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · Tailwind 4 · TypeScript · Drizzle ORM on
+CockroachDB · Cloudflare R2 · NextAuth v5 (Google) · Vercel.
+
+**This Next.js diverges from training-data assumptions** — see
+[`AGENTS.md`](./AGENTS.md) before writing Next.js code here.
+
+## Contributing
+
+[`agent-kit/`](./agent-kit/) is the single source of truth for how this repo
+is built — conventions, architecture, and the commit/PR workflow — for humans
+and agents alike. Start with [`agent-kit/README.md`](./agent-kit/README.md).
+[`docs/architecture.md`](./docs/architecture.md) has the human-readable
+overview, and [`docs/decisions/`](./docs/decisions/) records the "why" behind
+notable choices as they're made.
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in DATABASE_URL, auth, storage, etc.
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Useful scripts (see `agent-kit/database.md` and `agent-kit/storage.md` for the
+one-time cloud setup these assume):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run typecheck      # tsc --noEmit
+npm run lint           # eslint
+npm run build          # next build
+npm run db:generate    # diff db/schema/* → a new migration
+npm run db:migrate     # apply pending migrations
+npm run db:studio      # browse the DB
+```
 
-## Learn More
+## Deploying
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel's GitHub integration handles it — see
+[`docs/architecture.md`](./docs/architecture.md#deploying-to-vercel-one-time-setup)
+for the one-time import steps. `main` is protected and always deployed; every
+change flows branch → PR → green CI → merge.

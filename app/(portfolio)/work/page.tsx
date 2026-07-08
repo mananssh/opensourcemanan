@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { listProjects } from "@/lib/portfolio/queries";
-import { publicUrl } from "@/lib/storage/gcs";
+import { publicUrl } from "@/lib/storage/object-store";
 import { SectionHeading } from "@/components/portfolio/ui/section-heading";
 import { ProjectGrid } from "@/components/portfolio/work/project-grid";
 

@@ -8,11 +8,11 @@ const ACCEPT = "image/png,image/jpeg,image/gif,image/webp,image/avif";
 type Item = { key: string; url: string };
 
 /**
- * Multi-image gallery uploader for the portfolio admin. Uploads each file to GCS
+ * Multi-image gallery uploader for the portfolio admin. Uploads each file to R2
  * via a presigned URL and stores the ordered list of object keys as a JSON array
  * in a hidden field (the save action publishes them + cleans up removed ones).
  * Initial previews are passed in from the server (publicUrl can't be imported
- * client-side — it pulls the GCS SDK).
+ * client-side — it pulls the S3 SDK).
  */
 export function MultiImageUpload({
   name,
@@ -80,6 +80,15 @@ export function MultiImageUpload({
 
   function remove(key: string) {
     setItems((prev) => prev.filter((i) => i.key !== key));
+    // Best-effort: only clean up if this key wasn't already saved on the row —
+    // an unsaved pick removed before submit would otherwise orphan the object.
+    if (!initial.some((i) => i.key === key)) {
+      fetch("/api/storage/object", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ key }),
+      }).catch(() => {});
+    }
   }
 
   return (

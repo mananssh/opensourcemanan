@@ -3,9 +3,10 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Particles } from "@/components/portfolio/hero/particles";
 import { portfolioFontVars } from "@/lib/portfolio/fonts";
+import { AskSullyProvider } from "@/components/portfolio/ask-sully/ask-sully-provider";
 
 export const metadata: Metadata = {
-  title: { default: "Manan Shah", template: "%s · Manan Shah" },
+  title: "Manan Shah · Portfolio",
   description:
     "Manan Shah — software / AI-native engineer who ships. Forward-deployed, full-stack, ML/CV, and AI infrastructure.",
 };
@@ -29,10 +30,10 @@ export default function PortfolioLayout({
           </Link>
           <div className="flex items-center gap-4">
             <Link
-              href="/osm"
+              href="/blog"
               className="font-mono text-[0.7rem] uppercase tracking-[0.15em] text-muted transition-colors hover:text-accent"
             >
-              OSM ↗
+              View my blog
             </Link>
             <ThemeToggle />
           </div>
@@ -50,6 +51,8 @@ export default function PortfolioLayout({
           <span>mostly blr, maybe bom · usually building · occasionally airborne</span>
         </div>
       </footer>
+
+      <AskSullyProvider />
     </div>
   );
 }

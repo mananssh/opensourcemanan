@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Tag, AwardTag } from "@/components/portfolio/ui/tag";
 import type { Project } from "@/db/schema";
 
-// coverUrl is resolved server-side (publicUrl pulls the GCS SDK — not client-safe).
+// coverUrl is resolved server-side (publicUrl comes from the storage module, which pulls the S3 SDK — not client-safe).
 export type ProjectCard = Project & { coverUrl: string | null };
 
 /** Interactive card grid — entrance stagger + hover lift (framer-motion). */
@@ -33,7 +33,7 @@ export function ProjectGrid({ projects }: { projects: ProjectCard[] }) {
                 <div className="relative aspect-video overflow-hidden border-b border-rule">
                   <Image
                     src={cover}
-                    alt=""
+                    alt={`${p.name} cover`}
                     fill
                     sizes="(max-width: 640px) 92vw, 460px"
                     className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
