@@ -9,14 +9,18 @@
  * This is the Editorial Logbook palette (warm paper / warm ink).
  */
 :root {
-  --paper: #f5f1e7; /* warm off-white page */
-  --surface: #fffdf7; /* raised surface */
-  --ink: #221c15; /* warm near-black text */
-  --muted: #6d6354; /* secondary text */
-  --faint: #6f6451; /* tertiary / timestamps — kept ≥4.5:1 (AA) */
-  --rule: #ddd3c1; /* hairline rules */
+  /* Light mode is deliberately low-glare — "lamplight, not floodlight": toned
+     paper (never pure white), a raised surface you can actually see, rules
+     that read as structure, and accents deepened to hold AA on toned paper.
+     All ratios validated: ink ≥12:1, muted ≥6.5:1, faint ≥4.5:1, accent ≥4.5:1. */
+  --paper: #efe7d6; /* deepened parchment — no glare */
+  --surface: #f8f2e4; /* raised cream, visibly above paper */
+  --ink: #241d12; /* warm near-black text */
+  --muted: #574c39; /* secondary text */
+  --faint: #6a5e49; /* tertiary / timestamps — kept ≥4.5:1 (AA) */
+  --rule: #d2c3a5; /* rules dark enough to structure the page */
   --accent: #8c2b1c; /* oxblood */
-  --accent-soft: #ede2d3; /* accent tint for chips */
+  --accent-soft: #e6d6bc; /* accent tint for chips */
 
   /* Font families are tokenized too, so a vertical can swap its type (ADR 0010). */
   --display-family: var(--font-fraunces);
@@ -42,14 +46,16 @@
  * fonts are loaded in app/blog/layout.tsx.
  */
 .vertical-blog {
-  --paper: #fbfbf9;
-  --surface: #ffffff;
-  --ink: #0b0b0c;
-  --muted: #5a5a5e;
-  --faint: #6b6b72;
-  --rule: #e6e6e3;
-  --accent: #ff4d2e;
-  --accent-soft: #ffe9e3;
+  /* Light = warm newsprint: the Kinetic contrast comes from near-black ink on
+     bone paper, not from white glare. Vermilion deepens to stay AA on it. */
+  --paper: #ecebe5;
+  --surface: #f5f4ee;
+  --ink: #101013;
+  --muted: #46464c;
+  --faint: #57575e;
+  --rule: #cecdc4;
+  --accent: #c23315;
+  --accent-soft: #f0d8cf;
 
   --display-family: var(--font-archivo);
   --body-family: var(--font-hanken);
@@ -75,14 +81,14 @@ html.dark .vertical-blog {
  * components/dump/sticky-palette.ts), not tokens.
  */
 .vertical-dump {
-  --paper: #eef2fb; /* cool, bright board — deliberately NOT OSM's warm paper */
-  --surface: #ffffff;
-  --ink: #1b2436;
-  --muted: #4f5a72;
-  --faint: #5c6880;
-  --rule: #d2dcef;
-  --accent: #2f6bf2; /* crayon blue */
-  --accent-soft: #dbe7ff;
+  --paper: #dbe3f1; /* cool board, toned down — deliberately NOT OSM's warm paper */
+  --surface: #eef2fa; /* note-white surfaces now pop against the board */
+  --ink: #172033;
+  --muted: #3f4c66;
+  --faint: #4c5975;
+  --rule: #b4c2dc;
+  --accent: #1f52c9; /* crayon blue, deepened for AA on the toned board */
+  --accent-soft: #cadaf6;
 
   --display-family: var(--font-caveat);
   --body-family: var(--font-caveat);
@@ -107,23 +113,25 @@ html.dark .vertical-dump {
  * mode so links stay legible on white.
  */
 .vertical-portfolio {
-  --paper: #fafaf9;
-  --surface: #ffffff;
-  --ink: #0b0b0c;
-  --muted: #57575c;
-  --faint: #6c6c72;
-  --rule: #e6e6e3;
-  --accent: #cc3a2d; /* legible deep coral on light */
-  --accent-soft: #fbe3df;
+  /* Light = warm stone monochrome: toned paper gives the glass panels real
+     presence (they were white-on-white); coral deepens to hold AA. */
+  --paper: #e8e6e1;
+  --surface: #f3f2ee;
+  --ink: #0f0f11;
+  --muted: #45454b;
+  --faint: #56565d;
+  --rule: #cccac2;
+  --accent: #b02c20; /* deep coral, AA on stone */
+  --accent-soft: #eed5d0;
   --accent-ink: #ffffff;
-  --ok: #2f8f63;
-  --attention: #b9821c;
-  --negative: #bd3d33;
+  --ok: #226647;
+  --attention: #7d5a12;
+  --negative: #9e2f24;
   /* Sully's own emerald identity (matches .sully-stage), distinct from the
      portfolio's coral accent — used by the small avatar badge outside the
      stage (ADR 0005: still defined for both themes, never a bare hex). */
-  --sully-accent: #0a9d6b;
-  --sully-accent-bg: #f0f7f3;
+  --sully-accent: #0b7451;
+  --sully-accent-bg: #dcebe3;
 
   --display-family: var(--font-bricolage);
   --body-family: var(--font-geist);
@@ -407,25 +415,26 @@ html.dark .vertical-dump .sticky-note {
  * (input, graph nodes/edges, the "Ask Sully" button) inherits the neon look.
  */
 .sully-stage {
-  /* Light theme: a clean mint surface with a legible emerald accent. */
-  --paper: #ffffff;
-  --surface: #ffffff;
-  --ink: #0e1a14;
-  --muted: #4a5a52;
-  --faint: #7b8b82;
-  --rule: #d8e8df;
-  --accent: #0a9d6b; /* emerald, legible on light */
-  --accent-soft: #def1e8;
+  /* Light theme: a soft sage surface with a deep emerald accent — toned down
+     with the rest of light mode (no white glare inside the stage either). */
+  --paper: #eaf2ec;
+  --surface: #f2f8f3;
+  --ink: #0c1811;
+  --muted: #3b5245;
+  --faint: #53685c;
+  --rule: #c1d6c9;
+  --accent: #0b7a54; /* emerald, AA on sage */
+  --accent-soft: #cfe5d8;
   --accent-ink: #ffffff;
   /* Agent state colors (used by the live graph + verdict chip, ~only here). */
-  --ok: #0f9d6b;
-  --attention: #c98a1a;
-  --negative: #d4453a;
-  background: #f0f7f3;
-  border-color: #d8e8df;
+  --ok: #0b7a54;
+  --attention: #8a5e0b;
+  --negative: #b0392d;
+  background: #e2ece5;
+  border-color: #c1d6c9;
   box-shadow:
-    inset 0 0 0 1px #0a9d6b1a,
-    0 24px 70px -42px #0a9d6b40;
+    inset 0 0 0 1px #0b7a541a,
+    0 24px 70px -42px #0b7a5440;
 }
 html.dark .sully-stage {
   /* Dark theme: modern neon-dark. */
