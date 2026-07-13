@@ -5,7 +5,8 @@ import {
   listFeaturedPosts,
 } from "@/lib/blog/queries";
 import { PostList } from "@/components/blog/post-list";
-import { CategoryTiles } from "@/components/blog/category-tiles";
+import { CategoryChips } from "@/components/blog/category-chips";
+import { FeaturedHero } from "@/components/blog/featured-hero";
 import { NewsletterForm } from "@/components/blog/newsletter-form";
 
 const PAGE_SIZE = 9;
@@ -38,10 +39,15 @@ export default async function BlogIndex({
     listFeaturedPosts(),
   ]);
 
-  const totalPages = Math.max(1, Math.ceil(allPosts.length / PAGE_SIZE));
+  // The top featured post is spotlit as the hero; it's pulled out of the Latest
+  // list on every page so pagination counts stay stable and it doesn't repeat.
+  const hero = featured[0] ?? null;
+  const rest = hero ? allPosts.filter((p) => p.id !== hero.id) : allPosts;
+
+  const totalPages = Math.max(1, Math.ceil(rest.length / PAGE_SIZE));
   const start = (page - 1) * PAGE_SIZE;
-  const posts = allPosts.slice(start, start + PAGE_SIZE);
-  const showFeatured = page === 1 && featured.length > 0;
+  const posts = rest.slice(start, start + PAGE_SIZE);
+  const showHero = page === 1 && hero !== null;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 pb-28">
@@ -82,56 +88,60 @@ export default async function BlogIndex({
             className="w-full rounded-full border border-rule bg-surface px-4 py-2 font-mono text-sm text-ink transition-colors placeholder:text-faint focus:border-accent"
           />
         </form>
+
+        {categories.length > 0 && (
+          <div
+            className="reveal mt-8"
+            style={{ "--reveal-delay": "280ms" } as React.CSSProperties}
+          >
+            <CategoryChips categories={categories} />
+          </div>
+        )}
       </header>
 
-      {showFeatured && (
+      {showHero && hero && (
         <section className="mb-20">
           <SectionLabel>Featured</SectionLabel>
-          <PostList posts={featured} />
+          <FeaturedHero post={hero} />
         </section>
       )}
 
-      {categories.length > 0 && (
-        <section className="reveal mb-20" style={{ "--reveal-delay": "260ms" } as React.CSSProperties}>
-          <SectionLabel>Browse</SectionLabel>
-          <CategoryTiles categories={categories} />
+      {(posts.length > 0 || !showHero) && (
+        <section>
+          <SectionLabel>{page === 1 ? "Latest" : `Posts — page ${page}`}</SectionLabel>
+          <PostList posts={posts} />
+          {totalPages > 1 && (
+            <nav
+              aria-label="Pagination"
+              className="mt-12 flex items-center justify-between font-mono text-xs uppercase tracking-[0.18em]"
+            >
+              {page > 1 ? (
+                <Link
+                  href={page === 2 ? "/blog" : `/blog?page=${page - 1}`}
+                  className="text-muted transition-colors hover:text-accent"
+                >
+                  ← Newer
+                </Link>
+              ) : (
+                <span />
+              )}
+              <span className="text-faint">
+                {page} / {totalPages}
+              </span>
+              {page < totalPages ? (
+                <Link
+                  href={`/blog?page=${page + 1}`}
+                  className="text-muted transition-colors hover:text-accent"
+                >
+                  Older →
+                </Link>
+              ) : (
+                <span />
+              )}
+            </nav>
+          )}
         </section>
       )}
-
-      <section>
-        <SectionLabel>{page === 1 ? "Latest" : `Posts — page ${page}`}</SectionLabel>
-        <PostList posts={posts} />
-        {totalPages > 1 && (
-          <nav
-            aria-label="Pagination"
-            className="mt-12 flex items-center justify-between font-mono text-xs uppercase tracking-[0.18em]"
-          >
-            {page > 1 ? (
-              <Link
-                href={page === 2 ? "/blog" : `/blog?page=${page - 1}`}
-                className="text-muted transition-colors hover:text-accent"
-              >
-                ← Newer
-              </Link>
-            ) : (
-              <span />
-            )}
-            <span className="text-faint">
-              {page} / {totalPages}
-            </span>
-            {page < totalPages ? (
-              <Link
-                href={`/blog?page=${page + 1}`}
-                className="text-muted transition-colors hover:text-accent"
-              >
-                Older →
-              </Link>
-            ) : (
-              <span />
-            )}
-          </nav>
-        )}
-      </section>
 
       <section className="mt-20 border-t border-rule pt-12">
         <h2 className="font-display text-2xl font-bold text-ink">
