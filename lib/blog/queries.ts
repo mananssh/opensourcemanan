@@ -36,6 +36,7 @@ export interface PostCard {
   slug: string;
   title: string;
   excerpt: string | null;
+  coverImageKey: string | null;
   publishedAt: Date | null;
   readingMinutes: number;
   category: { name: string; slug: string } | null;
@@ -64,6 +65,7 @@ const cardColumns = {
   slug: posts.slug,
   title: posts.title,
   excerpt: posts.excerpt,
+  coverImageKey: posts.coverImageKey,
   publishedAt: posts.publishedAt,
   readingMinutes: posts.readingMinutes,
   postVisibility: posts.visibility,
@@ -79,6 +81,7 @@ type CardRow = {
   slug: string;
   title: string;
   excerpt: string | null;
+  coverImageKey: string | null;
   publishedAt: Date | null;
   readingMinutes: number;
   postVisibility: Gate["visibility"];
@@ -107,6 +110,7 @@ function toCard(r: CardRow): PostCard {
     slug: r.slug,
     title: r.title,
     excerpt: r.excerpt,
+    coverImageKey: r.coverImageKey,
     publishedAt: r.publishedAt,
     readingMinutes: r.readingMinutes,
     category: r.categorySlug ? { name: r.categoryName ?? "", slug: r.categorySlug } : null,

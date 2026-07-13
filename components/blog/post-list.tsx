@@ -42,7 +42,7 @@ export function PostList({
                 {p.title}
               </h2>
               {p.excerpt && (
-                <p className="mt-2 max-w-2xl font-body text-base text-muted">
+                <p className="mt-3 line-clamp-2 max-w-2xl border-l-2 border-rule pl-4 font-body text-base italic leading-relaxed text-muted transition-colors group-hover:border-accent">
                   {p.excerpt}
                 </p>
               )}
