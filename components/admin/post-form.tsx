@@ -5,6 +5,7 @@ import { CategorySelect } from "@/components/admin/category-select";
 import { AdminForm } from "@/components/admin/admin-form";
 import { SubmitButton } from "@/components/blog/submit-button";
 import { publicUrl } from "@/lib/storage/object-store";
+import { dateToIstInput } from "@/lib/blog/schedule";
 import type { Post, Category } from "@/db/schema";
 
 const labelCls =
@@ -13,14 +14,6 @@ const inputCls =
   "w-full rounded-md border border-rule bg-paper px-3 py-2 font-body text-ink transition-colors focus:border-accent";
 
 const VISIBILITY = ["public", "authed", "allowlist", "owner"] as const;
-
-/** Date → value for <input type="datetime-local"> (local time, no seconds). */
-function toLocalInput(d?: Date | null): string {
-  if (!d) return "";
-  const dt = new Date(d);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
-}
 
 export function PostForm({
   post,
@@ -90,13 +83,13 @@ export function PostForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className={labelCls} htmlFor="publishedAt">
-            Publish date (future = scheduled)
+            Publish date · IST (future = scheduled)
           </label>
           <input
             id="publishedAt"
             name="publishedAt"
             type="datetime-local"
-            defaultValue={toLocalInput(post?.publishedAt)}
+            defaultValue={dateToIstInput(post?.publishedAt)}
             className={inputCls}
           />
         </div>

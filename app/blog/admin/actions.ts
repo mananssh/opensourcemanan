@@ -8,6 +8,7 @@ import { db } from "@/db/client";
 import { posts, categories, tags, postTags, comments } from "@/db/schema";
 import { requireOwner } from "@/lib/auth";
 import { readingMinutes } from "@/lib/blog/reading-time";
+import { istInputToDate } from "@/lib/blog/schedule";
 import { makePublic, deleteObject } from "@/lib/storage/object-store";
 import type { FormState } from "@/components/admin/form-state";
 
@@ -123,9 +124,10 @@ export async function savePost(
 
   const status = (str(formData, "status") || "draft") as "draft" | "published";
   // Optional scheduled publish date (datetime-local). A future date with status
-  // "published" keeps the post hidden until then.
+  // "published" keeps the post hidden until then. The field is timezone-naive,
+  // so it's read as IST (the author's zone) — see lib/blog/schedule.
   const publishInput = str(formData, "publishedAt");
-  const scheduledAt = publishInput ? new Date(publishInput) : null;
+  const scheduledAt = publishInput ? istInputToDate(publishInput) : null;
   const publishedAt =
     status === "published"
       ? (scheduledAt ?? existingPublishedAt ?? new Date())
