@@ -490,6 +490,36 @@ html.dark {
   color-scheme: dark;
 }
 
+/*
+ * Large-screen scaling. The whole system is rem-based (containers, type,
+ * spacing), so stepping the root font-size up proportionally scales every
+ * vertical on big monitors: containers widen, type grows, and the measure
+ * stays identical in characters — no reflow, no stretched lines. Without
+ * this, max-w-5xl (64rem) covers barely 40% of a 1440p display. Steps (not
+ * fluid) so laptops ≤1536px keep the classic 16px baseline; breakpoints are
+ * in rem of the INITIAL font-size, so they don't shift as we scale. Sizes are
+ * percentages (not px) so a user's browser font-size preference multiplies
+ * through instead of being clobbered.
+ */
+@media (min-width: 100rem) {
+  /* ≥1600px */
+  html {
+    font-size: 106.25%; /* 17px at the 16px default */
+  }
+}
+@media (min-width: 120rem) {
+  /* ≥1920px */
+  html {
+    font-size: 115.625%; /* 18.5px */
+  }
+}
+@media (min-width: 150rem) {
+  /* ≥2400px */
+  html {
+    font-size: 128.125%; /* 20.5px */
+  }
+}
+
 body {
   background-color: var(--paper);
   color: var(--ink);
