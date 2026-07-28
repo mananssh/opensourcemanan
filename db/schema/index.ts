@@ -31,3 +31,4 @@ export * from "./dump";
 export * from "./portfolio";
 export * from "./agent";
 export * from "./ask";
+export * from "./movies";

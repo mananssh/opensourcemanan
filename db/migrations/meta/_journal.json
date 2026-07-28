@@ -85,6 +85,13 @@
       "when": 1783355284880,
       "tag": "0011_nebulous_living_tribunal",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785218460287,
+      "tag": "0012_ordinary_spectrum",
+      "breakpoints": true
     }
   ]
 }

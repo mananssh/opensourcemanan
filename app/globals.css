@@ -155,6 +155,44 @@ html.dark .vertical-portfolio {
   --sully-accent-bg: #0a0d0c;
 }
 
+/*
+ * Reel vertical (/movies) — "35mm & Ticket Stub": a retro cinema logbook.
+ * Light = kraft paper + warm ink + a single ticket-red accent; dark = the
+ * darkened auditorium, cream on near-black with a brighter marquee-red. Display
+ * = Oswald (condensed grotesque, marquee voice), body = Public Sans, meta =
+ * Space Mono (ticket serial numbers). Both themes (ADR 0005 + 0010); fonts load
+ * in app/movies/layout.tsx. Every pair WCAG-validated: ink ≥12:1, muted ≥6.5:1,
+ * faint/accent ≥4.5:1 on both paper and surface; accent-ink holds ≥5:1 on accent
+ * (dark-mode buttons carry dark text, since bright marquee-red fails white).
+ */
+.vertical-movies {
+  --paper: #e8dabd; /* kraft stock */
+  --surface: #f2e8d1; /* raised ticket card */
+  --ink: #1c1610; /* warm near-black */
+  --muted: #4a3f2a;
+  --faint: #5c4f35;
+  --rule: #cdba8d; /* perforation lines / film-strip rails */
+  --accent: #9d1e13; /* deep ticket red, AA on kraft */
+  --accent-soft: #f0d6c9;
+  --accent-ink: #ffffff; /* button text on accent */
+
+  --display-family: var(--font-oswald);
+  --body-family: var(--font-public-sans);
+  --mono-family: var(--font-space-mono);
+}
+
+html.dark .vertical-movies {
+  --paper: #141210; /* darkened auditorium */
+  --surface: #1e1a15;
+  --ink: #efe6d2; /* projector-cream */
+  --muted: #b3a78e;
+  --faint: #8f836c;
+  --rule: #322c22;
+  --accent: #ef5c4a; /* marquee red-orange, glows on black */
+  --accent-soft: #2a1a14;
+  --accent-ink: #201a12; /* dark text on the bright accent */
+}
+
 /* A sticky note: colored card, soft shadow, slight tilt; straightens on hover.
    NB: named `.sticky-note`, NOT `.sticky` — `.sticky` is Tailwind's position
    utility used by every navbar, so reusing it leaked the tape + hover onto them. */

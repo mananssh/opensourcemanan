@@ -28,6 +28,11 @@ export const siteNav: NavItem[] = [
     description: "Half-formed thoughts, stuck to a wall.",
   },
   {
+    label: "Reel",
+    href: "/movies",
+    description: "Everything I've watched, ticket-stub style.",
+  },
+  {
     label: "Changelog",
     href: "/changelog",
     description: "Everything that has shipped, newest first.",
