@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db/client";
-import { watchers, watchEntries } from "@/db/schema";
+import { watchers, watchEntries, follows } from "@/db/schema";
 import { requireAuth } from "@/lib/auth";
-import { getViewer, requireViewer } from "@/lib/movies/identity";
+import { getViewer, requireViewer, getWatcherByHandle } from "@/lib/movies/identity";
 import { normalizeHandle, handleError } from "@/lib/movies/handle";
 import { getTitle } from "@/lib/movies/tmdb";
 import { toCard, type MovieCard, type WatchStatusValue } from "@/lib/movies/queries";
@@ -228,4 +228,47 @@ export async function deleteEntry(input: { id: string }): Promise<void> {
     .delete(watchEntries)
     .where(and(eq(watchEntries.id, id), eq(watchEntries.viewerId, viewer.id)));
   revalidateViewer(viewer.handle);
+}
+
+export type FollowResult =
+  | { ok: true; following: boolean }
+  | { ok: false; error: string };
+
+/**
+ * Follow a watcher by exact @handle. Deliberately exact-match only — no fuzzy
+ * discovery (Reel is "not social media"). Idempotent via the composite PK.
+ */
+export async function follow(handle: string): Promise<FollowResult> {
+  const viewer = await requireViewer();
+  const target = await getWatcherByHandle(handle);
+  if (!target) return { ok: false, error: "No one with that handle." };
+  if (target.id === viewer.id)
+    return { ok: false, error: "You can't follow yourself." };
+
+  await db
+    .insert(follows)
+    .values({ followerId: viewer.id, followeeId: target.id })
+    .onConflictDoNothing();
+  revalidatePath("/movies");
+  revalidatePath(`/movies/${target.handle}`);
+  return { ok: true, following: true };
+}
+
+/** Unfollow a watcher by exact @handle. */
+export async function unfollow(handle: string): Promise<FollowResult> {
+  const viewer = await requireViewer();
+  const target = await getWatcherByHandle(handle);
+  if (!target) return { ok: false, error: "No one with that handle." };
+
+  await db
+    .delete(follows)
+    .where(
+      and(
+        eq(follows.followerId, viewer.id),
+        eq(follows.followeeId, target.id),
+      ),
+    );
+  revalidatePath("/movies");
+  revalidatePath(`/movies/${target.handle}`);
+  return { ok: true, following: false };
 }

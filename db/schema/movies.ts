@@ -10,6 +10,7 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -88,6 +89,29 @@ export const watchEntries = pgTable(
   ],
 );
 
+/**
+ * The follow graph. NOT a social feed — you only see someone's activity if you
+ * follow them by their exact @handle (Phase 2). A directed edge: `followerId`
+ * follows `followeeId`. Composite PK makes a follow idempotent; the reverse
+ * index answers "who follows me".
+ */
+export const follows = pgTable(
+  "follows",
+  {
+    followerId: uuid()
+      .notNull()
+      .references(() => watchers.id, { onDelete: "cascade" }),
+    followeeId: uuid()
+      .notNull()
+      .references(() => watchers.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.followerId, t.followeeId] }),
+    index("follows_followee_idx").on(t.followeeId),
+  ],
+);
+
 export const movieCache = pgTable(
   "movie_cache",
   {
@@ -101,4 +125,5 @@ export const movieCache = pgTable(
 
 export type Watcher = typeof watchers.$inferSelect;
 export type WatchEntry = typeof watchEntries.$inferSelect;
+export type Follow = typeof follows.$inferSelect;
 export type MovieCache = typeof movieCache.$inferSelect;
