@@ -1,6 +1,8 @@
 import type { ReelStats } from "@/lib/movies/stats";
 import { formatHours } from "@/lib/movies/format";
 import { StaticStars } from "@/components/movies/star-rating";
+import { Heatmap } from "@/components/movies/heatmap";
+import { Poster } from "@/components/movies/poster";
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
@@ -34,6 +36,30 @@ function Bar({ label, count, max }: { label: string; count: number; max: number 
   );
 }
 
+/** Ratings distribution as vertical bars, one per star rung (1–5★). */
+function Histogram({ ratingCounts }: { ratingCounts: number[] }) {
+  // Fold the 1–10 half-star scale into 5 whole-star buckets for a compact chart.
+  const buckets = [1, 2, 3, 4, 5].map((star) => ({
+    star,
+    count: (ratingCounts[star * 2 - 1] ?? 0) + (ratingCounts[star * 2] ?? 0),
+  }));
+  const max = Math.max(1, ...buckets.map((b) => b.count));
+  return (
+    <div className="flex h-24 items-end gap-2">
+      {buckets.map((b) => (
+        <div key={b.star} className="flex flex-1 flex-col items-center gap-1">
+          <span className="font-mono text-[0.55rem] text-faint">{b.count || ""}</span>
+          <span
+            className="w-full rounded-t-[2px] bg-accent/80"
+            style={{ height: `${Math.max(4, (b.count / max) * 100)}%` }}
+          />
+          <span className="font-mono text-[0.55rem] text-muted">{b.star}★</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * The "box office report" — a watcher's numbers. Presentational only (no hooks),
  * so it renders in the server profile page and inside the client dashboard alike.
@@ -47,28 +73,55 @@ export function StatsPanel({ stats }: { stats: ReelStats }) {
 
   return (
     <section className="space-y-6">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <Stat value={String(stats.totalTitles)} label="Titles" />
         <Stat value={String(stats.films)} label="Films" />
         <Stat value={String(stats.shows)} label="Shows" />
         <Stat value={formatHours(stats.totalMinutes)} label="Watched" />
         <Stat value={String(stats.thisYear)} label="This year" />
+        <Stat
+          value={stats.longestStreak > 1 ? `${stats.longestStreak}d` : String(stats.activeDays)}
+          label={stats.longestStreak > 1 ? "Best streak" : "Active days"}
+        />
       </div>
+
+      {stats.nowWatching.length > 0 && (
+        <div>
+          <p className="mb-3 font-mono text-[0.6rem] uppercase tracking-[0.18em] text-faint">
+            Now watching
+          </p>
+          <ul className="flex gap-3 overflow-x-auto pb-1">
+            {stats.nowWatching.map((e) => (
+              <li key={e.id} className="w-20 shrink-0">
+                <Poster url={e.posterUrl} title={e.title} mediaType={e.mediaType} />
+                <p className="mt-1 truncate font-body text-[0.7rem] text-ink" title={e.title}>
+                  {e.title}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {Object.keys(stats.dayCounts).length > 0 && <Heatmap dayCounts={stats.dayCounts} />}
 
       <div className="grid gap-6 sm:grid-cols-2">
         {stats.avgStars != null && (
           <div className="border border-rule bg-surface p-4">
-            <p className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-faint">
-              Average rating
-            </p>
-            <div className="mt-2 flex items-center gap-3">
-              <StaticStars value={Math.round((stats.avgRating ?? 0))} size="h-5 w-5" />
-              <span className="font-display text-2xl font-bold text-ink">
-                {stats.avgStars.toFixed(1)}
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-faint">
+                Ratings
+              </p>
+              <span className="inline-flex items-center gap-2 font-mono text-[0.62rem] text-faint">
+                <StaticStars value={Math.round(stats.avgRating ?? 0)} size="h-3.5 w-3.5" />
+                <span className="font-display text-base font-bold text-ink">
+                  {stats.avgStars.toFixed(1)}
+                </span>
+                / 5
               </span>
-              <span className="font-mono text-[0.62rem] text-faint">
-                / 5 · {stats.rated} rated
-              </span>
+            </div>
+            <div className="mt-3">
+              <Histogram ratingCounts={stats.ratingCounts} />
             </div>
           </div>
         )}
