@@ -79,6 +79,15 @@ export function EntryCard({
 
         <StarRating value={entry.rating} onChange={(rating) => onUpdate({ rating })} />
 
+        {entry.mediaType === "tv" && (
+          <EpisodeProgress
+            watched={entry.episodesWatched}
+            total={entry.episodesTotal}
+            seasons={entry.seasonsTotal}
+            onSet={(n) => onUpdate({ episodesWatched: n })}
+          />
+        )}
+
         <div className="mt-auto flex flex-wrap items-center gap-2">
           <select
             value={entry.status}
@@ -172,5 +181,67 @@ export function EntryCard({
         )}
       </div>
     </article>
+  );
+}
+
+/**
+ * TV episode progress: a bar + −/＋ steppers. Marking the last episode auto-flips
+ * the entry to "watched" (handled server-side). Shows raw count when TMDB has no
+ * episode total.
+ */
+function EpisodeProgress({
+  watched,
+  total,
+  seasons,
+  onSet,
+}: {
+  watched: number;
+  total: number | null;
+  seasons: number | null;
+  onSet: (n: number) => void;
+}) {
+  const pct = total && total > 0 ? Math.min(100, Math.round((watched / total) * 100)) : 0;
+  const dec = () => onSet(Math.max(0, watched - 1));
+  const inc = () => onSet(watched + 1);
+  const atMax = total != null && total > 0 && watched >= total;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted">
+        <span>
+          Ep {watched}
+          {total ? ` / ${total}` : ""}
+          {seasons ? ` · ${seasons} season${seasons === 1 ? "" : "s"}` : ""}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label="One fewer episode"
+            onClick={dec}
+            disabled={watched <= 0}
+            className="flex h-6 w-6 items-center justify-center rounded-full border border-rule text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="One more episode"
+            onClick={inc}
+            disabled={atMax}
+            className="flex h-6 items-center gap-1 rounded-full border border-accent bg-accent px-2.5 text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            ＋1 ep
+          </button>
+        </span>
+      </div>
+      {total != null && total > 0 && (
+        <span className="relative block h-2 overflow-hidden rounded-full bg-paper">
+          <span
+            className="absolute inset-y-0 left-0 rounded-full bg-accent-2 transition-[width] duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </span>
+      )}
+    </div>
   );
 }

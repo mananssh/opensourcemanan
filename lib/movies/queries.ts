@@ -27,6 +27,9 @@ export interface MovieCard {
   genres: string[];
   status: WatchStatusValue;
   rating: number | null;
+  seasonsTotal: number | null;
+  episodesTotal: number | null;
+  episodesWatched: number;
   watchedOn: string | null; // YYYY-MM-DD
   note: string | null;
   favorite: boolean;
@@ -54,6 +57,9 @@ export function toCard(r: WatchEntry): MovieCard {
     genres: r.genres,
     status: r.status,
     rating: r.rating,
+    seasonsTotal: r.seasonsTotal,
+    episodesTotal: r.episodesTotal,
+    episodesWatched: r.episodesWatched,
     watchedOn: r.watchedOn,
     note: r.note,
     favorite: r.favorite,

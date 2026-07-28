@@ -31,6 +31,11 @@ export function PosterGrid({ entries }: { entries: MovieCard[] }) {
                   Now
                 </span>
               )}
+              {e.mediaType === "tv" && e.episodesTotal && e.episodesWatched > 0 && (
+                <span className="absolute inset-x-0 bottom-0 bg-paper/80 px-1.5 py-0.5 text-center font-mono text-[0.55rem] tracking-[0.1em] text-accent-2">
+                  {e.episodesWatched}/{e.episodesTotal} ep
+                </span>
+              )}
             </div>
             <figcaption className="space-y-0.5">
               <p className="truncate font-body text-xs font-medium text-ink" title={e.title}>

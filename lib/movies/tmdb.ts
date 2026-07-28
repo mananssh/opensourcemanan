@@ -31,10 +31,12 @@ export interface TmdbResult {
   overview: string;
 }
 
-/** Full detail for one title — adds runtime + genres. */
+/** Full detail for one title — adds runtime + genres (+ TV season/episode counts). */
 export interface TmdbDetail extends TmdbResult {
   runtimeMinutes: number | null;
   genres: string[];
+  seasonsTotal: number | null; // TV only
+  episodesTotal: number | null; // TV only
 }
 
 function cacheKey(kind: string, id: string): string {
@@ -155,6 +157,8 @@ interface RawDetail {
   overview?: string;
   runtime?: number; // movie
   episode_run_time?: number[]; // tv
+  number_of_seasons?: number; // tv
+  number_of_episodes?: number; // tv
   genres?: Array<{ name: string }>;
 }
 
@@ -190,6 +194,8 @@ export async function getTitle(
     overview: data.overview ?? "",
     runtimeMinutes: runtimeMinutes && runtimeMinutes > 0 ? runtimeMinutes : null,
     genres: (data.genres ?? []).map((g) => g.name).filter(Boolean),
+    seasonsTotal: mediaType === "tv" ? (data.number_of_seasons ?? null) : null,
+    episodesTotal: mediaType === "tv" ? (data.number_of_episodes ?? null) : null,
   };
 
   await writeCache(key, detail, DETAIL_TTL_MS);
