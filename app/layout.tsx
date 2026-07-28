@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Fraunces, Newsreader, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
+import { RouteProgress } from "@/components/route-progress";
 import { siteUrl, siteName, siteAuthor } from "@/lib/site";
 
 const fraunces = Fraunces({
@@ -74,6 +76,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <Suspense fallback={null}>
+              <RouteProgress />
+            </Suspense>
             {children}
           </ThemeProvider>
         </SessionProvider>
