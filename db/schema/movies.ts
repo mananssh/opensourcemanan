@@ -69,6 +69,11 @@ export const watchEntries = pgTable(
     genres: text().array().notNull().default([]),
     status: watchStatus().notNull().default("watched"),
     rating: smallint(), // nullable; 1–10 = half-star scale (½–5★)
+    // TV progress (null for movies): totals snapshot from TMDB, plus how many
+    // episodes the viewer has marked watched.
+    seasonsTotal: integer(),
+    episodesTotal: integer(),
+    episodesWatched: integer().notNull().default(0),
     watchedOn: date(), // nullable; powers timeline / streaks / "this year"
     note: text(),
     favorite: boolean().notNull().default(false),

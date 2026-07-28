@@ -135,6 +135,8 @@ export async function addEntry(input: AddEntryInput): Promise<AddEntryResult> {
     releaseYear: detail?.releaseYear ?? input.releaseYear ?? null,
     runtimeMinutes: detail?.runtimeMinutes ?? null,
     genres: detail?.genres ?? [],
+    seasonsTotal: detail?.seasonsTotal ?? null,
+    episodesTotal: detail?.episodesTotal ?? null,
     status,
     // Watched now unless it's a queued watchlist item.
     watchedOn:
@@ -182,6 +184,7 @@ export interface UpdateEntryInput {
   watchedOn?: string | null;
   note?: string | null;
   favorite?: boolean;
+  episodesWatched?: number;
 }
 
 /** Patch one of the viewer's own entries. Ownership-checked. */
@@ -193,7 +196,10 @@ export async function updateEntry(
   if (!id) return { ok: false, error: "Missing entry." };
 
   const owned = await db
-    .select({ id: watchEntries.id })
+    .select({
+      id: watchEntries.id,
+      episodesTotal: watchEntries.episodesTotal,
+    })
     .from(watchEntries)
     .where(and(eq(watchEntries.id, id), eq(watchEntries.viewerId, viewer.id)))
     .limit(1);
@@ -213,6 +219,23 @@ export async function updateEntry(
   if (input.note !== undefined)
     patch.note = input.note ? input.note.slice(0, 2000) : null;
   if (input.favorite !== undefined) patch.favorite = Boolean(input.favorite);
+
+  if (input.episodesWatched !== undefined) {
+    const total = owned[0].episodesTotal;
+    const cap = total && total > 0 ? total : 100000;
+    const n = Math.max(0, Math.min(cap, Math.round(input.episodesWatched)));
+    patch.episodesWatched = n;
+    // Derive status from progress (only when we know the total and the caller
+    // didn't set status explicitly this call).
+    if (total && total > 0 && input.status === undefined) {
+      if (n >= total) {
+        patch.status = "watched";
+        patch.watchedOn = new Date().toISOString().slice(0, 10);
+      } else if (n > 0) {
+        patch.status = "watching";
+      }
+    }
+  }
 
   await db.update(watchEntries).set(patch).where(eq(watchEntries.id, id));
   revalidateViewer(viewer.handle);

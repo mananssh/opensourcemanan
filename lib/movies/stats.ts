@@ -98,7 +98,14 @@ export function computeStats(entries: MovieCard[]): ReelStats {
     if (e.mediaType === "movie") films++;
     else shows++;
 
-    if (e.runtimeMinutes) totalMinutes += e.runtimeMinutes * (1 + e.rewatches);
+    if (e.runtimeMinutes) {
+      // TV: per-episode runtime × episodes watched. Movies: full runtime ×
+      // (original + rewatches).
+      totalMinutes +=
+        e.mediaType === "tv"
+          ? e.runtimeMinutes * (e.episodesWatched || 0)
+          : e.runtimeMinutes * (1 + e.rewatches);
+    }
     if (e.favorite) favorites++;
     if (e.status === "watching") nowWatching.push(e);
 
