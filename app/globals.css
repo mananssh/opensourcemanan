@@ -949,3 +949,29 @@ html.dark .blog-prose [data-rehype-pretty-code-figure] code span {
 .vertical-blog .mdxeditor [contenteditable] {
   color: var(--ink);
 }
+
+/*
+ * Reel "wrapped" recap — each card rises + fades in on load (no JS). Cards set
+ * their own animation-delay inline to sequence the reveal. Respects reduced
+ * motion. Scoped to the movies vertical so it can't leak elsewhere.
+ */
+@keyframes reel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.vertical-movies .reel-wrapped-card {
+  opacity: 0;
+  animation: reel-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vertical-movies .reel-wrapped-card {
+    opacity: 1;
+    animation: none;
+  }
+}

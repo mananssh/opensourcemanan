@@ -30,12 +30,48 @@ export interface ReelStats {
   topGenres: GenreCount[]; // desc, capped
   decades: DecadeCount[]; // asc by decade
   nowWatching: MovieCard[];
+  dayCounts: Record<string, number>; // YYYY-MM-DD → count logged that day
+  activeDays: number; // distinct days with ≥1 watch
+  longestStreak: number; // longest run of consecutive calendar days
+  currentStreak: number; // run ending today or yesterday
   records: {
     longest: MovieCard | null;
     highestRated: MovieCard | null;
     oldest: MovieCard | null;
     mostRecent: MovieCard | null; // by watchedOn
   };
+}
+
+/** Add/subtract whole days from a YYYY-MM-DD string (UTC-safe). */
+function shiftDay(ymd: string, delta: number): string {
+  const d = new Date(`${ymd}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + delta);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Longest + current run of consecutive days from a set of logged days. */
+function streaks(days: Set<string>): { longest: number; current: number } {
+  if (days.size === 0) return { longest: 0, current: 0 };
+  const sorted = [...days].sort();
+  let longest = 1;
+  let run = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (shiftDay(sorted[i - 1], 1) === sorted[i]) {
+      run++;
+      longest = Math.max(longest, run);
+    } else {
+      run = 1;
+    }
+  }
+  // Current streak: count back from today (or yesterday) while days are present.
+  const today = new Date().toISOString().slice(0, 10);
+  let cursor = days.has(today) ? today : shiftDay(today, -1);
+  let current = 0;
+  while (days.has(cursor)) {
+    current++;
+    cursor = shiftDay(cursor, -1);
+  }
+  return { longest, current };
 }
 
 export function computeStats(entries: MovieCard[]): ReelStats {
@@ -50,6 +86,7 @@ export function computeStats(entries: MovieCard[]): ReelStats {
   const ratingValues: number[] = [];
   const genreMap = new Map<string, number>();
   const decadeMap = new Map<number, number>();
+  const dayCounts: Record<string, number> = {};
   const nowWatching: MovieCard[] = [];
 
   let longest: MovieCard | null = null;
@@ -65,7 +102,11 @@ export function computeStats(entries: MovieCard[]): ReelStats {
     if (e.favorite) favorites++;
     if (e.status === "watching") nowWatching.push(e);
 
-    if (e.watchedOn && Number(e.watchedOn.slice(0, 4)) === currentYear) thisYear++;
+    if (e.watchedOn) {
+      const day = e.watchedOn.slice(0, 10);
+      dayCounts[day] = (dayCounts[day] ?? 0) + 1;
+      if (Number(day.slice(0, 4)) === currentYear) thisYear++;
+    }
 
     if (e.rating != null && e.rating >= 1 && e.rating <= 10) {
       ratingCounts[e.rating]++;
@@ -102,6 +143,9 @@ export function computeStats(entries: MovieCard[]): ReelStats {
     .map(([decade, count]) => ({ decade, count }))
     .sort((a, b) => a.decade - b.decade);
 
+  const activeDaySet = new Set(Object.keys(dayCounts));
+  const { longest: longestStreak, current: currentStreak } = streaks(activeDaySet);
+
   return {
     totalTitles: entries.length,
     films,
@@ -116,6 +160,10 @@ export function computeStats(entries: MovieCard[]): ReelStats {
     topGenres,
     decades,
     nowWatching,
+    dayCounts,
+    activeDays: activeDaySet.size,
+    longestStreak,
+    currentStreak,
     records: { longest, highestRated, oldest, mostRecent },
   };
 }

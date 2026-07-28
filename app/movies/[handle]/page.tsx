@@ -7,7 +7,7 @@ import { isFollowing, getFollowCounts } from "@/lib/movies/follows";
 import { formatHours } from "@/lib/movies/format";
 import { StatsPanel } from "@/components/movies/stats-panel";
 import { PosterGrid } from "@/components/movies/poster-grid";
-import { CopyLink } from "@/components/movies/copy-link";
+import { ShareBar } from "@/components/movies/share-bar";
 import { FollowButton } from "@/components/movies/follow-button";
 
 export async function generateMetadata({
@@ -81,19 +81,27 @@ export default async function ProfilePage({
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {!isOwner && viewer && (
-            <FollowButton handle={watcher.handle} initialFollowing={viewerFollows} />
-          )}
-          <CopyLink handle={watcher.handle} />
-          {isOwner && (
+        <div className="flex flex-col items-start gap-3 sm:items-end">
+          <div className="flex items-center gap-2">
+            {!isOwner && viewer && (
+              <FollowButton handle={watcher.handle} initialFollowing={viewerFollows} />
+            )}
             <Link
-              href="/movies"
+              href={`/movies/${watcher.handle}/wrapped`}
               className="inline-flex h-9 items-center rounded-full border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
             >
-              Manage
+              Wrapped ✦
             </Link>
-          )}
+            {isOwner && (
+              <Link
+                href="/movies"
+                className="inline-flex h-9 items-center rounded-full border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
+              >
+                Manage
+              </Link>
+            )}
+          </div>
+          <ShareBar handle={watcher.handle} />
         </div>
       </header>
 
