@@ -26,10 +26,10 @@ export default async function MoviesHome() {
     <div className="mx-auto w-full max-w-5xl px-6 py-10 sm:py-14">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-faint">
-            Now showing
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-accent-2">
+            ●REC · Now showing
           </p>
-          <h1 className="mt-1 font-display text-4xl font-bold tracking-tight text-ink">
+          <h1 className="vhs-title mt-1 font-display text-5xl tracking-[0.03em] text-ink">
             {viewer.displayName ?? `@${viewer.handle}`}
             <span className="text-accent">.</span>
           </h1>
@@ -67,10 +67,10 @@ function Landing() {
   ];
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
-      <p className="font-mono text-[0.62rem] uppercase tracking-[0.28em] text-accent">
-        ▐▪▐ Admit one
+      <p className="font-mono text-[0.62rem] uppercase tracking-[0.28em] text-accent-2">
+        ●REC · SP · 0:00:00
       </p>
-      <h1 className="mt-4 font-display text-5xl font-bold leading-[1.05] tracking-tight text-ink sm:text-6xl">
+      <h1 className="vhs-title mt-4 font-display text-6xl leading-[0.95] tracking-[0.02em] text-ink sm:text-7xl">
         Keep the reel of
         <br />
         everything you watch<span className="text-accent">.</span>

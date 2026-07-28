@@ -1,6 +1,7 @@
 import type { MovieCard } from "@/lib/movies/queries";
 import { Poster } from "@/components/movies/poster";
 import { StaticStars } from "@/components/movies/star-rating";
+import { HeartIcon } from "@/components/movies/icons";
 
 /** A read-only wall of posters for a public profile. Favorites carry a heart. */
 export function PosterGrid({ entries }: { entries: MovieCard[] }) {
@@ -20,9 +21,9 @@ export function PosterGrid({ entries }: { entries: MovieCard[] }) {
               {e.favorite && (
                 <span
                   aria-label="Favorite"
-                  className="absolute right-1 top-1 rounded-full bg-paper/85 px-1.5 text-sm leading-5 text-accent"
+                  className="absolute right-1 top-1 rounded-full bg-paper/85 p-1 text-accent"
                 >
-                  ♥
+                  <HeartIcon filled className="h-3.5 w-3.5" />
                 </span>
               )}
               {e.status === "watching" && (

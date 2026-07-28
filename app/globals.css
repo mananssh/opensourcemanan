@@ -156,41 +156,93 @@ html.dark .vertical-portfolio {
 }
 
 /*
- * Reel vertical (/movies) — "35mm & Ticket Stub": a retro cinema logbook.
- * Light = kraft paper + warm ink + a single ticket-red accent; dark = the
- * darkened auditorium, cream on near-black with a brighter marquee-red. Display
- * = Oswald (condensed grotesque, marquee voice), body = Public Sans, meta =
- * Space Mono (ticket serial numbers). Both themes (ADR 0005 + 0010); fonts load
- * in app/movies/layout.tsx. Every pair WCAG-validated: ink ≥12:1, muted ≥6.5:1,
- * faint/accent ≥4.5:1 on both paper and surface; accent-ink holds ≥5:1 on accent
- * (dark-mode buttons carry dark text, since bright marquee-red fails white).
+ * Reel vertical (/movies) — "VHS / Video Nasty": a late-night video-store tape.
+ * Dark-first and unapologetically NOT the OSM warm-paper base — a violet-black
+ * auditorium lit by neon magenta + cyan, CRT scanlines, tape grain and a glitchy
+ * chromatic-aberration wordmark. Light mode is a cool "video-store daylight"
+ * (lilac-grey), never OSM's kraft. Display = Bebas Neue (VHS box marquee), body
+ * = DM Sans, meta = Space Mono (timecode). Two accents: --accent (magenta, the
+ * brand) and --accent-2 (cyan, the second neon). Both themes WCAG-validated:
+ * ink ≥12:1, muted ≥6.5:1, faint/accent/accent-2 ≥4.5:1 on paper AND surface;
+ * accent-ink ≥4.5:1 on both neons. Fonts load in app/movies/layout.tsx.
+ * (ADR 0005 + 0010; designed with the ui-ux-pro-max skill, styles #68 + #11.)
  */
 .vertical-movies {
-  --paper: #e8dabd; /* kraft stock */
-  --surface: #f2e8d1; /* raised ticket card */
-  --ink: #1c1610; /* warm near-black */
-  --muted: #4a3f2a;
-  --faint: #5c4f35;
-  --rule: #cdba8d; /* perforation lines / film-strip rails */
-  --accent: #9d1e13; /* deep ticket red, AA on kraft */
-  --accent-soft: #f0d6c9;
-  --accent-ink: #ffffff; /* button text on accent */
+  /* Light = cool "video-store daylight" — deliberately cool/lilac, not warm. */
+  --paper: #e9e6f2;
+  --surface: #f5f3fb;
+  --ink: #1a1327;
+  --muted: #4a3f63;
+  --faint: #5c5178;
+  --rule: #cfc7e0;
+  --accent: #b81e6a; /* VHS magenta, deepened for AA on light */
+  --accent-2: #0e6d8f; /* cyan, deepened for AA on light */
+  --accent-soft: #f0d9e6;
+  --accent-ink: #ffffff;
 
-  --display-family: var(--font-oswald);
-  --body-family: var(--font-public-sans);
+  --display-family: var(--font-bebas);
+  --body-family: var(--font-dm-sans);
   --mono-family: var(--font-space-mono);
 }
 
 html.dark .vertical-movies {
-  --paper: #141210; /* darkened auditorium */
-  --surface: #1e1a15;
-  --ink: #efe6d2; /* projector-cream */
-  --muted: #b3a78e;
-  --faint: #8f836c;
-  --rule: #322c22;
-  --accent: #ef5c4a; /* marquee red-orange, glows on black */
-  --accent-soft: #2a1a14;
-  --accent-ink: #201a12; /* dark text on the bright accent */
+  --paper: #0b0713; /* violet-black tape */
+  --surface: #150f24; /* elevated panel */
+  --ink: #f3ecff; /* cool white */
+  --muted: #baa9dc;
+  --faint: #8f7fb2;
+  --rule: #2c2246;
+  --accent: #ff3d8b; /* neon magenta */
+  --accent-2: #22e3e3; /* neon cyan */
+  --accent-soft: #2a0f22;
+  --accent-ink: #0b0713; /* dark text on the bright neons */
+}
+
+/*
+ * VHS chrome — scoped to the vertical so it can't leak. A faint CRT scanline
+ * wash over the whole surface + a subtle magenta/cyan vignette in dark mode.
+ * Kept low-opacity so text stays ≥AA; pointer-events off; not on print.
+ */
+.vertical-movies {
+  position: relative;
+}
+html.dark .vertical-movies::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.03) 0 1px,
+      transparent 1px 3px
+    ),
+    radial-gradient(120% 80% at 15% 0%, rgba(255, 61, 139, 0.08), transparent 60%),
+    radial-gradient(120% 80% at 85% 100%, rgba(34, 227, 227, 0.07), transparent 60%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vertical-movies .vhs-flicker {
+    animation: none !important;
+  }
+}
+
+/* Neon glow helpers (dark mode only — glow reads as haze on light). */
+html.dark .vertical-movies .neon-text {
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+html.dark .vertical-movies .neon-edge {
+  box-shadow: 0 0 0 1px var(--accent-soft), 0 0 18px -6px var(--accent);
+}
+
+/* Chromatic-aberration wordmark — the "tracking error" title treatment. */
+.vertical-movies .vhs-title {
+  position: relative;
+}
+html.dark .vertical-movies .vhs-title {
+  text-shadow:
+    -0.02em 0 color-mix(in srgb, var(--accent) 70%, transparent),
+    0.02em 0 color-mix(in srgb, var(--accent-2) 70%, transparent);
 }
 
 /* A sticky note: colored card, soft shadow, slight tilt; straightens on hover.
@@ -508,6 +560,8 @@ html.dark .sully-stage {
   --color-rule: var(--rule);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  /* Reel's second neon (cyan); other verticals fall back to their accent. */
+  --color-accent-2: var(--accent-2, var(--accent));
   /* Portfolio extras (fall back to accent/ink where a vertical doesn't set them). */
   --color-accent-ink: var(--accent-ink, var(--paper));
   --color-ok: var(--ok, var(--accent));
