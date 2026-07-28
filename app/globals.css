@@ -1029,3 +1029,60 @@ html.dark .blog-prose [data-rehype-pretty-code-figure] code span {
     animation: none;
   }
 }
+
+/*
+ * Site-wide navigation feedback (see components/route-progress.tsx). An
+ * indeterminate top bar in the active vertical's --accent, plus a `progress`
+ * cursor while a route is loading. Reduced motion swaps the slide for a pulse.
+ */
+.route-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 100;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.route-progress[data-active="true"] {
+  opacity: 1;
+}
+.route-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  transform: translateX(-100%);
+  animation: route-slide 1.1s ease-in-out infinite;
+}
+@keyframes route-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+html.nav-pending,
+html.nav-pending * {
+  cursor: progress !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-progress::before {
+    animation: route-pulse 1s ease-in-out infinite;
+    width: 100%;
+    transform: none;
+  }
+  @keyframes route-pulse {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+}

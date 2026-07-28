@@ -47,8 +47,8 @@ export default function OsmPage() {
           className="reveal mt-9 max-w-prose font-body text-xl leading-relaxed text-muted"
           style={delay(220)}
         >
-          OSM is my corner of the internet — portfolio, writing, experiments,
-          and a live log of what ships.{" "}
+          OSM is my corner of the internet — portfolio, writing, experiments, a
+          reel of everything I watch, and a live log of what ships.{" "}
           <span className="text-ink">One system, built to grow.</span> Open by
           default, private only by exception.
         </p>
