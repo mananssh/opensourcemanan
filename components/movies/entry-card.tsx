@@ -5,6 +5,7 @@ import type { MovieCard, WatchStatusValue } from "@/lib/movies/queries";
 import { formatRuntime, mediaTypeLabel } from "@/lib/movies/format";
 import { Poster } from "@/components/movies/poster";
 import { StarRating } from "@/components/movies/star-rating";
+import { HeartIcon } from "@/components/movies/icons";
 import type { UpdateEntryInput } from "@/app/movies/actions";
 
 const STATUS_LABEL: Record<WatchStatusValue, string> = {
@@ -68,11 +69,11 @@ export function EntryCard({
             aria-pressed={entry.favorite}
             aria-label={entry.favorite ? "Unfavorite" : "Favorite"}
             onClick={() => onUpdate({ favorite: !entry.favorite })}
-            className={`shrink-0 text-lg leading-none transition-colors ${
+            className={`shrink-0 transition-colors ${
               entry.favorite ? "text-accent" : "text-faint hover:text-accent"
             }`}
           >
-            {entry.favorite ? "♥" : "♡"}
+            <HeartIcon filled={entry.favorite} className="h-5 w-5" />
           </button>
         </div>
 

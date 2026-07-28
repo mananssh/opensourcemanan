@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Oswald, Public_Sans, Space_Mono } from "next/font/google";
+import { Bebas_Neue, DM_Sans, Space_Mono } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
 import { VerticalFooter } from "@/components/vertical-footer";
 
-const oswald = Oswald({
-  variable: "--font-oswald",
+const bebas = Bebas_Neue({
+  variable: "--font-bebas",
+  weight: "400",
   subsets: ["latin"],
   display: "swap",
 });
-const publicSans = Public_Sans({
-  variable: "--font-public-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
   display: "swap",
 });
@@ -32,7 +33,7 @@ export default function MoviesLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div
-      className={`vertical-movies ${oswald.variable} ${publicSans.variable} ${spaceMono.variable} flex min-h-dvh flex-col bg-paper font-body text-ink`}
+      className={`vertical-movies ${bebas.variable} ${dmSans.variable} ${spaceMono.variable} flex min-h-dvh flex-col bg-paper font-body text-ink`}
     >
       <a href="#content" className="skip-link">
         Skip to content
@@ -41,12 +42,19 @@ export default function MoviesLayout({
         <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <Link
             href="/movies"
-            className="group inline-flex items-center gap-2 font-display text-2xl font-bold uppercase tracking-[0.08em] text-ink"
+            className="group inline-flex items-center gap-2.5 text-ink"
+            aria-label="Reel home"
           >
-            <span aria-hidden className="text-accent transition-transform group-hover:rotate-12">
-              ◈
+            <span
+              aria-hidden
+              className="inline-flex h-2.5 w-2.5 rounded-full bg-accent transition-shadow group-hover:shadow-[0_0_10px_var(--accent)]"
+            />
+            <span className="vhs-title font-display text-3xl leading-none tracking-[0.14em]">
+              REEL
             </span>
-            Reel
+            <span className="hidden font-mono text-[0.58rem] uppercase tracking-[0.24em] text-faint sm:inline">
+              ●REC · SP
+            </span>
           </Link>
           <div className="flex items-center gap-3">
             <ThemeToggle />

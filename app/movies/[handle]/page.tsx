@@ -63,7 +63,7 @@ export default async function ProfilePage({
             )}
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-ink">{name}</h1>
+            <h1 className="vhs-title font-display text-4xl tracking-[0.03em] text-ink">{name}</h1>
             <p className="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-faint">
               @{watcher.handle}
               {" · "}
