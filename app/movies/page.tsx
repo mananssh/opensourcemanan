@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { auth, signIn } from "@/lib/auth";
 import { getViewer } from "@/lib/movies/identity";
 import { listEntries } from "@/lib/movies/queries";
+import { listFollowing, getFriendsFeed } from "@/lib/movies/follows";
 import { SubmitButton } from "@/components/blog/submit-button";
 import { EntryLibrary } from "@/components/movies/entry-library";
+import { FriendsStrip } from "@/components/movies/friends-strip";
 
 export default async function MoviesHome() {
   const session = await auth();
@@ -14,7 +16,11 @@ export default async function MoviesHome() {
   const viewer = await getViewer();
   if (!viewer) redirect("/movies/welcome");
 
-  const entries = await listEntries(viewer.id);
+  const [entries, following, feed] = await Promise.all([
+    listEntries(viewer.id),
+    listFollowing(viewer.id),
+    getFriendsFeed(viewer.id),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-10 sm:py-14">
@@ -45,6 +51,10 @@ export default async function MoviesHome() {
       </div>
 
       <EntryLibrary initialEntries={entries} />
+
+      <div className="mt-12">
+        <FriendsStrip following={following} feed={feed} />
+      </div>
     </div>
   );
 }

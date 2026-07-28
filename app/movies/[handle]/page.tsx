@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicProfile } from "@/lib/movies/queries";
-import { getViewer } from "@/lib/movies/identity";
+import { getViewer, getWatcherByHandle } from "@/lib/movies/identity";
+import { isFollowing, getFollowCounts } from "@/lib/movies/follows";
 import { formatHours } from "@/lib/movies/format";
 import { StatsPanel } from "@/components/movies/stats-panel";
 import { PosterGrid } from "@/components/movies/poster-grid";
 import { CopyLink } from "@/components/movies/copy-link";
+import { FollowButton } from "@/components/movies/follow-button";
 
 export async function generateMetadata({
   params,
@@ -40,6 +42,14 @@ export default async function ProfilePage({
   const name = watcher.displayName ?? `@${watcher.handle}`;
   const initial = (watcher.displayName ?? watcher.handle).charAt(0).toUpperCase();
 
+  // Follow state + counts. Resolve the target's id (not in the public payload).
+  const target = await getWatcherByHandle(watcher.handle);
+  const counts = target
+    ? await getFollowCounts(target.id)
+    : { followers: 0, following: 0 };
+  const viewerFollows =
+    viewer && target && !isOwner ? await isFollowing(viewer.id, target.id) : false;
+
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-10 sm:py-14">
       <header className="flex flex-col gap-5 border-b border-rule pb-8 sm:flex-row sm:items-center sm:justify-between">
@@ -60,6 +70,10 @@ export default async function ProfilePage({
               {stats.totalTitles} titles · {formatHours(stats.totalMinutes)}
               {stats.thisYear > 0 ? ` · ${stats.thisYear} this year` : ""}
             </p>
+            <p className="mt-1 font-mono text-[0.62rem] text-faint">
+              <span className="text-ink">{counts.followers}</span> followers ·{" "}
+              <span className="text-ink">{counts.following}</span> following
+            </p>
             {watcher.bio && (
               <p className="mt-2 max-w-md font-body text-sm leading-relaxed text-muted">
                 {watcher.bio}
@@ -68,6 +82,9 @@ export default async function ProfilePage({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!isOwner && viewer && (
+            <FollowButton handle={watcher.handle} initialFollowing={viewerFollows} />
+          )}
           <CopyLink handle={watcher.handle} />
           {isOwner && (
             <Link
