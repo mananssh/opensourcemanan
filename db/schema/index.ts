@@ -32,3 +32,4 @@ export * from "./portfolio";
 export * from "./agent";
 export * from "./ask";
 export * from "./movies";
+export * from "./vault";

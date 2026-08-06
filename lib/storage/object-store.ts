@@ -69,7 +69,13 @@ function getClient(): S3Client {
 }
 
 /** Allowed verticals — keeps keys namespaced and prevents path traversal. */
-export type StorageVertical = "blog" | "dump" | "portfolio" | "projects" | "misc";
+export type StorageVertical =
+  | "blog"
+  | "dump"
+  | "portfolio"
+  | "projects"
+  | "misc"
+  | "vault";
 
 function buildKey(vertical: StorageVertical, filename: string): string {
   const safe = filename
@@ -102,7 +108,8 @@ export async function createUploadUrl(opts: {
 }
 
 /** Object-key prefixes we ever mint — used to validate client-supplied keys. */
-const KEY_PREFIX_RE = /^(blog|dump|portfolio|projects|misc)\/[a-z0-9][a-z0-9./-]*$/;
+const KEY_PREFIX_RE =
+  /^(blog|dump|portfolio|projects|misc|vault)\/[a-z0-9][a-z0-9./-]*$/;
 
 /** True if `key` looks like a key we minted (no traversal, known vertical). */
 export function isManagedKey(key: string): boolean {
@@ -182,4 +189,36 @@ export async function uploadText(key: string, text: string, contentType = "appli
   await getClient().send(
     new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: text, ContentType: contentType }),
   );
+}
+
+/**
+ * Mint a namespaced, traversal-safe object key server-side. For writers that
+ * produce the bytes themselves and so can't use a presigned browser PUT — e.g.
+ * the vault, which must ENCRYPT before anything reaches R2.
+ */
+export function buildStorageKey(vertical: StorageVertical, filename: string): string {
+  return buildKey(vertical, filename);
+}
+
+/**
+ * Upload raw bytes to a key as a PRIVATE object (never made public). Server-side
+ * writers only — the vault stores ciphertext this way (see lib/vault/crypto.ts).
+ */
+export async function putObject(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  await getClient().send(
+    new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: body, ContentType: contentType }),
+  );
+}
+
+/**
+ * Read a PRIVATE object's raw bytes server-side (via bucket credentials, never a
+ * public URL). The vault fetches ciphertext this way, then decrypts in memory.
+ */
+export async function getObjectBuffer(key: string): Promise<Buffer> {
+  const res = await getClient().send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+  return Buffer.from(await res.Body!.transformToByteArray());
 }
