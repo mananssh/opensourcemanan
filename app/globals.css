@@ -199,6 +199,96 @@ html.dark .vertical-movies {
 }
 
 /*
+ * Vault vertical (/vault) — "Encrypted Archive / secure terminal": a graphite
+ * steel console lit by a single brass dial (--accent) with a verify-green
+ * (--accent-2) "ENCRYPTED" signal. Dark-first and deliberately NOT the OSM warm
+ * paper — a private, custody-grade environment. Light mode is a cool brushed-
+ * steel filing cabinet (never kraft). Display = Chakra Petch (technical console),
+ * body = IBM Plex Sans (institutional), meta/file-codes = IBM Plex Mono. Both
+ * themes WCAG-validated: ink ≥12:1, muted ≥6.5:1, faint/accent/accent-2 ≥4.5:1
+ * on paper AND surface; accent-ink ≥4.5:1 on both accents. Fonts load in
+ * app/vault/layout.tsx. (ADR 0005 + 0010; see docs/design/vault.md.)
+ */
+.vertical-vault {
+  /* Light = cool brushed-steel filing cabinet. */
+  --paper: #e4e7ec;
+  --surface: #f2f4f7;
+  --ink: #111620;
+  --muted: #414b57;
+  --faint: #525c68;
+  --rule: #c3cad3;
+  --accent: #8a5a05; /* deep brass, AA on steel */
+  --accent-2: #0d6f38; /* verify-green, AA on steel */
+  --accent-soft: #efe1c6;
+  --accent-ink: #ffffff;
+  --negative: #b3261e; /* destructive / error, AA on steel */
+
+  --display-family: var(--font-chakra);
+  --body-family: var(--font-plex-sans);
+  --mono-family: var(--font-plex-mono);
+}
+
+html.dark .vertical-vault {
+  --paper: #0a0c10; /* graphite black, the cabinet */
+  --surface: #13171d; /* brushed-steel panel */
+  --ink: #eef2f6;
+  --muted: #a4afbb;
+  --faint: #78838f;
+  --rule: #252c34;
+  --accent: #e8b24a; /* brass dial (vault gold) */
+  --accent-2: #4ade80; /* verify-green ENCRYPTED signal */
+  --accent-soft: #241d0e;
+  --accent-ink: #0a0c10; /* dark text on brass / green */
+  --negative: #f0736a; /* destructive / error */
+}
+
+/*
+ * Vault chrome — scoped so it can't leak. A dim CRT scanline + vignette on the
+ * dark console, a one-shot brass "unlock" reveal on mount, and the live status
+ * dot. All motion is motion-safe-gated.
+ */
+html.dark .vertical-vault {
+  position: relative;
+}
+html.dark .vertical-vault::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.015) 0px,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(120% 100% at 50% 0%, transparent 55%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+@keyframes vault-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .vertical-vault .vault-reveal {
+    animation: vault-reveal 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/* The etched, slightly-spaced console wordmark. */
+.vertical-vault .vault-wordmark {
+  letter-spacing: 0.16em;
+}
+
+/*
  * VHS chrome — scoped to the vertical so it can't leak. A faint CRT scanline
  * wash over the whole surface + a subtle magenta/cyan vignette in dark mode.
  * Kept low-opacity so text stays ≥AA; pointer-events off; not on print.
