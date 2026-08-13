@@ -2,6 +2,10 @@
 
 ## 2026-08-13
 
+- **20:56 · `7e3a8e6` · feat:** Allow multiple categories per vault document
+  Replace the single `category` column with a `categories` enum array (data-
+  preserving migration), add multi-select chips on upload/edit, and when Other
+  is selected allow typing a custom `categoryOther` label shown on the dossier.
 - **20:44 · `127e7ea` · feat:** Redesign Vault frontend as Blacklight Notary
   Replace the steel/brass console look with a mood-first redesign: Cinzel +
   Figtree + Azeret Mono, indigo/wax/UV tokens, kinetic-type hero, sharp dossier
