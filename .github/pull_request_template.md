@@ -17,6 +17,7 @@
 - [ ] Ran `/oss-check` — nothing private going public
 - [ ] Considered `/devils-advocate` — risks addressed or consciously accepted
 - [ ] Built as a **system, not static content** where applicable
+- [ ] **UI:** ran `/design-review` — mood brief in `docs/design/`, OSM defaults overridden under `.vertical-*`, light+dark (skip if no UI)
 - [ ] Docs / ADR updated if architecture changed
 
 ## Test plan

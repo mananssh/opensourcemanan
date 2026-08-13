@@ -14,6 +14,7 @@ Be a constructive skeptic of the change about to be committed. Your job is to *c
    - **Correctness / edge cases** — what inputs or states break this? What's untested?
    - **Simpler alternative** — is there a smaller change, or existing code that should be reused instead? (DRY — see `agent-kit/conventions.md`.)
    - **Architecture fit** — does it respect systems-not-static and the four-axis model, or does it hardcode/duplicate plumbing?
+   - **Frontend / design-review** — if the diff adds or materially changes UI: was `/design-review` run? Is there `docs/design/<slug>.md`? Do `.vertical-*` tokens override Editorial defaults, or did cream/oxblood/Fraunces leak through? Light+dark both?
    - **Scope creep** — is it doing more than the task needs?
    - **Maintenance / reversibility** — what will be painful later? How hard to undo?
    - **Security / safety** — anything risky for a public, deployed app? (Defer secret/PII specifics to `/oss-check`.)

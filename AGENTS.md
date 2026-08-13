@@ -15,5 +15,6 @@ Non-negotiables:
 - **`main` is always deployed and protected.** Work flows branch → PR → green CI → merge. Branch from the latest `origin/main`. See [`agent-kit/commit-and-pr.md`](agent-kit/commit-and-pr.md).
 - **This is a public repo.** Nothing private ships — secrets, PII, employer-confidential. See [`agent-kit/oss-safety.md`](agent-kit/oss-safety.md).
 - **Done means done.** [`agent-kit/definition-of-done.md`](agent-kit/definition-of-done.md): typecheck + lint + build green, changeset added, oss-safety passed, docs updated.
+- **UI = `/design-review` first.** Any feature with a user-facing surface, and any new/changed page or frontend, must run [`/design-review`](.claude/skills/design-review/SKILL.md) during planning: mood-specific look, full OSM token overrides, `docs/design/<slug>.md` — never inherit Editorial by default (ADR 0006). `/feature` enforces this before components.
 
-Skills: `/commit`, `/ship`, `/oss-check`, `/devils-advocate`, `/feature`.
+Skills: `/commit`, `/ship`, `/oss-check`, `/devils-advocate`, `/feature`, `/design-review`.

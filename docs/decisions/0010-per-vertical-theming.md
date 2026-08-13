@@ -37,3 +37,5 @@ provider; `/blog` has its own layout/header.
   toggle work everywhere.
 - Shared semantic classes mean a component dropped into any vertical adopts that
   vertical's look automatically.
+- `/design-review` (ADR 0006) requires inventing those token values from the
+  feature's mood — not inheriting Editorial `:root` by leaving overrides blank.
