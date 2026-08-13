@@ -2,6 +2,11 @@
 
 ## 2026-08-13
 
+- **20:44 · `127e7ea` · feat:** Redesign Vault frontend as Blacklight Notary
+  Replace the steel/brass console look with a mood-first redesign: Cinzel +
+  Figtree + Azeret Mono, indigo/wax/UV tokens, kinetic-type hero, sharp dossier
+  rows, and updated docs/design/vault.md per /design-review. Backend crypto and
+  access gating unchanged.
 - **20:30 · `05f79a1` · feat:** Redesign ARCD as Cabinet After Hours (phosphor marquee)
   Replace the Floor (Syne/rose) look with a mood-first redesign: Big Shoulders +
   Sora + Share Tech Mono, CRT phosphor tokens, kinetic marquee hero, sharp CTAs,
