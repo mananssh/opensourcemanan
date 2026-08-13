@@ -243,6 +243,93 @@ html.dark .vertical-vault {
 }
 
 /*
+ * ARCD (/games) — "Floor": charcoal + rose, Syne marque, unDraw hero art.
+ * See docs/design/games.md. Fonts in app/games/layout.tsx.
+ */
+.vertical-games {
+  --paper: #f7f5f2;
+  --surface: #ffffff;
+  --ink: #18181b;
+  --muted: #57534e;
+  --faint: #78716c;
+  --rule: #e7e5e4;
+  --accent: #e11d48;
+  --accent-2: #0f766e;
+  --accent-soft: #ffe4e6;
+  --accent-ink: #ffffff;
+  --chart-1: #e11d48;
+  --chart-2: #0f766e;
+  --chart-3: #78716c;
+  --chart-4: #f59e0b;
+  --chart-5: #8b5cf6;
+  --chart-background: var(--surface);
+  --chart-foreground: var(--ink);
+  --chart-foreground-muted: var(--muted);
+  --chart-label: var(--faint);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--accent-soft);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --destructive: #be123c;
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--accent);
+
+  --display-family: var(--font-syne);
+  --body-family: var(--font-manrope);
+  --mono-family: var(--font-plex-mono-games);
+}
+
+html.dark .vertical-games {
+  --paper: #0c0c0e;
+  --surface: #18181b;
+  --ink: #fafafa;
+  --muted: #a1a1aa;
+  --faint: #71717a;
+  --rule: #27272a;
+  --accent: #fb7185;
+  --accent-2: #2dd4bf;
+  --accent-soft: #4c0519;
+  --accent-ink: #0c0c0e;
+  --chart-1: #fb7185;
+  --chart-2: #2dd4bf;
+  --chart-3: #71717a;
+  --chart-4: #fbbf24;
+  --chart-5: #a78bfa;
+  --chart-background: var(--surface);
+  --chart-foreground: var(--ink);
+  --chart-foreground-muted: var(--muted);
+  --chart-label: var(--faint);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--accent-soft);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --destructive: #fb7185;
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--accent);
+}
+
+.vertical-games {
+  position: relative;
+}
+.vertical-games .arcd-wordmark {
+  letter-spacing: -0.07em;
+  line-height: 0.88;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+.vertical-games .arcd-art {
+  shape-rendering: geometricPrecision;
+}
+
+/*
  * Vault chrome — scoped so it can't leak. A dim CRT scanline + vignette on the
  * dark console, a one-shot brass "unlock" reveal on mount, and the live status
  * dot. All motion is motion-safe-gated.
@@ -659,6 +746,23 @@ html.dark .sully-stage {
   --color-negative: var(--negative, var(--accent));
   --color-sully-accent: var(--sully-accent, var(--accent));
   --color-sully-accent-bg: var(--sully-accent-bg, var(--accent-soft));
+  /* shadcn / Kokonut / Bklit (Games sets these; elsewhere they fall back). */
+  --color-background: var(--background, var(--paper));
+  --color-foreground: var(--foreground, var(--ink));
+  --color-primary: var(--primary, var(--accent));
+  --color-primary-foreground: var(--primary-foreground, var(--accent-ink, var(--paper)));
+  --color-secondary: var(--secondary, var(--surface));
+  --color-secondary-foreground: var(--secondary-foreground, var(--ink));
+  --color-muted-foreground: var(--muted-foreground, var(--muted));
+  --color-destructive: var(--destructive, #dc2626);
+  --color-border: var(--border, var(--rule));
+  --color-input: var(--input, var(--rule));
+  --color-ring: var(--ring, var(--accent));
+  --color-chart-1: var(--chart-1, var(--accent));
+  --color-chart-2: var(--chart-2, var(--accent-2, var(--accent)));
+  --color-chart-3: var(--chart-3, var(--muted));
+  --color-chart-4: var(--chart-4, var(--accent));
+  --color-chart-5: var(--chart-5, var(--accent));
 
   --font-display: var(--display-family);
   --font-body: var(--body-family);

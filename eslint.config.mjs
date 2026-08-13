@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // UI UX Pro Max / Cursor skill install (local tooling, not app code)
+    ".cursor/**",
+    // Vendor registry components (Kokonut UI / Bklit) — lint upstream, not here
+    "components/kokonutui/**",
+    "components/charts/**",
   ]),
 ]);
 

@@ -43,6 +43,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Cursor / UI UX Pro Max skills (local agent tooling — not app source)
+.cursor/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

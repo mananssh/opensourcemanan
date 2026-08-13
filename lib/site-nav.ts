@@ -33,6 +33,11 @@ export const siteNav: NavItem[] = [
     description: "Everything I've watched, ticket-stub style.",
   },
   {
+    label: "ARCD",
+    href: "/games",
+    description: "The arcade — playable experiments as they ship.",
+  },
+  {
     label: "Changelog",
     href: "/changelog",
     description: "Everything that has shipped, newest first.",
