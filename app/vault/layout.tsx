@@ -1,27 +1,25 @@
 import type { Metadata } from "next";
-import { Chakra_Petch, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Cinzel, Figtree, Azeret_Mono } from "next/font/google";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButton } from "@/components/auth-button";
 import { VerticalFooter } from "@/components/vertical-footer";
-import { LockIcon } from "@/components/vault/icons";
 import { requireVaultOwner } from "@/lib/vault/access";
 
-const chakra = Chakra_Petch({
-  variable: "--font-chakra",
-  weight: ["400", "500", "600", "700"],
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
   subsets: ["latin"],
   display: "swap",
 });
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
-  weight: ["400", "500", "600", "700"],
+
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
   display: "swap",
 });
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  weight: ["400", "500", "600"],
+
+const azeret = Azeret_Mono({
+  variable: "--font-azeret",
   subsets: ["latin"],
   display: "swap",
 });
@@ -43,22 +41,19 @@ export default async function VaultLayout({
 
   return (
     <div
-      className={`vertical-vault ${chakra.variable} ${plexSans.variable} ${plexMono.variable} flex min-h-dvh flex-col bg-paper font-body text-ink`}
+      className={`vertical-vault ${cinzel.variable} ${figtree.variable} ${azeret.variable} flex min-h-dvh flex-col bg-paper font-body text-ink`}
     >
       <a href="#content" className="skip-link">
         Skip to content
       </a>
-      <header className="sticky top-0 z-40 border-b border-rule bg-paper/85 backdrop-blur">
-        <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
+      <header className="sticky top-0 z-40 border-b border-rule bg-paper/90 backdrop-blur-sm">
+        <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-3">
           <Link
             href="/vault"
-            className="group inline-flex items-center gap-2.5 text-ink"
+            className="vault-wordmark font-display text-xl font-semibold text-ink transition-colors hover:text-accent"
             aria-label="Vault home"
           >
-            <LockIcon className="text-[1.4rem] text-accent" />
-            <span className="vault-wordmark font-display text-2xl font-semibold leading-none">
-              VAULT
-            </span>
+            Vault
           </Link>
           <div className="flex items-center gap-4">
             <span
@@ -67,9 +62,9 @@ export default async function VaultLayout({
             >
               <span
                 aria-hidden
-                className="inline-block h-1.5 w-1.5 rounded-full bg-accent-2 motion-safe:animate-pulse"
+                className="inline-block h-1.5 w-1.5 bg-accent-2 motion-safe:animate-pulse"
               />
-              Encrypted · AES-256
+              Sealed · AES-256
             </span>
             <ThemeToggle />
             <AuthButton />
@@ -81,7 +76,9 @@ export default async function VaultLayout({
         {children}
       </main>
 
-      <VerticalFooter tagline="Vault · encrypted at rest, private by design. Only you can open it." />
+      <div className="relative z-10">
+        <VerticalFooter tagline="Vault · sealed under blacklight. Only you can open it." />
+      </div>
     </div>
   );
 }

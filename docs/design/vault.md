@@ -1,84 +1,86 @@
-# Vault — "Encrypted Archive" design brief
+# Vault — design brief: "Blacklight Notary"
 
-The Vault (`/vault`) is a **private, single-owner** document store for sensitive
-identity documents (Aadhaar, PAN, DL, …). It is the one vertical that is *not*
-public-by-anything: only `VAULT_OWNER_EMAIL` can reach it, files are AES-256-GCM
-envelope-encrypted before they touch storage, and the route is kept out of the
-public site nav and search index. The design has to *feel* like that — a secure
-terminal / bank-vault console, not the warm editorial OSM base.
+`/vault` is a private, single-owner encrypted document store. Full frontend
+redesign — replaces the previous **Encrypted Archive** look (graphite steel,
+brass dial, Chakra Petch, CRT scanlines).
 
-## The one memorable idea
+## Mood
 
-A **secure terminal console**: a graphite steel surface lit by a single brass
-accent (the vault dial) with a verify-green "encrypted" signal. Documents are
-**sealed dossiers** — mono file-codes, a lock glyph, an `AES-256` seal — that
-read like classified records in a cabinet, not blog cards. The header carries a
-live `ENCRYPTED · LOCAL-ONLY` status line. Nothing is playful; everything signals
-custody and integrity.
+**wax seal under ultraviolet** — a notary desk after hours: indigo black paper,
+crimson wax, UV verification lamp, engraved titles. Custody without cosplay
+military console.
 
-## Palette (both themes, WCAG-validated)
+## Direction
 
-Dark-first (the vault lives in the dark). Both themes validated with the repo's
-relative-luminance script: **ink ≥ 12:1, muted ≥ 6.5:1, faint / accent / accent-2
-≥ 4.5:1** on *both* `--paper` and `--surface`; `--accent-ink` ≥ 4.5:1 on the
-accents.
+**Name:** Blacklight Notary  
+**Why:** The vault holds identity documents. It should feel like a sealed
+ledger under blacklight — quiet authority, not a brass bank terminal and not a
+phosphor arcade.  
+**Bold risk:** **Kinetic type** hero — oversized clipped `VAULT` that nearly
+exits the viewport; the working console sits *under* that typographic seal, not
+beside a soft card stack. Radius **0** everywhere.  
+**Hero archetype:** kinetic-type
 
-### Dark — "vault interior"
-| token | value | role |
-|-------|-------|------|
-| `--paper` | `#0a0c10` | graphite black, the cabinet |
-| `--surface` | `#13171d` | brushed-steel panel |
-| `--ink` | `#eef2f6` | etched label white |
-| `--muted` | `#a4afbb` | secondary meta |
-| `--faint` | `#78838f` | file-codes, timestamps |
-| `--rule` | `#252c34` | hairline seams |
-| `--accent` | `#e8b24a` | **brass dial** (the vault gold) |
-| `--accent-2` | `#4ade80` | verify-green (`ENCRYPTED` signal) |
-| `--accent-soft` | `#241d0e` | brass tint fill |
-| `--accent-ink` | `#0a0c10` | dark text on brass/green |
+## Anti-goals
 
-### Light — "steel filing cabinet"
-| token | value | role |
-|-------|-------|------|
-| `--paper` | `#e4e7ec` | cool brushed steel (never OSM kraft) |
-| `--surface` | `#f2f4f7` | drawer-white panel |
-| `--ink` | `#111620` | stamped ink |
-| `--muted` | `#414b57` | secondary meta |
-| `--faint` | `#525c68` | file-codes |
-| `--rule` | `#c3cad3` | seams |
-| `--accent` | `#8a5a05` | deep brass (AA on steel) |
-| `--accent-2` | `#0d6f38` | verify-green (AA on steel) |
-| `--accent-soft` | `#efe1c6` | brass tint |
-| `--accent-ink` | `#ffffff` | text on accents |
+- Not Editorial Logbook (warm paper / Fraunces / oxblood)
+- Not previous Vault (steel + brass + Chakra Petch + CRT)
+- Not ARCD Cabinet After Hours (phosphor green / marquee / Big Shoulders)
+- Not Reel (VHS neon magenta/cyan / Bebas)
+- Not rounded SaaS card grids / pill chips as the visual system
 
 ## Type
 
-Distinct from every other vertical (Reel = Bebas/DM Sans/Space Mono; OSM =
-Fraunces/Newsreader/JetBrains).
+| Role | Family | Role on page |
+|------|--------|--------------|
+| Display | **Cinzel** | Engraved wordmark + section titles |
+| Body | **Figtree** | UI copy, notes, dialogs |
+| Mono | **Azeret Mono** | File codes, AES line, stats, chips |
 
-- **Display** — `Chakra Petch` (a technical, semi-condensed grotesque; reads
-  "secure console / defense-grade").
-- **Body** — `IBM Plex Sans` (institutional, precise).
-- **Mono** — `IBM Plex Mono` (file-codes, sizes, checksums, the status line).
+## Token overrides (OSM Editorial → Vault)
 
-Fonts load in `app/vault/layout.tsx` via `next/font/google` and map onto
-`--display-family` / `--body-family` / `--mono-family`.
+| Token | OSM light | OSM dark | This light | This dark |
+|-------|-----------|----------|------------|-----------|
+| `--paper` | `#efe7d6` | `#15120d` | `#ebe6f2` | `#0c0814` |
+| `--surface` | `#f8f2e4` | `#1d1811` | `#f7f4fc` | `#15101f` |
+| `--ink` | `#241d12` | `#ece4d5` | `#1a1228` | `#f0e8ff` |
+| `--muted` | `#574c39` | `#a0937f` | `#4a3f5c` | `#b5a5d0` |
+| `--faint` | `#6a5e49` | `#8e8472` | `#6a5d7a` | `#8a7aa8` |
+| `--rule` | `#d2c3a5` | `#322a1e` | `#d4cce0` | `#2a2238` |
+| `--accent` | `#8c2b1c` | `#db6a4a` | `#8b1e4a` | `#ff5a8a` |
+| `--accent-2` | — | — | `#4c1d95` | `#a78bfa` |
+| `--accent-soft` | `#e6d6bc` | `#2a201a` | `#ead5e0` | `#2a1020` |
+| `--accent-ink` | — | — | `#ffffff` | `#0c0814` |
+| `--negative` | — | — | `#b42318` | `#ff7a72` |
+| `--display-family` | Fraunces | — | Cinzel | — |
+| `--body-family` | Newsreader | — | Figtree | — |
+| `--mono-family` | JetBrains Mono | — | Azeret Mono | — |
 
-## Motion & effects (scoped to `.vertical-vault`, reduced-motion safe)
+**Radius:** `0` — stamped dossier edges, not soft cards.
 
-- A faint **scanline + vignette** on the dark surface (like Reel's CRT, dimmer)
-  to sell the console.
-- A one-shot **unlock** reveal when the dashboard mounts (brass sweep), 200–300ms,
-  disabled under `prefers-reduced-motion`.
-- The `ENCRYPTED` status dot pulses the verify-green (motion-safe only).
-- Document seals lift on hover with a brass hairline; focus states are a solid
-  brass ring (keyboard parity).
+## Motion
 
-## Non-negotiables (pre-delivery checklist)
+- **Hero:** Wordmark lines rise from a clip (`yPercent`-style) via Motion; mono
+  custody labels fade after.
+- **Scroll:** Dossier list / empty state fades once into view.
+- **Hover:** Accent hairline on dossier row; star/download affordances tint to
+  accent-2.
+- **Reduced motion:** Instant opacity; no rise; no pulse on status.
 
-- SVG icons only (lock, shield, download, seal) — never emoji.
-- 4.5:1 contrast in **both** themes, validated.
-- All motion 150–300ms and gated behind `motion-safe`.
-- Visible focus ring on every interactive element.
-- `robots: noindex`; never in `siteNav`; every route/action/API behind
-  `requireVaultOwner()`.
+## Layout notes
+
+1. **First viewport:** mono custody row (`SEALED · AES-256 · OWNER`) → clipped
+   kinetic `VAULT` → one custody sentence → sharp stat strip (no rounded tiles)
+   → console (upload + search + dossiers).
+2. **Dossiers:** Prefer **indexed rows** (or sharp rectangles) over cozy
+   rounded card grids; keep actions (download / edit / delete / favorite).
+3. **Upload:** Sharp dashed seal bay — “Drop to seal” language.
+4. **Chrome:** Sticky header with Cinzel mark + UV status (accent-2), no CRT
+   overlay (leave that to ARCD / Reel).
+5. **Privacy non-negotiables unchanged:** `robots: noindex`, out of `siteNav`,
+   `requireVaultOwner()` on layout/actions/APIs.
+
+## What must not change (backend)
+
+Crypto, access gating, upload/download APIs, schema, Fuse search behavior —
+frontend shell only.

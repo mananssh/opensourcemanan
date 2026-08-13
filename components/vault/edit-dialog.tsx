@@ -24,7 +24,6 @@ export function EditDialog({
   const [notes, setNotes] = useState(doc.notes ?? "");
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  // Focus the close button on open; close on Escape.
   useEffect(() => {
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -40,7 +39,10 @@ export function EditDialog({
       const res = await updateDocument(doc.id, {
         title,
         category,
-        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+        tags: tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
         notes,
       });
       if (res.ok) {
@@ -54,7 +56,7 @@ export function EditDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-paper/70 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-paper/75 p-4 backdrop-blur-sm sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-label={`Edit ${doc.title}`}
@@ -62,14 +64,16 @@ export function EditDialog({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg rounded-2xl border border-rule bg-surface p-6 shadow-2xl">
+      <div className="w-full max-w-lg border border-rule bg-surface p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
-          <h2 className="font-display text-xl font-semibold text-ink">Edit document</h2>
+          <h2 className="vault-wordmark font-display text-xl font-semibold tracking-wide text-ink">
+            Edit seal
+          </h2>
           <button
             ref={closeRef}
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted transition-colors hover:bg-paper hover:text-ink focus-visible:ring-2 focus-visible:ring-accent"
+            className="p-1.5 text-muted transition-colors hover:bg-paper hover:text-ink focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Close"
           >
             <CloseIcon className="text-lg" />
@@ -89,7 +93,7 @@ export function EditDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
-              className="mt-1.5 w-full rounded-lg border border-rule bg-paper px-3 py-2 text-ink outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
+              className="mt-1.5 w-full border border-rule bg-paper px-3 py-2 text-ink outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
             />
           </label>
 
@@ -100,7 +104,7 @@ export function EditDialog({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as typeof category)}
-              className="mt-1.5 w-full rounded-lg border border-rule bg-paper px-3 py-2 text-ink outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
+              className="mt-1.5 w-full border border-rule bg-paper px-3 py-2 text-ink outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
             >
               {VAULT_CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>
@@ -118,7 +122,7 @@ export function EditDialog({
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="e.g. renewed-2027, original"
-              className="mt-1.5 w-full rounded-lg border border-rule bg-paper px-3 py-2 text-ink outline-none placeholder:text-faint focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
+              className="mt-1.5 w-full border border-rule bg-paper px-3 py-2 text-ink outline-none placeholder:text-faint focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
             />
           </label>
 
@@ -131,22 +135,22 @@ export function EditDialog({
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               maxLength={2000}
-              className="mt-1.5 w-full resize-none rounded-lg border border-rule bg-paper px-3 py-2 text-ink outline-none placeholder:text-faint focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
+              className="mt-1.5 w-full resize-none border border-rule bg-paper px-3 py-2 text-ink outline-none placeholder:text-faint focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
             />
           </label>
         </div>
 
-        {error && (
+        {error ? (
           <p className="mt-3 text-sm text-negative" role="alert">
             {error}
           </p>
-        )}
+        ) : null}
 
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-muted transition-colors hover:text-ink"
+            className="px-4 py-2 text-sm text-muted transition-colors hover:text-ink"
           >
             Cancel
           </button>
@@ -154,9 +158,9 @@ export function EditDialog({
             type="button"
             onClick={save}
             disabled={pending}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
+            className="border border-accent bg-accent px-4 py-2 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-accent-ink transition-colors hover:bg-transparent hover:text-accent focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
           >
-            {pending ? "Saving…" : "Save changes"}
+            {pending ? "Saving…" : "Save"}
           </button>
         </div>
       </div>

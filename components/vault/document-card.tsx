@@ -2,29 +2,32 @@
 
 import { type ReactNode, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useReducedMotion, motion } from "motion/react";
 import { deleteDocument, toggleFavorite } from "@/app/vault/actions";
 import { categoryLabel } from "@/lib/vault/categories";
 import { formatBytes, formatDate } from "@/lib/vault/format";
 import type { VaultDocCard } from "@/lib/vault/queries";
 import {
   DownloadIcon,
-  FileIcon,
   PencilIcon,
   StarIcon,
   TrashIcon,
 } from "@/components/vault/icons";
 
-/** One sealed dossier. `title` may be a highlighted node from fuzzy search. */
+/** One sealed dossier row. `title` may be a highlighted node from fuzzy search. */
 export function DocumentCard({
   doc,
   title,
   onEdit,
+  index = 0,
 }: {
   doc: VaultDocCard;
   title: ReactNode;
   onEdit: () => void;
+  index?: number;
 }) {
   const router = useRouter();
+  const reduce = useReducedMotion();
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
 
@@ -45,80 +48,90 @@ export function DocumentCard({
   const ext = doc.originalFilename.split(".").pop()?.toUpperCase().slice(0, 4);
 
   return (
-    <div className="group relative flex flex-col gap-3 rounded-xl border border-rule bg-surface p-4 transition-all hover:border-accent/60 hover:shadow-[0_2px_20px_-8px_var(--accent)]">
-      {/* Top row: seal + code, favorite */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-lg border border-rule bg-paper text-accent">
-            <FileIcon className="text-lg" />
-          </span>
-          <span className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-faint">
-            {ext || "FILE"} · {formatBytes(doc.sizeBytes)}
-          </span>
+    <motion.li
+      initial={reduce ? false : { opacity: 0, x: -10 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, amount: 0.4 }}
+      transition={{
+        duration: 0.35,
+        delay: reduce ? 0 : Math.min(index, 8) * 0.04,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className="group list-none"
+    >
+      <div className="flex flex-col gap-4 py-5 transition-colors sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-mono text-[0.6rem] tracking-[0.16em] text-faint">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <span className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-accent-2">
+              {ext || "FILE"} · {formatBytes(doc.sizeBytes)}
+            </span>
+            <span className="border border-accent/35 bg-accent-soft px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-accent">
+              {categoryLabel(doc.category)}
+            </span>
+          </div>
+
+          <h3 className="vault-wordmark mt-2 font-display text-xl font-semibold tracking-wide text-ink transition-colors group-hover:text-accent sm:text-2xl">
+            {title}
+          </h3>
+
+          {doc.tags.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {doc.tags.map((t) => (
+                <span
+                  key={t}
+                  className="border border-rule px-2 py-0.5 font-mono text-[0.58rem] text-muted"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          {doc.notes ? (
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">
+              {doc.notes}
+            </p>
+          ) : null}
+
+          <p className="mt-3 font-mono text-[0.58rem] text-faint">
+            {formatDate(doc.createdAt)}
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={fav}
-          disabled={pending}
-          aria-pressed={doc.favorite}
-          aria-label={doc.favorite ? "Unfavorite" : "Favorite"}
-          className={`rounded-md p-1 transition-colors focus-visible:ring-2 focus-visible:ring-accent ${
-            doc.favorite ? "text-accent" : "text-faint hover:text-accent"
-          }`}
-        >
-          <StarIcon
-            className="text-lg"
-            fill={doc.favorite ? "currentColor" : "none"}
-          />
-        </button>
-      </div>
 
-      {/* Title */}
-      <h3 className="font-display text-lg font-semibold leading-snug text-ink">
-        {title}
-      </h3>
-
-      {/* Category + tags */}
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full border border-accent/40 bg-accent-soft px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-accent">
-          {categoryLabel(doc.category)}
-        </span>
-        {doc.tags.map((t) => (
-          <span
-            key={t}
-            className="rounded-full border border-rule px-2 py-0.5 font-mono text-[0.6rem] text-muted"
+        <div className="flex shrink-0 items-center gap-1 self-start">
+          <button
+            type="button"
+            onClick={fav}
+            disabled={pending}
+            aria-pressed={doc.favorite}
+            aria-label={doc.favorite ? "Unfavorite" : "Favorite"}
+            className={`p-2 transition-colors focus-visible:ring-2 focus-visible:ring-accent ${
+              doc.favorite ? "text-accent" : "text-faint hover:text-accent-2"
+            }`}
           >
-            {t}
-          </span>
-        ))}
-      </div>
+            <StarIcon
+              className="text-lg"
+              fill={doc.favorite ? "currentColor" : "none"}
+            />
+          </button>
 
-      {doc.notes && (
-        <p className="line-clamp-2 text-sm leading-relaxed text-muted">
-          {doc.notes}
-        </p>
-      )}
-
-      {/* Footer: date + actions */}
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-rule pt-3">
-        <span className="font-mono text-[0.6rem] text-faint">
-          {formatDate(doc.createdAt)}
-        </span>
-        <div className="flex items-center gap-1">
           {confirming ? (
             <>
               <button
                 type="button"
                 onClick={remove}
                 disabled={pending}
-                className="rounded-md px-2 py-1 font-mono text-[0.62rem] uppercase tracking-wide text-negative hover:bg-negative/10 focus-visible:ring-2 focus-visible:ring-negative"
+                className="px-2 py-1 font-mono text-[0.62rem] uppercase tracking-wide text-negative hover:bg-negative/10 focus-visible:ring-2 focus-visible:ring-negative"
               >
                 {pending ? "Deleting…" : "Confirm"}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirming(false)}
-                className="rounded-md px-2 py-1 font-mono text-[0.62rem] uppercase tracking-wide text-muted hover:text-ink"
+                className="px-2 py-1 font-mono text-[0.62rem] uppercase tracking-wide text-muted hover:text-ink"
               >
                 Cancel
               </button>
@@ -127,7 +140,7 @@ export function DocumentCard({
             <>
               <a
                 href={`/api/vault/${doc.id}/download`}
-                className="rounded-md p-1.5 text-muted transition-colors hover:bg-paper hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
+                className="p-2 text-muted transition-colors hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={`Download ${doc.title}`}
               >
                 <DownloadIcon className="text-base" />
@@ -135,7 +148,7 @@ export function DocumentCard({
               <button
                 type="button"
                 onClick={onEdit}
-                className="rounded-md p-1.5 text-muted transition-colors hover:bg-paper hover:text-ink focus-visible:ring-2 focus-visible:ring-accent"
+                className="p-2 text-muted transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={`Edit ${doc.title}`}
               >
                 <PencilIcon className="text-base" />
@@ -143,7 +156,7 @@ export function DocumentCard({
               <button
                 type="button"
                 onClick={() => setConfirming(true)}
-                className="rounded-md p-1.5 text-muted transition-colors hover:bg-paper hover:text-negative focus-visible:ring-2 focus-visible:ring-negative"
+                className="p-2 text-muted transition-colors hover:text-negative focus-visible:ring-2 focus-visible:ring-negative"
                 aria-label={`Delete ${doc.title}`}
               >
                 <TrashIcon className="text-base" />
@@ -152,6 +165,6 @@ export function DocumentCard({
           )}
         </div>
       </div>
-    </div>
+    </motion.li>
   );
 }
