@@ -47,7 +47,7 @@ When listing anti-goals in the brief, name at least one real sibling:
 - Dump — cool board / Caveat
 - Portfolio — monochrome Bricolage
 - Movies / Reel — VHS magenta/cyan
-- Vault — steel + brass
+- Vault — Blacklight Notary / wax + UV indigo
 - Games / ARCD — Cabinet After Hours / phosphor + marquee
 
 New work should be **visibly not** those.
