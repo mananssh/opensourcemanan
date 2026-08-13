@@ -2,6 +2,10 @@
 
 ## 2026-08-13
 
+- **20:30 · `05f79a1` · feat:** Redesign ARCD as Cabinet After Hours (phosphor marquee)
+  Replace the Floor (Syne/rose) look with a mood-first redesign: Big Shoulders +
+  Sora + Share Tech Mono, CRT phosphor tokens, kinetic marquee hero, sharp CTAs,
+  and empty-bay catalog. Updates docs/design/games.md per /design-review.
 - **19:46 · `34ef606` · feat:** Add ARCD arcade vertical shell at /games
   Public `/games` branded **ARCD**: code-first empty registry, Motion + Kokonut/Bklit UI stack, Floor design (Syne/Manrope, charcoal + rose), and licensed unDraw Gaming Controller hero art.
 - **19:46 · `34ef606` · feat:** Vault — a private, single-owner encrypted document store at /vault
