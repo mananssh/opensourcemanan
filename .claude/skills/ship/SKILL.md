@@ -19,7 +19,7 @@ Take committed work from a feature branch to an open PR against `main`. `main` i
 
 4. **Open the PR** with `gh pr create --base main`, using the repository PR template. Write a comprehensive summary from the **full commit history** of the branch (`git log origin/main..HEAD`), not just the latest commit. Include a test plan.
 
-5. **Report CI.** After creating the PR, surface its checks (`gh pr checks` / `gh pr view`). Remind: merge only when CI is green. Do not merge automatically.
+5. **Report CI.** After creating the PR, surface its checks (`gh pr checks` / `gh pr view`). Remind: merge only when CI is green. Do not merge automatically. If the PR includes UI, remind the author to tick the `/design-review` DoD checkbox (brief + `.vertical-*` overrides).
 
 ## Notes
 

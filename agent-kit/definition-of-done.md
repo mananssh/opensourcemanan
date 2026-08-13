@@ -17,7 +17,7 @@ A change is done when **all** of these are true. CI enforces the hard gates; the
 - [ ] **Built as a system, not static content** — if it's content that grows, it's on the content-system primitive, not a hardcoded page (see [conventions.md](./conventions.md)).
 - [ ] **Four-axis discipline** — Access / Data / Telemetry / Rendering chosen declaratively; no reimplemented plumbing.
 - [ ] **Light + dark both done** — any UI works and was checked in both themes; colors come from semantic tokens defined for both modes (ADR 0005). No single-mode features.
-- [ ] **Design review done (for UI work)** — ran `/design-review`; committed to a deliberate aesthetic with distinctive type, not default/AI-slop (ADR 0006).
+- [ ] **Design review done (for UI work)** — ran `/design-review`; mood-specific aesthetic + type + motion; OSM defaults overridden under `.vertical-*`; `docs/design/<slug>.md` written; not Editorial-by-default / not AI-slop (ADR 0006).
 - [ ] **Access declared** — gated features call `requireAuth()`/`requireOwner()` server-side; nothing sensitive relies on Proxy or client-only checks (see [auth.md](./auth.md)).
 - [ ] **DB changes migrated** — any schema change went through `db/schema/*` + a committed `npm run db:generate` migration; no ad-hoc SQL (see [database.md](./database.md)).
 - [ ] **Docs updated** — relevant `docs/` or `agent-kit/` reflects the change; an ADR added for any architectural decision.

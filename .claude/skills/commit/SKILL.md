@@ -24,15 +24,17 @@ Create a safe, recorded commit on a feature branch. Hard gates live in CI; this 
    ```
    Do NOT include datetime or hash — those are added at compile time.
 
-4. **Run reviews in parallel** (both are advisory / non-blocking — surface findings, let the user decide):
+4. **UI design-review gate (advisory but loud).** If the diff adds/changes pages, layouts, vertical chrome, or user-facing components under `app/` / `components/`: check for `docs/design/<slug>.md` and `.vertical-*` (or equivalent) token overrides. If missing, or if the UI clearly inherited Editorial defaults without a brief, **call it out before committing** and point at `/design-review`.
+
+5. **Run reviews in parallel** (both are advisory / non-blocking — surface findings, let the user decide):
    - Launch the `/devils-advocate` review on the current diff.
    - Launch the `/oss-check` review on the current diff.
    Present a concise summary of both. If oss-check flags a likely secret/PII, strongly recommend resolving before committing.
 
-5. **Commit.** After the user is satisfied, stage and commit with a Conventional Commit message:
+6. **Commit.** After the user is satisfied, stage and commit with a Conventional Commit message:
    ```
    <type>: <description>
    ```
    Types: feat, fix, refactor, docs, test, chore, perf, ci. No co-author/attribution trailers.
 
-6. **Do not push.** Pushing and PRs are `/ship`'s job.
+7. **Do not push.** Pushing and PRs are `/ship`'s job.
