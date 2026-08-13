@@ -4,6 +4,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useReducedMotion, motion } from "motion/react";
 import Fuse, { type FuseResultMatch } from "fuse.js";
 import { VAULT_CATEGORIES, categoryLabel } from "@/lib/vault/categories";
+import type { VaultCategory } from "@/db/schema";
 import type { VaultDocCard } from "@/lib/vault/queries";
 import { UploadDropzone } from "@/components/vault/upload-dropzone";
 import { DocumentCard } from "@/components/vault/document-card";
@@ -42,17 +43,18 @@ export function VaultConsole({
 }) {
   const reduce = useReducedMotion();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<VaultCategory | null>(null);
   const [editing, setEditing] = useState<VaultDocCard | null>(null);
 
   const fuse = useMemo(
     () =>
       new Fuse(cards, {
         keys: [
-          { name: "title", weight: 0.5 },
+          { name: "title", weight: 0.45 },
           { name: "tags", weight: 0.2 },
           { name: "notes", weight: 0.15 },
-          { name: "originalFilename", weight: 0.15 },
+          { name: "originalFilename", weight: 0.1 },
+          { name: "categoryOther", weight: 0.1 },
         ],
         includeMatches: true,
         threshold: 0.4,
@@ -67,11 +69,13 @@ export function VaultConsole({
     const ranked = q
       ? fuse.search(q).map((r) => ({ card: r.item, matches: r.matches }))
       : cards.map((card) => ({ card, matches: undefined }));
-    return category ? ranked.filter((r) => r.card.category === category) : ranked;
+    return category
+      ? ranked.filter((r) => r.card.categories.includes(category))
+      : ranked;
   }, [query, category, fuse, cards]);
 
   const present = useMemo(() => {
-    const set = new Set(cards.map((c) => c.category));
+    const set = new Set(cards.flatMap((c) => c.categories));
     return VAULT_CATEGORIES.filter((c) => set.has(c.value));
   }, [cards]);
 

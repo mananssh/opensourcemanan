@@ -22,6 +22,7 @@ export const VAULT_CATEGORIES = [
 }>;
 
 const LABELS = new Map(VAULT_CATEGORIES.map((c) => [c.value, c.label]));
+const ORDER = new Map(VAULT_CATEGORIES.map((c, i) => [c.value, i]));
 
 /** Human label for a category value (falls back to the raw value). */
 export function categoryLabel(value: string): string {
@@ -33,4 +34,53 @@ export function normalizeCategory(value: unknown): VaultCategory {
   return typeof value === "string" && LABELS.has(value as VaultCategory)
     ? (value as VaultCategory)
     : "other";
+}
+
+/**
+ * Normalize a list of category values. Dedupes, drops unknowns, keeps stable
+ * VAULT_CATEGORIES order. Empty / invalid input → `["other"]` so every document
+ * always has at least one drawer.
+ */
+export function normalizeCategories(value: unknown): VaultCategory[] {
+  const raw: unknown[] = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(/[,|]/).map((s) => s.trim()).filter(Boolean)
+      : [];
+  const seen = new Set<VaultCategory>();
+  for (const item of raw) {
+    if (typeof item !== "string") continue;
+    if (LABELS.has(item as VaultCategory)) {
+      seen.add(item as VaultCategory);
+    }
+  }
+  if (seen.size === 0) return ["other"];
+  return [...seen].sort(
+    (a, b) => (ORDER.get(a) ?? 99) - (ORDER.get(b) ?? 99),
+  );
+}
+
+const MAX_OTHER_LEN = 48;
+
+/**
+ * Custom label for the `other` category. Returns null when `other` isn't
+ * selected or the text is empty. Trimmed + length-capped.
+ */
+export function normalizeCategoryOther(
+  categories: readonly VaultCategory[],
+  value: unknown,
+): string | null {
+  if (!categories.includes("other")) return null;
+  if (typeof value !== "string") return null;
+  const label = value.trim().slice(0, MAX_OTHER_LEN);
+  return label || null;
+}
+
+/** Display label for a category on a card, using the custom Other text when set. */
+export function categoryDisplayLabel(
+  value: VaultCategory,
+  categoryOther: string | null | undefined,
+): string {
+  if (value === "other" && categoryOther?.trim()) return categoryOther.trim();
+  return categoryLabel(value);
 }

@@ -8,7 +8,7 @@ import {
 } from "@/lib/storage/object-store";
 import { vaultOwnerOrNull } from "@/lib/vault/access";
 import { sealDocument, isVaultCryptoConfigured } from "@/lib/vault/crypto";
-import { normalizeCategory } from "@/lib/vault/categories";
+import { normalizeCategories, normalizeCategoryOther } from "@/lib/vault/categories";
 
 // Reads/writes R2 + Node crypto — must run on the Node runtime, not the edge.
 export const runtime = "nodejs";
@@ -84,7 +84,17 @@ export async function POST(request: Request) {
 
   const rawTitle = (form.get("title") as string | null)?.trim();
   const title = (rawTitle || file.name).slice(0, MAX_TITLE);
-  const category = normalizeCategory(form.get("category"));
+  // Prefer multi-value `categories` (repeated fields or comma-separated); fall
+  // back to legacy single `category` so older clients still work.
+  const categories = normalizeCategories(
+    form.getAll("categories").length > 0
+      ? form.getAll("categories")
+      : form.get("categories") ?? form.get("category"),
+  );
+  const categoryOther = normalizeCategoryOther(
+    categories,
+    form.get("categoryOther"),
+  );
   const notes =
     ((form.get("notes") as string | null)?.trim().slice(0, MAX_NOTES) || null);
   const tags = String(form.get("tags") ?? "")
@@ -113,7 +123,8 @@ export async function POST(request: Request) {
       .insert(vaultDocuments)
       .values({
         title,
-        category,
+        categories,
+        categoryOther,
         tags,
         notes,
         originalFilename: file.name.slice(0, 255),

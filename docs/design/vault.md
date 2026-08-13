@@ -82,5 +82,13 @@ beside a soft card stack. Radius **0** everywhere.
 
 ## What must not change (backend)
 
-Crypto, access gating, upload/download APIs, schema, Fuse search behavior —
-frontend shell only.
+Crypto, access gating, upload/download APIs (aside from metadata shape), schema
+migrations via Drizzle — frontend shell + searchable metadata only.
+
+## Categories
+
+Documents support **multiple categories** (`categories: vault_category[]`).
+Upload and edit use multi-select chips; filters match any assigned category.
+Empty selection normalizes to `["other"]`. Choosing **Other** reveals a text
+field (`categoryOther`) so you can name a custom drawer; the chip shows that
+label on the dossier.

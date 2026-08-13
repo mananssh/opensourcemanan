@@ -7,7 +7,7 @@ import { vaultDocuments } from "@/db/schema";
 import { deleteObject } from "@/lib/storage/object-store";
 import { requireVaultOwner } from "@/lib/vault/access";
 import { getDocumentRecord } from "@/lib/vault/queries";
-import { normalizeCategory } from "@/lib/vault/categories";
+import { normalizeCategories, normalizeCategoryOther } from "@/lib/vault/categories";
 
 /**
  * Vault mutations. EVERY action re-gates with `requireVaultOwner()` (404s anyone
@@ -44,7 +44,8 @@ export async function updateDocument(
   id: string,
   patch: {
     title?: string;
-    category?: string;
+    categories?: string[];
+    categoryOther?: string | null;
     tags?: string[];
     notes?: string | null;
   },
@@ -59,14 +60,34 @@ export async function updateDocument(
       ? undefined
       : (patch.notes?.trim().slice(0, MAX_NOTES) || null);
 
+  const categories =
+    patch.categories !== undefined
+      ? normalizeCategories(patch.categories)
+      : undefined;
+  // If categories are patched, always re-resolve categoryOther against them.
+  // If only categoryOther is patched, we need current categories — load below.
+  let categoryOther: string | null | undefined;
+  if (categories !== undefined) {
+    categoryOther = normalizeCategoryOther(
+      categories,
+      patch.categoryOther ?? null,
+    );
+  } else if (patch.categoryOther !== undefined) {
+    const row = await getDocumentRecord(id);
+    if (!row) return { ok: false, error: "Document not found." };
+    categoryOther = normalizeCategoryOther(
+      normalizeCategories(row.categories),
+      patch.categoryOther,
+    );
+  }
+
   try {
     await db
       .update(vaultDocuments)
       .set({
         ...(title !== undefined ? { title } : {}),
-        ...(patch.category !== undefined
-          ? { category: normalizeCategory(patch.category) }
-          : {}),
+        ...(categories !== undefined ? { categories } : {}),
+        ...(categoryOther !== undefined ? { categoryOther } : {}),
         ...(patch.tags !== undefined ? { tags: cleanTags(patch.tags) } : {}),
         ...(notes !== undefined ? { notes } : {}),
         updatedAt: new Date(),

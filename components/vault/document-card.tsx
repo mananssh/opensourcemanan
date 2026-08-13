@@ -4,7 +4,7 @@ import { type ReactNode, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useReducedMotion, motion } from "motion/react";
 import { deleteDocument, toggleFavorite } from "@/app/vault/actions";
-import { categoryLabel } from "@/lib/vault/categories";
+import { categoryDisplayLabel } from "@/lib/vault/categories";
 import { formatBytes, formatDate } from "@/lib/vault/format";
 import type { VaultDocCard } from "@/lib/vault/queries";
 import {
@@ -68,9 +68,14 @@ export function DocumentCard({
             <span className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-accent-2">
               {ext || "FILE"} · {formatBytes(doc.sizeBytes)}
             </span>
-            <span className="border border-accent/35 bg-accent-soft px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-accent">
-              {categoryLabel(doc.category)}
-            </span>
+            {doc.categories.map((cat) => (
+              <span
+                key={cat}
+                className="border border-accent/35 bg-accent-soft px-2 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-accent"
+              >
+                {categoryDisplayLabel(cat, doc.categoryOther)}
+              </span>
+            ))}
           </div>
 
           <h3 className="vault-wordmark mt-2 font-display text-xl font-semibold tracking-wide text-ink transition-colors group-hover:text-accent sm:text-2xl">

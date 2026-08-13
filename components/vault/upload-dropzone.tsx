@@ -2,9 +2,10 @@
 
 import { useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
-import { VAULT_CATEGORIES } from "@/lib/vault/categories";
+import type { VaultCategory } from "@/db/schema";
 import { formatBytes } from "@/lib/vault/format";
 import { UploadIcon, CloseIcon, LockIcon } from "@/components/vault/icons";
+import { CategoryMultiSelect } from "@/components/vault/category-multi-select";
 
 const MAX_BYTES = 25 * 1024 * 1024;
 
@@ -14,7 +15,8 @@ export function UploadDropzone({ configured }: { configured: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string>("identity");
+  const [categories, setCategories] = useState<VaultCategory[]>(["identity"]);
+  const [categoryOther, setCategoryOther] = useState("");
   const [tags, setTags] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,6 +42,8 @@ export function UploadDropzone({ configured }: { configured: boolean }) {
   function reset() {
     setFile(null);
     setTitle("");
+    setCategories(["identity"]);
+    setCategoryOther("");
     setTags("");
     setError(null);
     if (inputRef.current) inputRef.current.value = "";
@@ -53,7 +57,8 @@ export function UploadDropzone({ configured }: { configured: boolean }) {
       const body = new FormData();
       body.set("file", file);
       body.set("title", title);
-      body.set("category", category);
+      for (const c of categories) body.append("categories", c);
+      if (categoryOther.trim()) body.set("categoryOther", categoryOther);
       body.set("tags", tags);
       const res = await fetch("/api/vault/upload", { method: "POST", body });
       if (!res.ok) {
@@ -138,23 +143,25 @@ export function UploadDropzone({ configured }: { configured: boolean }) {
                 className="mt-1 w-full border border-rule bg-paper px-3 py-2 text-ink outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
               />
             </label>
-            <label className="block">
+            <div className="sm:col-span-2">
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-faint">
-                Category
+                Categories
               </span>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="mt-1 w-full border border-rule bg-paper px-3 py-2 text-ink outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent"
-              >
-                {VAULT_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
+              <CategoryMultiSelect
+                idPrefix="upload-cat"
+                value={categories}
+                onChange={setCategories}
+                otherLabel={categoryOther}
+                onOtherLabelChange={setCategoryOther}
+              />
+              <p className="mt-1.5 font-mono text-[0.58rem] text-faint">
+                Pick one or more
+                {categories.includes("other")
+                  ? " · name the custom category below"
+                  : ""}
+              </p>
+            </div>
+            <label className="block sm:col-span-2">
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-faint">
                 Tags
               </span>
