@@ -42,7 +42,7 @@ export default async function GameDetailPage({ params }: Props) {
         href="/games"
         className="mt-12 inline-flex cursor-pointer items-center font-mono text-[0.7rem] uppercase tracking-[0.18em] text-muted transition-colors hover:text-accent"
       >
-        ← Back to ARCD
+        ← Cabinets
       </Link>
     </div>
   );

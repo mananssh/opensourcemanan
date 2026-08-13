@@ -2,84 +2,88 @@
 
 import { useReducedMotion, motion } from "motion/react";
 import { StageCta } from "@/components/games/stage-cta";
+import { ArcadeMarquee } from "@/components/games/arcade-marquee";
 
 /**
- * ARCD hero — marque + unDraw Gaming Controller (licensed).
- * See docs/design/games.md and public/games/art/LICENSES.md.
+ * ARCD hero — marquee archetype + clipped display type.
+ * See docs/design/games.md ("Cabinet After Hours").
  */
 export function ArcadeHero() {
   const reduce = useReducedMotion();
 
-  const fade = (delay: number) =>
+  const line = (delay: number) =>
     reduce
-      ? { initial: false as const, animate: { opacity: 1 } }
+      ? { initial: false as const, animate: { y: "0%", opacity: 1 } }
       : {
-          initial: { opacity: 0 },
-          animate: { opacity: 1 },
+          initial: { y: "110%", opacity: 0 },
+          animate: { y: "0%", opacity: 1 },
           transition: {
-            duration: 0.55,
+            duration: 0.85,
             delay,
             ease: [0.22, 1, 0.36, 1] as const,
           },
         };
 
   return (
-    <section className="relative">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 py-16 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:py-24">
-        <div className="order-2 text-left lg:order-1">
-          <motion.p
-            {...fade(0)}
-            className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-faint"
-          >
-            Arcade
-          </motion.p>
+    <section className="relative overflow-x-clip">
+      <div className="mx-auto flex w-full max-w-6xl items-baseline justify-between px-6 pt-8 sm:pt-10">
+        <p className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-faint">
+          Index 001 — cabinets
+        </p>
+        <p className="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-accent-2">
+          Coin ready
+        </p>
+      </div>
 
+      <div className="mt-6">
+        <ArcadeMarquee />
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl px-6 pb-[clamp(4rem,12vh,8rem)] pt-[clamp(2.5rem,8vh,5rem)]">
+        <div className="overflow-hidden">
           <motion.h1
-            {...fade(0.06)}
-            className="arcd-wordmark mt-4 font-display text-[clamp(4rem,12vw,7.5rem)] font-bold text-ink"
+            {...line(0.05)}
+            className="arcd-wordmark font-display text-[clamp(5rem,18vw,12rem)] font-bold text-ink"
+            aria-label="ARCD"
           >
             ARCD
-            <span className="text-accent" aria-hidden>
-              .
-            </span>
           </motion.h1>
-
-          <motion.p
-            {...fade(0.1)}
-            className="mt-6 max-w-sm text-lg leading-relaxed text-muted"
-          >
-            Playable experiments — single-player, multiplayer, and whatever lands
-            next.
-          </motion.p>
-
-          <motion.div {...fade(0.14)} className="mt-8">
-            <StageCta
-              onClick={() => {
-                document.getElementById("catalog")?.scrollIntoView({
-                  behavior: reduce ? "auto" : "smooth",
-                  block: "start",
-                });
-              }}
-            >
-              See what&rsquo;s on the floor
-            </StageCta>
-          </motion.div>
         </div>
 
-        <motion.div
-          {...fade(0.08)}
-          className="order-1 flex justify-center lg:order-2 lg:justify-end"
+        <motion.p
+          {...(reduce
+            ? { initial: false as const, animate: { opacity: 1 } }
+            : {
+                initial: { opacity: 0 },
+                animate: { opacity: 1 },
+                transition: { duration: 0.5, delay: 0.35 },
+              })}
+          className="mt-6 max-w-md text-lg leading-relaxed text-muted sm:text-xl"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- SVG stays vector-crisp */}
-          <img
-            src="/games/art/undraw-gaming-controller.svg"
-            alt=""
-            width={801}
-            height={664}
-            decoding="async"
-            fetchPriority="high"
-            className="arcd-art h-auto w-full max-w-md select-none lg:max-w-lg"
-          />
+          Playable experiments still humming after the lights go out —
+          single-player, multiplayer, whatever lands next.
+        </motion.p>
+
+        <motion.div
+          {...(reduce
+            ? { initial: false as const, animate: { opacity: 1 } }
+            : {
+                initial: { opacity: 0 },
+                animate: { opacity: 1 },
+                transition: { duration: 0.45, delay: 0.45 },
+              })}
+          className="mt-10"
+        >
+          <StageCta
+            onClick={() => {
+              document.getElementById("catalog")?.scrollIntoView({
+                behavior: reduce ? "auto" : "smooth",
+                block: "start",
+              });
+            }}
+          >
+            Insert coin
+          </StageCta>
         </motion.div>
       </div>
     </section>
