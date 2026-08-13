@@ -39,7 +39,10 @@ export const vaultDocuments = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     // Owner-authored, searchable metadata.
     title: text().notNull(),
-    category: vaultCategory().notNull().default("other"),
+    // One or more categories (enum array). A document can sit in several drawers.
+    categories: vaultCategory().array().notNull().default([]),
+    // Free-text label when `other` is among categories (cleared when it isn't).
+    categoryOther: text(),
     tags: text().array().notNull().default([]),
     notes: text(),
     favorite: boolean().notNull().default(false),
@@ -55,10 +58,7 @@ export const vaultDocuments = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    index("vault_documents_category_idx").on(t.category),
-    index("vault_documents_created_idx").on(t.createdAt),
-  ],
+  (t) => [index("vault_documents_created_idx").on(t.createdAt)],
 );
 
 export type VaultDocument = typeof vaultDocuments.$inferSelect;

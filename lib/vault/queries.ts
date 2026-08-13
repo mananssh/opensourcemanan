@@ -4,6 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { vaultDocuments, type VaultDocument, type VaultCategory } from "@/db/schema";
 import { safeDb } from "@/lib/blog/safe-db";
+import { normalizeCategories } from "@/lib/vault/categories";
 
 /**
  * Vault store. Every read here is already behind `requireVaultOwner()` at the
@@ -17,7 +18,8 @@ import { safeDb } from "@/lib/blog/safe-db";
 export interface VaultDocCard {
   id: string;
   title: string;
-  category: VaultCategory;
+  categories: VaultCategory[];
+  categoryOther: string | null;
   tags: string[];
   notes: string | null;
   favorite: boolean;
@@ -32,7 +34,8 @@ export function toCard(r: VaultDocument): VaultDocCard {
   return {
     id: r.id,
     title: r.title,
-    category: r.category,
+    categories: normalizeCategories(r.categories),
+    categoryOther: r.categoryOther,
     tags: r.tags,
     notes: r.notes,
     favorite: r.favorite,
@@ -86,7 +89,9 @@ export function computeStats(cards: VaultDocCard[]): VaultStats {
   let totalBytes = 0;
   let favorites = 0;
   for (const c of cards) {
-    counts.set(c.category, (counts.get(c.category) ?? 0) + 1);
+    for (const cat of c.categories) {
+      counts.set(cat, (counts.get(cat) ?? 0) + 1);
+    }
     totalBytes += c.sizeBytes;
     if (c.favorite) favorites++;
   }

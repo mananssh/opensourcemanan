@@ -1,0 +1,1 @@
+ALTER TABLE "vault_documents" ADD COLUMN "category_other" text;
