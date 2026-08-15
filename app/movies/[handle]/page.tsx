@@ -63,7 +63,7 @@ export default async function ProfilePage({
             )}
           </div>
           <div>
-            <h1 className="vhs-title font-display text-4xl tracking-[0.03em] text-ink">{name}</h1>
+            <h1 className="reel-wordmark font-display text-4xl text-ink sm:text-5xl">{name}</h1>
             <p className="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-faint">
               @{watcher.handle}
               {" · "}
@@ -88,14 +88,14 @@ export default async function ProfilePage({
             )}
             <Link
               href={`/movies/${watcher.handle}/wrapped`}
-              className="inline-flex h-9 items-center rounded-full border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
+              className="inline-flex h-9 items-center border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
             >
               Wrapped ✦
             </Link>
             {isOwner && (
               <Link
                 href="/movies"
-                className="inline-flex h-9 items-center rounded-full border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
+                className="inline-flex h-9 items-center border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
               >
                 Manage
               </Link>

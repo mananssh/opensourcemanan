@@ -68,7 +68,7 @@ export function ProfileForm({ watcher }: { watcher: PublicWatcher }) {
       )}
 
       <SubmitButton
-        className="inline-flex items-center rounded-full bg-accent px-5 py-2 font-mono text-sm uppercase tracking-[0.12em] text-accent-ink transition-opacity hover:opacity-90"
+        className="inline-flex items-center border border-accent bg-accent px-5 py-2 font-mono text-[0.7rem] uppercase tracking-[0.14em] text-accent-ink transition-colors hover:bg-transparent hover:text-accent"
         pendingLabel="Saving…"
       >
         Save

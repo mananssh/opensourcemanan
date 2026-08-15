@@ -89,9 +89,9 @@ export default async function WrappedPage({
     <div className="mx-auto w-full max-w-2xl space-y-6 px-6 py-10 sm:py-16">
       <Card index={i++} tone="ink">
         <p className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-accent">
-          ●REC · Reel · Wrapped
+          Reel · Wrapped
         </p>
-        <h1 className="vhs-title mt-4 font-display text-7xl leading-[0.9] tracking-[0.02em]">
+        <h1 className="reel-wordmark mt-4 font-display text-7xl leading-[0.9]">
           {name}&rsquo;s
           <br />
           {label}

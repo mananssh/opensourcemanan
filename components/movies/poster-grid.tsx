@@ -21,13 +21,13 @@ export function PosterGrid({ entries }: { entries: MovieCard[] }) {
               {e.favorite && (
                 <span
                   aria-label="Favorite"
-                  className="absolute right-1 top-1 rounded-full bg-paper/85 p-1 text-accent"
+                  className="absolute right-1 top-1 bg-paper/85 p-1 text-accent"
                 >
                   <HeartIcon filled className="h-3.5 w-3.5" />
                 </span>
               )}
               {e.status === "watching" && (
-                <span className="absolute left-1 top-1 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-accent-ink">
+                <span className="absolute left-1 top-1 bg-accent px-1.5 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-accent-ink">
                   Now
                 </span>
               )}

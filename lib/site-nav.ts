@@ -30,7 +30,7 @@ export const siteNav: NavItem[] = [
   {
     label: "Reel",
     href: "/movies",
-    description: "Everything I've watched, ticket-stub style.",
+    description: "Last showing — everything you've watched, on the lot.",
   },
   {
     label: "ARCD",

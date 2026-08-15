@@ -155,7 +155,7 @@ export function EntryLibrary({ initialEntries }: { initialEntries: MovieCard[] }
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] transition-colors ${
+                className={`inline-flex items-center gap-1.5 border px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.14em] transition-colors ${
                   active
                     ? "border-accent bg-accent text-accent-ink"
                     : "border-rule text-muted hover:border-accent hover:text-accent"

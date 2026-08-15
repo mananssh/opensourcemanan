@@ -45,7 +45,7 @@ export function FriendsStrip({
               <li key={w.handle}>
                 <Link
                   href={`/movies/${w.handle}`}
-                  className="inline-flex items-center gap-2 rounded-full border border-rule bg-surface py-1 pl-1 pr-3 transition-colors hover:border-accent"
+                  className="inline-flex items-center gap-2 border border-rule bg-surface py-1 pl-1 pr-3 transition-colors hover:border-accent"
                 >
                   <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-accent-soft text-xs font-bold text-accent">
                     {w.avatarUrl ? (

@@ -93,7 +93,7 @@ export function EntryCard({
             value={entry.status}
             aria-label="Status"
             onChange={(e) => onUpdate({ status: e.target.value as WatchStatusValue })}
-            className="rounded-full border border-rule bg-paper px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted outline-none focus:border-accent"
+            className="border border-rule bg-paper px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted outline-none focus:border-accent"
           >
             {(["watched", "watching", "watchlist"] as WatchStatusValue[]).map((s) => (
               <option key={s} value={s}>
@@ -105,7 +105,7 @@ export function EntryCard({
           <button
             type="button"
             onClick={() => setNoteOpen((v) => !v)}
-            className="rounded-full border border-rule px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted transition-colors hover:border-accent hover:text-accent"
+            className="border border-rule px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-muted transition-colors hover:border-accent hover:text-accent"
           >
             {entry.note ? "Note ✓" : "＋ Note"}
           </button>
@@ -115,7 +115,7 @@ export function EntryCard({
               <button
                 type="button"
                 onClick={onRemove}
-                className="rounded-full border border-accent px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-accent"
+                className="border border-accent px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-accent"
               >
                 Delete?
               </button>
@@ -166,7 +166,7 @@ export function EntryCard({
                   onUpdate({ note: note.trim() || null });
                   setNoteOpen(false);
                 }}
-                className="rounded-full bg-accent px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-accent-ink"
+                className="bg-accent px-3 py-1 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-accent-ink"
               >
                 Save
               </button>
@@ -219,7 +219,7 @@ function EpisodeProgress({
             aria-label="One fewer episode"
             onClick={dec}
             disabled={watched <= 0}
-            className="flex h-6 w-6 items-center justify-center rounded-full border border-rule text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+            className="flex h-6 w-6 items-center justify-center  border border-rule text-ink transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
           >
             −
           </button>
@@ -228,16 +228,16 @@ function EpisodeProgress({
             aria-label="One more episode"
             onClick={inc}
             disabled={atMax}
-            className="flex h-6 items-center gap-1 rounded-full border border-accent bg-accent px-2.5 text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="flex h-6 items-center gap-1  border border-accent bg-accent px-2.5 text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             ＋1 ep
           </button>
         </span>
       </div>
       {total != null && total > 0 && (
-        <span className="relative block h-2 overflow-hidden rounded-full bg-paper">
+        <span className="relative block h-2 overflow-hidden  bg-paper">
           <span
-            className="absolute inset-y-0 left-0 rounded-full bg-accent-2 transition-[width] duration-300"
+            className="absolute inset-y-0 left-0  bg-accent-2 transition-[width] duration-300"
             style={{ width: `${pct}%` }}
           />
         </span>

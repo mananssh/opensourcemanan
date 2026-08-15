@@ -42,10 +42,10 @@ export function FollowButton({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       aria-pressed={following}
-      className={`inline-flex h-9 items-center rounded-full px-5 font-mono text-[0.62rem] uppercase tracking-[0.14em] transition-colors disabled:opacity-60 ${
+      className={`inline-flex h-9 items-center px-5 font-mono text-[0.62rem] uppercase tracking-[0.14em] transition-colors disabled:opacity-60 ${
         following
           ? "border border-rule text-muted hover:border-accent hover:text-accent"
-          : "bg-accent text-accent-ink hover:opacity-90"
+          : "border border-accent bg-accent text-accent-ink hover:bg-transparent hover:text-accent"
       }`}
     >
       {label}

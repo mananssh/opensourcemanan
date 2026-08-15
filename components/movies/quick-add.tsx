@@ -96,7 +96,7 @@ export function QuickAdd({
       <label className="sr-only" htmlFor="reel-search">
         Search films and TV
       </label>
-      <div className="neon-edge flex items-center gap-3 rounded-sm border-2 border-rule bg-surface px-4 py-3 transition-colors focus-within:border-accent">
+      <div className="flex items-center gap-3 border border-rule bg-surface px-4 py-3 transition-colors focus-within:border-accent">
         <span aria-hidden className="font-mono text-accent-2">
           ▸
         </span>
@@ -189,7 +189,7 @@ export function QuickAdd({
                       type="button"
                       disabled={busy}
                       onClick={() => choose(r, "watchlist")}
-                      className="shrink-0 rounded-full border border-rule px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.15em] text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
+                      className="shrink-0 border border-rule px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-[0.15em] text-muted transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
                     >
                       Queue
                     </button>
