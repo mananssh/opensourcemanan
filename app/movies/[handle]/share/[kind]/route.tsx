@@ -3,8 +3,7 @@ import { getPublicProfile } from "@/lib/movies/queries";
 import { computeStats } from "@/lib/movies/stats";
 import { formatHours } from "@/lib/movies/format";
 
-// Shareable cards (Instagram story / square) — a VHS tape label. Reads the
-// public profile from the DB, so it runs on the Node runtime (postgres.js).
+// Shareable cards (Instagram story / square) — Last Showing lot card.
 export const runtime = "nodejs";
 
 const SIZES = {
@@ -14,15 +13,15 @@ const SIZES = {
 
 type Kind = keyof typeof SIZES;
 
-// VHS dark palette (mirrors .vertical-movies dark tokens). OG images can't read
-// CSS vars, so these are inlined intentionally.
-const BG = "#0b0713";
-const PANEL = "#150f24";
-const INK = "#f3ecff";
-const MUTED = "#baa9dc";
-const MAGENTA = "#ff3d8b";
-const CYAN = "#22e3e3";
-const RULE = "#2c2246";
+// Last Showing dark palette (mirrors .vertical-movies dark tokens). OG images
+// can't read CSS vars, so these are inlined intentionally.
+const BG = "#0c0b09";
+const PANEL = "#171512";
+const INK = "#f3ece3";
+const MUTED = "#b8ad9c";
+const MAGENTA = "#ffb020";
+const CYAN = "#7eb8d4";
+const RULE = "#2a2620";
 
 /** A drawn star (avoids relying on the ★ glyph, which satori's default font lacks). */
 function Star({ size = 40 }: { size?: number }) {

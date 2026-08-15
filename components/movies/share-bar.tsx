@@ -25,7 +25,7 @@ export function ShareBar({ handle }: { handle: string }) {
   }
 
   const link =
-    "inline-flex h-9 items-center rounded-full border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent";
+    "inline-flex h-9 items-center border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent";
 
   return (
     <div className="flex flex-wrap items-center gap-2">

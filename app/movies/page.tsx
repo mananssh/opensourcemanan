@@ -7,6 +7,7 @@ import { listFollowing, getFriendsFeed } from "@/lib/movies/follows";
 import { SubmitButton } from "@/components/blog/submit-button";
 import { EntryLibrary } from "@/components/movies/entry-library";
 import { FriendsStrip } from "@/components/movies/friends-strip";
+import { ReelHero } from "@/components/movies/reel-hero";
 
 export default async function MoviesHome() {
   const session = await auth();
@@ -24,26 +25,25 @@ export default async function MoviesHome() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-10 sm:py-14">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-accent-2">
-            ●REC · Now showing
+            Now showing
           </p>
-          <h1 className="vhs-title mt-1 font-display text-5xl tracking-[0.03em] text-ink">
+          <h1 className="reel-wordmark mt-1 font-display text-[clamp(2.75rem,8vw,5rem)] text-ink">
             {viewer.displayName ?? `@${viewer.handle}`}
-            <span className="text-accent">.</span>
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/movies/${viewer.handle}`}
-            className="inline-flex h-9 items-center rounded-full border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
+            className="inline-flex h-9 items-center border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
           >
             View reel
           </Link>
           <Link
             href="/movies/settings"
-            className="inline-flex h-9 items-center rounded-full border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
+            className="inline-flex h-9 items-center border border-rule px-4 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-muted transition-colors hover:border-accent hover:text-accent"
           >
             Settings
           </Link>
@@ -61,52 +61,43 @@ export default async function MoviesHome() {
 
 function Landing() {
   const features = [
-    ["One-tap logging", "Search a title, tap it, done. Built to be a habit, not a chore."],
-    ["Your box-office report", "Hours watched, top genres, decades, ratings — your taste, quantified."],
-    ["Follow by @handle", "No feed, no algorithm. Add friends you actually know and pin their reels."],
+    ["01", "Log it", "Search a title, tap it, done. A habit, not a chore."],
+    ["02", "The report", "Hours, genres, decades, ratings — taste, counted."],
+    ["03", "Follow @handle", "No feed. Add people you know and pin their reels."],
   ];
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
-      <p className="font-mono text-[0.62rem] uppercase tracking-[0.28em] text-accent-2">
-        ●REC · SP · 0:00:00
-      </p>
-      <h1 className="vhs-title mt-4 font-display text-6xl leading-[0.95] tracking-[0.02em] text-ink sm:text-7xl">
-        Keep the reel of
-        <br />
-        everything you watch<span className="text-accent">.</span>
-      </h1>
-      <p className="mt-6 max-w-xl font-body text-lg leading-relaxed text-muted">
-        A retro logbook for films &amp; TV. Rate them, stack the stats, and share
-        a ticket-stub of your taste. Sign in to start yours.
-      </p>
+    <div className="mx-auto w-full max-w-5xl px-6 pb-[clamp(4rem,12vh,8rem)] pt-10 sm:pt-16">
+      <ReelHero
+        cta={
+          <form
+            action={async () => {
+              "use server";
+              await signIn("google", { redirectTo: "/movies" });
+            }}
+          >
+            <SubmitButton
+              className="inline-flex items-center border border-accent bg-accent px-7 py-3.5 font-mono text-[0.7rem] uppercase tracking-[0.2em] text-accent-ink transition-colors hover:bg-transparent hover:text-accent"
+              pendingLabel="Redirecting…"
+            >
+              Continue with Google
+            </SubmitButton>
+          </form>
+        }
+      />
 
-      <form
-        action={async () => {
-          "use server";
-          await signIn("google", { redirectTo: "/movies" });
-        }}
-      >
-        <SubmitButton
-          className="mt-8 inline-flex items-center gap-3 rounded-full bg-accent px-6 py-3 font-mono text-sm uppercase tracking-[0.12em] text-accent-ink transition-opacity hover:opacity-90"
-          pendingLabel="Redirecting…"
-        >
-          <span aria-hidden>◈</span> Continue with Google
-        </SubmitButton>
-      </form>
-
-      <ul className="mt-16 space-y-6 border-t border-rule pt-10">
-        {features.map(([title, desc]) => (
-          <li key={title} className="flex gap-4">
-            <span aria-hidden className="mt-1 font-display text-accent">
-              ◆
-            </span>
+      <ol className="mt-[clamp(4rem,12vh,7rem)] divide-y divide-rule border-y border-rule">
+        {features.map(([n, title, desc]) => (
+          <li key={n} className="grid gap-2 py-8 sm:grid-cols-[4rem_1fr] sm:items-baseline sm:gap-8">
+            <span className="font-mono text-[0.65rem] tracking-[0.18em] text-faint">{n}</span>
             <div>
-              <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
-              <p className="mt-1 font-body text-muted">{desc}</p>
+              <h2 className="reel-wordmark font-display text-2xl text-ink sm:text-3xl">
+                {title}
+              </h2>
+              <p className="mt-2 max-w-lg text-muted">{desc}</p>
             </div>
           </li>
         ))}
-      </ul>
+      </ol>
     </div>
   );
 }

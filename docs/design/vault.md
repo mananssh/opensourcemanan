@@ -26,7 +26,7 @@ beside a soft card stack. Radius **0** everywhere.
 - Not Editorial Logbook (warm paper / Fraunces / oxblood)
 - Not previous Vault (steel + brass + Chakra Petch + CRT)
 - Not ARCD Cabinet After Hours (phosphor green / marquee / Big Shoulders)
-- Not Reel (VHS neon magenta/cyan / Bebas)
+- Not Reel Last Showing (sodium asphalt / Anton)
 - Not rounded SaaS card grids / pill chips as the visual system
 
 ## Type

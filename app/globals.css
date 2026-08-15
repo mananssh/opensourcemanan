@@ -156,46 +156,38 @@ html.dark .vertical-portfolio {
 }
 
 /*
- * Reel vertical (/movies) — "VHS / Video Nasty": a late-night video-store tape.
- * Dark-first and unapologetically NOT the OSM warm-paper base — a violet-black
- * auditorium lit by neon magenta + cyan, CRT scanlines, tape grain and a glitchy
- * chromatic-aberration wordmark. Light mode is a cool "video-store daylight"
- * (lilac-grey), never OSM's kraft. Display = Bebas Neue (VHS box marquee), body
- * = DM Sans, meta = Space Mono (timecode). Two accents: --accent (magenta, the
- * brand) and --accent-2 (cyan, the second neon). Both themes WCAG-validated:
- * ink ≥12:1, muted ≥6.5:1, faint/accent/accent-2 ≥4.5:1 on paper AND surface;
- * accent-ink ≥4.5:1 on both neons. Fonts load in app/movies/layout.tsx.
- * (ADR 0005 + 0010; designed with the ui-ux-pro-max skill, styles #68 + #11.)
+ * Reel (/movies) — "Last Showing": sodium lamps on wet asphalt after credits.
+ * See docs/design/movies.md. Fonts in app/movies/layout.tsx.
  */
 .vertical-movies {
-  /* Light = cool "video-store daylight" — deliberately cool/lilac, not warm. */
-  --paper: #e9e6f2;
-  --surface: #f5f3fb;
-  --ink: #1a1327;
-  --muted: #4a3f63;
-  --faint: #5c5178;
-  --rule: #cfc7e0;
-  --accent: #b81e6a; /* VHS magenta, deepened for AA on light */
-  --accent-2: #0e6d8f; /* cyan, deepened for AA on light */
-  --accent-soft: #f0d9e6;
+  --paper: #e4e0d6;
+  --surface: #f1ece2;
+  --ink: #16120e;
+  --muted: #4d463c;
+  --faint: #6b6358;
+  --rule: #c9c0b0;
+  --accent: #b45309;
+  --accent-2: #1e4d6b;
+  --accent-soft: #f0dcc0;
   --accent-ink: #ffffff;
+  --radius: 0;
 
-  --display-family: var(--font-bebas);
-  --body-family: var(--font-dm-sans);
-  --mono-family: var(--font-space-mono);
+  --display-family: var(--font-anton);
+  --body-family: var(--font-outfit);
+  --mono-family: var(--font-red-hat-mono);
 }
 
 html.dark .vertical-movies {
-  --paper: #0b0713; /* violet-black tape */
-  --surface: #150f24; /* elevated panel */
-  --ink: #f3ecff; /* cool white */
-  --muted: #baa9dc;
-  --faint: #8f7fb2;
-  --rule: #2c2246;
-  --accent: #ff3d8b; /* neon magenta */
-  --accent-2: #22e3e3; /* neon cyan */
-  --accent-soft: #2a0f22;
-  --accent-ink: #0b0713; /* dark text on the bright neons */
+  --paper: #0c0b09;
+  --surface: #171512;
+  --ink: #f3ece3;
+  --muted: #b8ad9c;
+  --faint: #8a8072;
+  --rule: #2a2620;
+  --accent: #ffb020;
+  --accent-2: #7eb8d4;
+  --accent-soft: #2a1c08;
+  --accent-ink: #0c0b09;
 }
 
 /*
@@ -439,51 +431,33 @@ html.dark .vertical-games .arcd-art {
   }
 }
 
-/*
- * VHS chrome — scoped to the vertical so it can't leak. A faint CRT scanline
- * wash over the whole surface + a subtle magenta/cyan vignette in dark mode.
- * Kept low-opacity so text stays ≥AA; pointer-events off; not on print.
- */
 .vertical-movies {
   position: relative;
+  isolation: isolate;
 }
-html.dark .vertical-movies::after {
+
+html.dark .vertical-movies::before {
   content: "";
+  pointer-events: none;
   position: fixed;
   inset: 0;
-  z-index: 60;
-  pointer-events: none;
+  z-index: 0;
   background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.03) 0 1px,
-      transparent 1px 3px
-    ),
-    radial-gradient(120% 80% at 15% 0%, rgba(255, 61, 139, 0.08), transparent 60%),
-    radial-gradient(120% 80% at 85% 100%, rgba(34, 227, 227, 0.07), transparent 60%);
-}
-@media (prefers-reduced-motion: reduce) {
-  .vertical-movies .vhs-flicker {
-    animation: none !important;
-  }
+    radial-gradient(70% 50% at 8% 0%, rgb(255 176 32 / 0.1), transparent 55%),
+    radial-gradient(60% 40% at 92% 100%, rgb(126 184 212 / 0.07), transparent 50%);
 }
 
-/* Neon glow helpers (dark mode only — glow reads as haze on light). */
-html.dark .vertical-movies .neon-text {
-  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
-}
-html.dark .vertical-movies .neon-edge {
-  box-shadow: 0 0 0 1px var(--accent-soft), 0 0 18px -6px var(--accent);
+.vertical-movies .reel-wordmark {
+  letter-spacing: 0.02em;
+  line-height: 0.85;
+  text-transform: uppercase;
 }
 
-/* Chromatic-aberration wordmark — the "tracking error" title treatment. */
 .vertical-movies .vhs-title {
-  position: relative;
-}
-html.dark .vertical-movies .vhs-title {
-  text-shadow:
-    -0.02em 0 color-mix(in srgb, var(--accent) 70%, transparent),
-    0.02em 0 color-mix(in srgb, var(--accent-2) 70%, transparent);
+  /* Back-compat alias — same as reel-wordmark; no chromatic split. */
+  letter-spacing: 0.02em;
+  line-height: 0.85;
+  text-transform: uppercase;
 }
 
 /* A sticky note: colored card, soft shadow, slight tilt; straightens on hover.

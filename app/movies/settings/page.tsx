@@ -12,8 +12,8 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-14">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="vhs-title font-display text-4xl tracking-[0.03em] text-ink">
-          Settings<span className="text-accent">.</span>
+        <h1 className="reel-wordmark font-display text-4xl text-ink">
+          Settings
         </h1>
         <Link
           href="/movies"

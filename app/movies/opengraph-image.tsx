@@ -1,10 +1,10 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Reel — track everything you watch";
+export const alt = "Reel — last showing";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** Default OG card for the Reel vertical (VHS aesthetic). */
+/** Default OG card for Reel — Last Showing (asphalt + sodium). */
 export default function OgImage() {
   return new ImageResponse(
     (
@@ -15,45 +15,37 @@ export default function OgImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#0b0713",
-          color: "#f3ecff",
+          background: "#0c0b09",
+          color: "#f3ece3",
           padding: "88px",
           fontFamily: "sans-serif",
         }}
       >
         <div
           style={{
-            position: "absolute",
-            inset: 0,
             display: "flex",
-            backgroundImage:
-              "repeating-linear-gradient(to bottom, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 4px)",
-          }}
-        />
-        <div
-          style={{
-            display: "flex",
-            fontSize: 30,
-            letterSpacing: 10,
-            color: "#22e3e3",
+            fontSize: 28,
+            letterSpacing: 8,
+            color: "#7eb8d4",
             fontWeight: 700,
           }}
         >
-          ● REC · REEL
+          LAST SHOWING
         </div>
         <div
           style={{
             display: "flex",
-            fontSize: 132,
+            fontSize: 140,
             fontWeight: 800,
-            letterSpacing: -3,
-            lineHeight: 0.9,
+            letterSpacing: -2,
+            lineHeight: 0.85,
+            textTransform: "uppercase",
           }}
         >
-          Reel<span style={{ color: "#ff3d8b" }}>.</span>
+          Reel
         </div>
-        <div style={{ display: "flex", fontSize: 30, color: "#baa9dc" }}>
-          A VHS logbook for everything you watch.
+        <div style={{ display: "flex", fontSize: 28, color: "#b8ad9c" }}>
+          Everything you watch, logged on the lot.
         </div>
       </div>
     ),

@@ -46,7 +46,7 @@ When listing anti-goals in the brief, name at least one real sibling:
 - Blog — Kinetic Mono / vermilion
 - Dump — cool board / Caveat
 - Portfolio — monochrome Bricolage
-- Movies / Reel — VHS magenta/cyan
+- Movies / Reel — Last Showing / sodium asphalt + Anton
 - Vault — Blacklight Notary / wax + UV indigo
 - Games / ARCD — Cabinet After Hours / phosphor + marquee
 

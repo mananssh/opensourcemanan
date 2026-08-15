@@ -23,9 +23,9 @@ function Bar({ label, count, max }: { label: string; count: number; max: number 
       <span className="w-16 shrink-0 truncate font-mono text-[0.62rem] uppercase tracking-[0.1em] text-muted">
         {label}
       </span>
-      <span className="relative h-3 flex-1 overflow-hidden rounded-full bg-paper">
+      <span className="relative h-3 flex-1 overflow-hidden bg-paper">
         <span
-          className="absolute inset-y-0 left-0 rounded-full bg-accent"
+          className="absolute inset-y-0 left-0 bg-accent"
           style={{ width: `${pct}%` }}
         />
       </span>

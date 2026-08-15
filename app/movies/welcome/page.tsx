@@ -11,17 +11,16 @@ export default async function WelcomePage() {
   if (await getViewer()) redirect("/movies");
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-24">
+    <div className="mx-auto w-full max-w-3xl overflow-x-clip px-6 py-16 sm:py-24">
       <p className="font-mono text-[0.62rem] uppercase tracking-[0.28em] text-accent-2">
-        ●REC · New here
+        Claim a stall
       </p>
-      <h1 className="vhs-title mt-4 font-display text-5xl tracking-[0.03em] text-ink sm:text-6xl">
-        Claim your handle<span className="text-accent">.</span>
+      <h1 className="reel-wordmark mt-4 font-display text-[clamp(3rem,10vw,5.5rem)] text-ink">
+        Handle
       </h1>
-      <p className="mt-5 max-w-lg font-body text-lg leading-relaxed text-muted">
-        This is how friends find you — they&rsquo;ll follow you by your exact
-        @handle. It becomes your public reel&rsquo;s address, so pick something
-        you like.
+      <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted">
+        This is how friends find you — they follow the exact @handle. It becomes
+        your public reel&rsquo;s address.
       </p>
       <HandleForm />
     </div>
