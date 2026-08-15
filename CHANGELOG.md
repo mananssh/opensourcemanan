@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-15
+
+- **15:22 · `2b5ff76` · feat:** Redesign Reel as Last Showing (kill the VHS look)
+  Mood-first /design-review pass for /movies: sodium asphalt tokens, Anton /
+  Outfit / Red Hat Mono, kinetic clipped REEL hero, sharp chrome. Product
+  behavior (TMDB, logging, follows) unchanged.
+
 ## 2026-08-13
 
 - **20:56 · `7e3a8e6` · feat:** Allow multiple categories per vault document
