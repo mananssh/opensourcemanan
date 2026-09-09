@@ -431,6 +431,127 @@ html.dark .vertical-games .arcd-art {
   }
 }
 
+/*
+ * Blind (/games/blind) — "Redacted Signal": void + signal rose + teal slit.
+ * See docs/design/blind.md. Fonts in app/games/blind/layout.tsx.
+ */
+.vertical-blind {
+  --paper: #f4f1ec;
+  --surface: #ebe6df;
+  --ink: #0c0c10;
+  --muted: #5a5660;
+  --faint: #8a8490;
+  --rule: #d4cfc6;
+  --accent: #e11d48;
+  --accent-2: #0d9488;
+  --accent-soft: #fce7ec;
+  --accent-ink: #ffffff;
+  --chart-1: #e11d48;
+  --chart-2: #0d9488;
+  --chart-3: #5a5660;
+  --chart-4: #be123c;
+  --chart-5: #0f766e;
+  --chart-background: var(--surface);
+  --chart-foreground: var(--ink);
+  --chart-foreground-muted: var(--muted);
+  --chart-label: var(--faint);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--accent-soft);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --destructive: #b42318;
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--accent);
+  --radius: 0;
+
+  --display-family: var(--font-archivo-black);
+  --body-family: var(--font-outfit-blind);
+  --mono-family: var(--font-ibm-plex-mono);
+
+  position: relative;
+  isolation: isolate;
+}
+
+html.dark .vertical-blind {
+  --paper: #07070a;
+  --surface: #12121a;
+  --ink: #f3f0ea;
+  --muted: #9a96a3;
+  --faint: #6a6674;
+  --rule: #2a2a36;
+  --accent: #ff2d55;
+  --accent-2: #2ee6c7;
+  --accent-soft: #2a1018;
+  --accent-ink: #07070a;
+  --chart-1: #ff2d55;
+  --chart-2: #2ee6c7;
+  --chart-3: #9a96a3;
+  --chart-4: #fb7185;
+  --chart-5: #5eead4;
+  --chart-background: var(--surface);
+  --chart-foreground: var(--ink);
+  --chart-foreground-muted: var(--muted);
+  --chart-label: var(--faint);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--accent-soft);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --destructive: #ff6b6b;
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--accent);
+}
+
+/* Diagonal hash atmosphere — static, not CRT */
+.vertical-blind::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.35;
+  background: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 3px,
+    rgb(12 12 16 / 0.03) 3px,
+    rgb(12 12 16 / 0.03) 4px
+  );
+}
+
+html.dark .vertical-blind::before {
+  opacity: 0.5;
+  background: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 3px,
+    rgb(255 45 85 / 0.04) 3px,
+    rgb(255 45 85 / 0.04) 4px
+  );
+}
+
+.vertical-blind .blind-wordmark {
+  letter-spacing: -0.03em;
+  line-height: 0.85;
+  text-transform: uppercase;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+.vertical-blind .blind-redact {
+  display: inline-block;
+  background: var(--ink);
+  color: transparent;
+  user-select: none;
+}
+
 .vertical-movies {
   position: relative;
   isolation: isolate;

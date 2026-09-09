@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * Detail route for a registered game. v1 has an empty registry — unknown
- * slugs 404. When a game ships, resolve it here and render its Play surface.
+ * Detail stub for registered games that do not yet have a dedicated play
+ * route. Blind lives at /games/blind (sibling segment) and wins for that path.
  */
 export default async function GameDetailPage({ params }: Props) {
   const { slug } = await params;

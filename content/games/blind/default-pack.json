@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "title": "Blind stub (replace with full pack)",
+  "locale": "en",
+  "pairs": [
+    { "majority": "coffee", "undercover": "espresso" },
+    { "majority": "Goa", "undercover": "Pondicherry" },
+    { "majority": "biryani", "undercover": "pulao" },
+    { "majority": "iPhone", "undercover": "Android" },
+    { "majority": "Netflix", "undercover": "Prime Video" }
+  ]
+}
