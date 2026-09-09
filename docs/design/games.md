@@ -23,7 +23,7 @@ demoted below the fold (empty-cabinet atmosphere), not co-hero.
 
 - Not Editorial Logbook (warm paper / Fraunces / oxblood)
 - Not previous ARCD "Floor" (Syne + rose charcoal + unDraw hero split)
-- Not Vault (brushed steel / brass) or Reel (Last Showing / sodium)
+- Not Vault (brushed steel / brass), Reel (Last Showing / sodium), or Blind (Redacted Signal)
 - Not centered card-stack / purple gradient AI SaaS
 
 ## Type

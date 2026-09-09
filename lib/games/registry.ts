@@ -2,9 +2,17 @@ import type { GameDefinition } from "./types";
 
 /**
  * Static registry of playable games. Add a game = append here + ship the
- * play route module. v1 ships empty — the arcade shell is the product.
+ * play route module.
  */
-export const games: readonly GameDefinition[] = [];
+export const games: readonly GameDefinition[] = [
+  {
+    slug: "blind",
+    title: "Blind",
+    blurb: "Same room. One of you has the wrong word. Pass-and-play Undercover.",
+    status: "live",
+    access: "public",
+  },
+];
 
 export function listGames(): readonly GameDefinition[] {
   return games;

@@ -49,5 +49,6 @@ When listing anti-goals in the brief, name at least one real sibling:
 - Movies / Reel — Last Showing / sodium asphalt + Anton
 - Vault — Blacklight Notary / wax + UV indigo
 - Games / ARCD — Cabinet After Hours / phosphor + marquee
+- Blind — Redacted Signal / void + signal rose (under `/games/blind`)
 
 New work should be **visibly not** those.
