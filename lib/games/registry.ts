@@ -4,7 +4,15 @@ import type { GameDefinition } from "./types";
  * Static registry of playable games. Add a game = append here + ship the
  * play route module. v1 ships empty — the arcade shell is the product.
  */
-export const games: readonly GameDefinition[] = [];
+export const games: readonly GameDefinition[] = [
+  {
+    slug: "geetdle",
+    title: "Geetdle",
+    blurb: "Daily Bollywood song guessing game. Guess the song from categories.",
+    status: "live",
+    access: "public",
+  },
+];
 
 export function listGames(): readonly GameDefinition[] {
   return games;

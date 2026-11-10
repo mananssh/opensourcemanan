@@ -431,6 +431,147 @@ html.dark .vertical-games .arcd-art {
   }
 }
 
+/*
+ * Geetdle (/games/geetdle) — "Mumbai Nights":
+  * vibrant jewel tones, electric Bollywood cinema meets daily puzzle.
+  * See docs/design/geetdle.md. Fonts in app/games/geetdle/layout.tsx.
+  */
+ .vertical-geetdle {
+   --paper: #faf5ff;
+   --surface: #fdf4ff;
+   --ink: #1a0033;
+   --muted: #6b21a8;
+   --faint: #9333ea;
+   --rule: #e9d5ff;
+   --accent: #db2777;
+   --accent-2: #059669;
+   --accent-soft: #fce7f3;
+   --accent-ink: #ffffff;
+   --success: #059669;
+   --partial: #f59e0b;
+   --wrong: #6b7280;
+   --chart-1: #db2777;
+   --chart-2: #059669;
+   --chart-3: #9333ea;
+   --chart-4: #f59e0b;
+   --chart-5: #6b21a8;
+   --chart-background: var(--surface);
+   --chart-foreground: var(--ink);
+   --chart-foreground-muted: var(--muted);
+   --chart-label: var(--faint);
+   --background: var(--paper);
+   --foreground: var(--ink);
+   --primary: var(--accent);
+   --primary-foreground: var(--accent-ink);
+   --secondary: var(--accent-soft);
+   --secondary-foreground: var(--ink);
+   --muted-foreground: var(--muted);
+   --destructive: #dc2626;
+   --border: var(--rule);
+   --input: var(--rule);
+   --ring: var(--accent);
+   --radius: 0.5rem;
+
+   --display-family: var(--font-poppins);
+   --body-family: var(--font-inter-geetdle);
+   --mono-family: var(--font-jetbrains-mono);
+
+   position: relative;
+   isolation: isolate;
+ }
+
+ html.dark .vertical-geetdle {
+   --paper: #0a0118;
+   --surface: #1a0a2e;
+   --ink: #f5e6ff;
+   --muted: #c084fc;
+   --faint: #a78bfa;
+   --rule: #2e1065;
+   --accent: #f472b6;
+   --accent-2: #34d399;
+   --accent-soft: #4a044e;
+   --accent-ink: #0a0118;
+   --success: #34d399;
+   --partial: #fbbf24;
+   --wrong: #4b5563;
+   --chart-1: #f472b6;
+   --chart-2: #34d399;
+   --chart-3: #a78bfa;
+   --chart-4: #fbbf24;
+   --chart-5: #c084fc;
+   --chart-background: var(--surface);
+   --chart-foreground: var(--ink);
+   --chart-foreground-muted: var(--muted);
+   --chart-label: var(--faint);
+   --background: var(--paper);
+   --foreground: var(--ink);
+   --primary: var(--accent);
+   --primary-foreground: var(--accent-ink);
+   --secondary: var(--accent-soft);
+   --secondary-foreground: var(--ink);
+   --muted-foreground: var(--muted);
+   --destructive: #f87171;
+   --border: var(--rule);
+   --input: var(--rule);
+   --ring: var(--accent);
+ }
+
+ /* Electric gradient overlay — purple-to-pink in light, deep purple-to-magenta in dark */
+ .vertical-geetdle::before {
+   content: "";
+   pointer-events: none;
+   position: fixed;
+   inset: 0;
+   z-index: 0;
+   opacity: 0.12;
+   background:
+     radial-gradient(ellipse at 20% 10%, rgb(219 39 119 / 0.3), transparent 50%),
+     radial-gradient(ellipse at 80% 90%, rgb(147 51 234 / 0.25), transparent 55%);
+ }
+
+ html.dark .vertical-geetdle::before {
+   opacity: 0.18;
+   background:
+     radial-gradient(ellipse at 20% 10%, rgb(244 114 182 / 0.35), transparent 50%),
+     radial-gradient(ellipse at 80% 90%, rgb(192 132 252 / 0.3), transparent 55%);
+ }
+
+ .vertical-geetdle .geetdle-wordmark {
+   font-weight: 700;
+   letter-spacing: -0.02em;
+   line-height: 0.9;
+   text-rendering: geometricPrecision;
+   -webkit-font-smoothing: antialiased;
+ }
+
+ /* Category tile feedback states */
+ .vertical-geetdle .category-tile {
+   border-radius: var(--radius);
+   border: 1px solid var(--rule);
+   background: var(--surface);
+   transition: all 0.2s ease;
+ }
+
+ .vertical-geetdle .category-tile.exact {
+   background: var(--success);
+   color: white;
+   border-color: var(--success);
+   font-weight: 500;
+ }
+
+ .vertical-geetdle .category-tile.partial {
+   background: var(--partial);
+   color: var(--ink);
+   border-color: var(--partial);
+   font-weight: 500;
+ }
+
+ .vertical-geetdle .category-tile.wrong {
+   background: var(--wrong);
+   color: white;
+   border-color: var(--wrong);
+ }
+
 .vertical-movies {
   position: relative;
   isolation: isolate;
