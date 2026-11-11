@@ -54,8 +54,14 @@ export default function GeetdleLayout({
 
           <div className="flex items-center gap-5">
             <Link
-              href="/games"
+              href="/games/geetdle/archive"
               className="text-sm text-muted transition-colors hover:text-ink"
+            >
+              Archive
+            </Link>
+            <Link
+              href="/games"
+              className="hidden text-sm text-muted transition-colors hover:text-ink sm:inline"
             >
               All Games
             </Link>

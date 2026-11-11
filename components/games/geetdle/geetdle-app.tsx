@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import type { Guess, GeetdlePhase, CategoryFeedback } from "@/lib/games/geetdle/types";
 import { generateShareText, getPuzzleNumber } from "@/lib/games/geetdle/rules";
 import { GameBoard } from "./game-board";
@@ -19,7 +20,15 @@ type GuessResponse = {
 const POSTER_UNLOCK_THRESHOLD = 3;
 const SHARE_URL = "https://mananssh.com/games/geetdle";
 
-export function GeetdleApp() {
+export function GeetdleApp({
+  puzzleNumber: puzzleProp,
+  archive = false,
+}: {
+  /** Which puzzle to play. Defaults to today's. Past puzzles pass an older number. */
+  puzzleNumber?: number;
+  /** True when playing an archived (past) puzzle, not today's. */
+  archive?: boolean;
+} = {}) {
   const [phase, setPhase] = useState<GeetdlePhase>("hub");
   const [guesses, setGuesses] = useState<Guess[]>([]);
   const [isWon, setIsWon] = useState(false);
@@ -28,7 +37,10 @@ export function GeetdleApp() {
   const [answer, setAnswer] = useState<GuessResponse["answer"]>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const puzzleNumber = useMemo(() => getPuzzleNumber(), []);
+  const puzzleNumber = useMemo(
+    () => puzzleProp ?? getPuzzleNumber(),
+    [puzzleProp],
+  );
 
   const handleStartGame = () => setPhase("playing");
   const handleShare = () => setShowShare(true);
@@ -40,7 +52,11 @@ export function GeetdleApp() {
       const res = await fetch("/api/geetdle/guess", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: song.id, guessNumber: guesses.length + 1 }),
+        body: JSON.stringify({
+          id: song.id,
+          guessNumber: guesses.length + 1,
+          puzzle: puzzleNumber,
+        }),
       });
       if (!res.ok) throw new Error(`guess failed: ${res.status}`);
       const data = (await res.json()) as GuessResponse;
@@ -73,7 +89,7 @@ export function GeetdleApp() {
             className="mb-4 text-[11px] tracking-[0.2em] text-faint sm:mb-5 sm:text-xs"
             style={{ fontFamily: "var(--mono-family)" }}
           >
-            DAILY PUZZLE #{puzzleNumber}
+            {archive ? `ARCHIVE · PUZZLE #${puzzleNumber}` : `DAILY PUZZLE #${puzzleNumber}`}
           </p>
 
           <h1
@@ -84,15 +100,29 @@ export function GeetdleApp() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-md text-balance text-base text-muted sm:text-lg">
-            Guess the Bollywood song from category clues. A new puzzle every day.
+            {archive
+              ? "Replay an earlier daily puzzle. Guess the Bollywood song from category clues."
+              : "Guess the Bollywood song from category clues. A new puzzle every day."}
           </p>
 
           <button
             onClick={handleStartGame}
             className="rounded-full bg-accent px-9 py-4 text-base font-semibold text-accent-ink transition-all hover:opacity-90 active:scale-[0.98]"
           >
-            Play today&apos;s puzzle
+            {archive ? "Play this puzzle" : "Play today’s puzzle"}
           </button>
+
+          <div className="mt-6 text-sm">
+            {archive ? (
+              <Link href="/games/geetdle" className="text-muted transition-colors hover:text-ink">
+                ← Today&apos;s puzzle
+              </Link>
+            ) : (
+              <Link href="/games/geetdle/archive" className="text-muted transition-colors hover:text-ink">
+                Past puzzles →
+              </Link>
+            )}
+          </div>
 
           <div className="mx-auto mt-20 max-w-lg border-t border-rule pt-10 text-left">
             <h2
@@ -148,7 +178,7 @@ export function GeetdleApp() {
               className="text-xs tracking-[0.2em] text-faint"
               style={{ fontFamily: "var(--mono-family)" }}
             >
-              PUZZLE #{puzzleNumber}
+              {archive ? "ARCHIVE · " : ""}PUZZLE #{puzzleNumber}
             </p>
             <p
               className="mt-2 text-sm text-muted"
@@ -156,6 +186,14 @@ export function GeetdleApp() {
             >
               {guesses.length} GUESS{guesses.length !== 1 ? "ES" : ""}
             </p>
+            {archive && (
+              <Link
+                href="/games/geetdle"
+                className="mt-2 inline-block text-xs text-muted transition-colors hover:text-ink"
+              >
+                ← Today&apos;s puzzle
+              </Link>
+            )}
           </div>
 
           {isWon && (
