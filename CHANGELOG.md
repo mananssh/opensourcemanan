@@ -2,6 +2,15 @@
 
 ## 2026-11-11
 
+- **10:43 · `9bb584e` · feat:** Grow the Geetdle catalog from JioSaavn and gate answers by real popularity
+  Adds a targeted JioSaavn crawler (`scripts/crawl-jiosaavn.mjs`) that pulls
+  popular Hindi Bollywood songs with their play counts, and reworks the seed to
+  use that signal: each crawled song's `play_count` is merged onto the matching
+  base catalog row, JioSaavn-only songs are added as extra searchable guesses, and
+  a song is answer-eligible only when it has a genre AND a play_count above a
+  threshold. This replaces the static top-1000 eligibility list with a real
+  popularity gate, so daily answers are genuinely well-known. All source/crawl
+  files stay gitignored — the catalog lives only in the DB.
 - **10:03 · `2cfe410` · feat:** Move Geetdle to a private DB catalog with weighted daily answers
   Redesign Geetdle (Apple-minimalist, mobile-responsive UI; richer share with a
   link to the game) and move its song catalog into the shared database. Adds the
