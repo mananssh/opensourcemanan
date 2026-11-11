@@ -1,121 +1,137 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import type { BollywoodSong, Guess, GeetdlePhase } from "@/lib/games/geetdle/types";
-import { loadSongs, findSongByTitle, getAutocompleteSuggestions } from "@/lib/games/geetdle/data";
-import { checkGuess, isWinningGuess, getDailySongIndex, generateShareText } from "@/lib/games/geetdle/rules";
+import { useState, useMemo } from "react";
+import type { Guess, GeetdlePhase, CategoryFeedback } from "@/lib/games/geetdle/types";
+import { generateShareText, getPuzzleNumber } from "@/lib/games/geetdle/rules";
 import { GameBoard } from "./game-board";
 import { GuessInput } from "./guess-input";
 import { ShareModal } from "./share-modal";
 
+type GuessResponse = {
+  guessTitle: string;
+  feedback: CategoryFeedback[];
+  won: boolean;
+  puzzleNumber: number;
+  posterUrl: string | null;
+  answer: { title: string; movie: string; year: number } | null;
+};
+
+const POSTER_UNLOCK_THRESHOLD = 3;
+const SHARE_URL = "https://mananssh.com/games/geetdle";
+
 export function GeetdleApp() {
   const [phase, setPhase] = useState<GeetdlePhase>("hub");
-  const [songs, setSongs] = useState<BollywoodSong[]>([]);
-  const [dailySong, setDailySong] = useState<BollywoodSong | null>(null);
   const [guesses, setGuesses] = useState<Guess[]>([]);
   const [isWon, setIsWon] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [posterUnlocked, setPosterUnlocked] = useState(false);
+  const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<GuessResponse["answer"]>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Poster unlock threshold
-  const POSTER_UNLOCK_THRESHOLD = 3;
+  const puzzleNumber = useMemo(() => getPuzzleNumber(), []);
 
-  // Load songs and set daily song
-  useEffect(() => {
-    const allSongs = loadSongs();
-    setSongs(allSongs);
+  const handleStartGame = () => setPhase("playing");
+  const handleShare = () => setShowShare(true);
 
-    const todayIndex = getDailySongIndex(allSongs.length);
-    setDailySong(allSongs[todayIndex]);
-  }, []);
+  const handleGuess = async (song: { id: string; title: string }) => {
+    if (submitting || isWon) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/geetdle/guess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: song.id, guessNumber: guesses.length + 1 }),
+      });
+      if (!res.ok) throw new Error(`guess failed: ${res.status}`);
+      const data = (await res.json()) as GuessResponse;
 
-  const puzzleNumber = useMemo(() => {
-    if (!songs.length) return 0;
-    const epoch = new Date("2024-01-01T00:00:00Z");
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    return Math.floor((now.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
-  }, [songs]);
-
-  const handleStartGame = () => {
-    setPhase("playing");
-  };
-
-  const handleGuess = (songTitle: string) => {
-    if (!dailySong) return;
-
-    const guessSong = findSongByTitle(songTitle, songs);
-    if (!guessSong) {
-      alert("Song not found in database. Please select from autocomplete.");
-      return;
+      setGuesses((prev) => [
+        ...prev,
+        { song_title: data.guessTitle, feedback: data.feedback, timestamp: Date.now() },
+      ]);
+      // Poster, once revealed by the server, stays revealed.
+      if (data.posterUrl) setPosterUrl(data.posterUrl);
+      if (data.won) {
+        setIsWon(true);
+        setAnswer(data.answer);
+        setPhase("won");
+        setTimeout(() => setShowShare(true), 1000);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong submitting your guess. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-
-    const feedback = checkGuess(guessSong, dailySong);
-    const won = isWinningGuess(feedback);
-
-    const newGuess: Guess = {
-      song_title: guessSong.song_title,
-      feedback,
-      timestamp: Date.now(),
-    };
-
-    const newGuesses = [...guesses, newGuess];
-    setGuesses(newGuesses);
-
-    if (won) {
-      setIsWon(true);
-      setPhase("won");
-      setTimeout(() => setShowShare(true), 1000);
-    }
-
-    // Unlock poster after threshold
-    if (newGuesses.length >= POSTER_UNLOCK_THRESHOLD) {
-      setPosterUnlocked(true);
-    }
-  };
-
-  const handleShare = () => {
-    setShowShare(true);
   };
 
   if (phase === "hub") {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-5 py-16 sm:py-24">
         <div className="mx-auto max-w-2xl text-center">
           <p
-            className="text-sm tracking-wider text-muted mb-4"
+            className="mb-4 text-[11px] tracking-[0.2em] text-faint sm:mb-5 sm:text-xs"
             style={{ fontFamily: "var(--mono-family)" }}
           >
             DAILY PUZZLE #{puzzleNumber}
           </p>
 
           <h1
-            className="geetdle-wordmark text-6xl md:text-8xl text-ink mb-6"
+            className="geetdle-wordmark mb-5 text-6xl text-ink sm:mb-6 sm:text-7xl md:text-9xl"
             style={{ fontFamily: "var(--display-family)" }}
           >
             GEETDLE
           </h1>
 
-          <p className="text-lg text-muted mb-8 max-w-xl mx-auto">
-            Guess the Bollywood song from category clues. New puzzle daily.
+          <p className="mx-auto mb-10 max-w-md text-balance text-base text-muted sm:text-lg">
+            Guess the Bollywood song from category clues. A new puzzle every day.
           </p>
 
           <button
             onClick={handleStartGame}
-            className="px-8 py-4 bg-accent text-accent-ink font-semibold rounded-md hover:opacity-90 transition-opacity text-lg"
+            className="rounded-full bg-accent px-9 py-4 text-base font-semibold text-accent-ink transition-all hover:opacity-90 active:scale-[0.98]"
           >
-            PLAY TODAY&apos;S PUZZLE
+            Play today&apos;s puzzle
           </button>
 
-          <div className="mt-12 pt-12 border-t border-rule">
-            <h2 className="text-xl font-semibold mb-4">How to Play</h2>
-            <div className="text-left max-w-lg mx-auto space-y-3 text-sm text-muted">
-              <p>• Guess the daily Bollywood song from category hints</p>
-              <p>• Categories: Music Director, Singer(s), Year, Movie, Language, Genre</p>
-              <p>• 🟩 Green = Exact match</p>
-              <p>• 🟨 Yellow = Partial/Close (±1 year or partial singer match)</p>
-              <p>• ⬜ Gray = Wrong (↑↓ shows year direction)</p>
-              <p>• Movie poster unlocks after {POSTER_UNLOCK_THRESHOLD} guesses</p>
+          <div className="mx-auto mt-20 max-w-lg border-t border-rule pt-10 text-left">
+            <h2
+              className="mb-6 text-center text-xs uppercase tracking-[0.2em] text-faint"
+              style={{ fontFamily: "var(--mono-family)" }}
+            >
+              How to play
+            </h2>
+            <div className="space-y-4 text-sm text-muted">
+              <p>
+                Each guess scores six categories — Music Director, Singer(s),
+                Year, Movie, Language and Genre.
+              </p>
+              <ul className="space-y-2.5">
+                <li className="flex items-center gap-3">
+                  <span
+                    className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm"
+                    style={{ background: "var(--success)" }}
+                  />
+                  Exact match
+                </li>
+                <li className="flex items-center gap-3">
+                  <span
+                    className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm"
+                    style={{ background: "var(--partial)" }}
+                  />
+                  Close — within a year, or a shared singer
+                </li>
+                <li className="flex items-center gap-3">
+                  <span
+                    className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm"
+                    style={{ background: "var(--wrong)" }}
+                  />
+                  Wrong — arrows point toward the year
+                </li>
+              </ul>
+              <p className="pt-1 text-faint">
+                The movie poster unlocks after {POSTER_UNLOCK_THRESHOLD} guesses.
+              </p>
             </div>
           </div>
         </div>
@@ -123,66 +139,60 @@ export function GeetdleApp() {
     );
   }
 
-  if (!dailySong) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <p className="text-muted">Loading today&apos;s puzzle...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-6 flex items-center justify-between">
+    <div className="container mx-auto px-5 py-10">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-8 flex items-end justify-between">
           <div>
             <p
-              className="text-sm tracking-wider text-muted"
+              className="text-xs tracking-[0.2em] text-faint"
               style={{ fontFamily: "var(--mono-family)" }}
             >
               PUZZLE #{puzzleNumber}
             </p>
-            <p className="text-sm text-faint mt-1">
-              {guesses.length} guess{guesses.length !== 1 ? "es" : ""}
+            <p
+              className="mt-2 text-sm text-muted"
+              style={{ fontFamily: "var(--mono-family)" }}
+            >
+              {guesses.length} GUESS{guesses.length !== 1 ? "ES" : ""}
             </p>
           </div>
 
           {isWon && (
             <button
               onClick={handleShare}
-              className="px-4 py-2 bg-accent text-accent-ink font-medium rounded-md hover:opacity-90 transition-opacity"
+              className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition-all hover:opacity-90 active:scale-[0.98]"
             >
-              Share Results
+              Share results
             </button>
           )}
         </div>
 
-        <GameBoard
-          guesses={guesses}
-          dailySong={dailySong}
-          posterUnlocked={posterUnlocked}
-          isWon={isWon}
-        />
+        <GameBoard guesses={guesses} posterUrl={posterUrl} isWon={isWon} />
 
         {!isWon && (
           <div className="mt-8">
-            <GuessInput
-              songs={songs}
-              onGuess={handleGuess}
-              getAutocompleteSuggestions={getAutocompleteSuggestions}
-            />
+            <GuessInput onGuess={handleGuess} disabled={submitting} />
           </div>
         )}
 
-        {isWon && (
-          <div className="mt-8 text-center">
-            <div className="bg-success/10 border border-success rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-success mb-2">
-                🎉 Solved in {guesses.length} guess{guesses.length !== 1 ? "es" : ""}!
-              </h2>
-              <p className="text-lg text-ink mb-1">{dailySong.song_title}</p>
-              <p className="text-muted text-sm">
-                from {dailySong.movie} ({dailySong.year})
+        {isWon && answer && (
+          <div className="mt-10">
+            <div className="rounded-2xl border border-rule bg-surface p-8 text-center">
+              <p
+                className="mb-3 text-xs uppercase tracking-[0.2em]"
+                style={{ fontFamily: "var(--mono-family)", color: "var(--success)" }}
+              >
+                Solved in {guesses.length} guess{guesses.length !== 1 ? "es" : ""}
+              </p>
+              <p
+                className="mb-1 text-2xl font-bold text-ink"
+                style={{ fontFamily: "var(--display-family)" }}
+              >
+                {answer.title}
+              </p>
+              <p className="text-sm text-muted">
+                {answer.movie} · {answer.year}
               </p>
             </div>
           </div>
@@ -191,7 +201,8 @@ export function GeetdleApp() {
 
       {showShare && (
         <ShareModal
-          shareText={generateShareText(guesses, puzzleNumber)}
+          displayText={generateShareText(guesses, puzzleNumber)}
+          shareText={generateShareText(guesses, puzzleNumber, SHARE_URL)}
           onClose={() => setShowShare(false)}
         />
       )}

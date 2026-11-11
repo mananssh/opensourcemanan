@@ -1,33 +1,52 @@
-# Geetdle — design brief: "Mumbai Nights"
+# Geetdle — design brief: "Quiet Marquee"
 
 `/games/geetdle` — daily guessing game for Bollywood songs.
 Nested under `/games` but **does not inherit** Cabinet After Hours or Blind look.
 
+> **Revision (2026-11-11):** The original "Mumbai Nights" brief (saturated
+> magenta/purple jewel tones splashed across every surface) was replaced with an
+> Apple-minimalist system at the user's request. The restraint comes from the
+> canvas, not the subject — colour now lives only in the feedback tiles and the
+> single CTA, which reads more premium and keeps the six-category grid legible.
+
 ## Mood
 
-**electric marquee lights in monsoon rain** — vibrant jewel tones bleeding neon, 
-vintage Hindi cinema posters meets modern daily puzzle, celebration of Bollywood's 
-golden to contemporary eras with BOLD unapologetic color.
+**a dark cinema before the reel starts** — a near-silent off-white / true-black
+canvas, hairline rules, one confident crimson accent. Restrained, precise,
+unmistakably a daily ritual. The Bollywood warmth is carried by the content
+(song titles, eras, singers) rather than by loud chrome.
 
 ## Direction
 
 **Name:** Geetdle (गीत = "song" in Hindi)  
-**Why:** This is about iconic songs spanning decades — UI should feel cinematic, 
-electric, and distinctly Bollywood. Think vintage film posters with hand-painted 
-typography, Mumbai street cinema marquees, not subtle minimalism.  
-**Bold risk:** Rich jewel-tone palette with **magenta, purple, emerald, gold** that 
-completely breaks from OSM's warm editorial aesthetic; category tiles as cinema 
-marquee strips with progressive reveal; neon-inspired accents.  
-**Hero archetype:** daily puzzle ritual with MAXIMUM Bollywood vibrancy
+**Why:** A daily puzzle people return to should feel calm and fast, not noisy.
+Apple-grade minimalism — generous whitespace, huge clean display type, pill
+controls, subtle motion — with a single saturated accent for intent.  
+**Bold risk:** near-monochrome canvas (`#fbfbfd` / `#000`) with exactly ONE
+crimson accent (`#e11d48` / `#ff375f`) used sparingly; feedback tiles are the
+only place colour appears in force (green exact · amber close · neutral wrong).  
+**Hero archetype:** oversized kinetic wordmark over a quiet canvas.
+
+## Palette
+
+| Token | Light | Dark | Role |
+|-------|-------|------|------|
+| `--paper` | `#fbfbfd` | `#000000` | Canvas |
+| `--surface` | `#f3f3f6` | `#1c1c1e` | Cards, input, neutral tiles |
+| `--ink` | `#1d1d1f` | `#f5f5f7` | Primary text |
+| `--muted` / `--faint` | `#6e6e73` / `#a1a1a6` | `#a1a1a6` / `#6e6e73` | Secondary / mono labels |
+| `--accent` | `#e11d48` | `#ff375f` | CTA, links, focus ring — **used sparingly** |
+| `--success` (exact) | `#2a9d5c` | `#30d158` | Exact-match tile |
+| `--partial` (close) | `#d9a200` | `#ffd60a` | Close-match tile |
+| `--wrong` | `#d6d6db` | `#3a3a3c` | Wrong tile (neutral, not loud) |
 
 ## Anti-goals
 
 - Not ARCD Cabinet After Hours (phosphor green / arcade CRT)
 - Not Blind Redacted Signal (void + hard accusation)
-- Not generic Wordle clone (gray tiles, system fonts)
-- Not OSM Editorial (warm amber/sepia/cream — **completely different**)
-- Not multiplex LED (cold cyan/blue neon)
-- Not minimalist (embrace the bold aesthetic)
+- Not OSM Editorial (warm amber/sepia/cream)
+- Not the old "Mumbai Nights" (jewel tones everywhere — too loud for a daily ritual)
+- Not colour in the chrome — accent is reserved for intent (CTA + feedback tiles)
 
 ## Type
 

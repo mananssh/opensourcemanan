@@ -1,11 +1,10 @@
 /**
- * Bollywood Stumple game rules and logic
+ * Geetdle game rules and logic
  */
 
 import type {
   BollywoodSong,
   CategoryFeedback,
-  CategoryKey,
   MatchState,
   Guess,
 } from "./types";
@@ -143,37 +142,49 @@ export function isWinningGuess(feedback: CategoryFeedback[]): boolean {
 }
 
 /**
- * Get daily song index based on date
+ * The puzzle number for a given day: whole days since the fixed epoch
+ * (2024-01-01 UTC). This is the shared seed for the daily puzzle — the client
+ * uses it to label/share "#N", and the server uses it to seed the weighted
+ * pseudo-random answer pick (lib/games/geetdle/daily.ts), so everyone gets the
+ * same song on the same day. Pure (no DB), safe to import on the client.
  */
-export function getDailySongIndex(totalSongs: number, date = new Date()): number {
-  // Use a fixed epoch (Jan 1, 2024) to calculate days elapsed
+export function getPuzzleNumber(date = new Date()): number {
   const epoch = new Date("2024-01-01T00:00:00Z");
   const now = new Date(date);
   now.setHours(0, 0, 0, 0);
-
-  const daysSinceEpoch = Math.floor(
-    (now.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  return daysSinceEpoch % totalSongs;
+  return Math.floor((now.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 /**
- * Generate shareable emoji grid
+ * Generate a shareable message: a cool header, the emoji guess matrix, and
+ * (optionally) a link back to Geetdle.
  */
-export function generateShareText(guesses: Guess[], puzzleNumber: number): string {
-  const header = `Bollywood Stumple #${puzzleNumber}\n`;
+export function generateShareText(
+  guesses: Guess[],
+  puzzleNumber: number,
+  url?: string
+): string {
+  const tries = guesses.length;
+  const title = `🎬 Geetdle #${puzzleNumber}`;
+  const result =
+    tries > 0
+      ? `Named that Bollywood tune in ${tries} ${tries === 1 ? "guess" : "guesses"} 🎶`
+      : `Today's Bollywood song puzzle 🎶`;
+
   const grid = guesses
-    .map((guess) => {
-      return guess.feedback
+    .map((guess) =>
+      guess.feedback
         .map((f) => {
           if (f.state === "exact") return "🟩";
           if (f.state === "partial") return "🟨";
           return "⬜";
         })
-        .join("");
-    })
+        .join("")
+    )
     .join("\n");
 
-  return header + grid;
+  const parts = [`${title}\n${result}`, grid];
+  if (url) parts.push(`Can you beat me? 👉 ${url}`);
+
+  return parts.filter(Boolean).join("\n\n");
 }

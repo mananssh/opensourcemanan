@@ -1,79 +1,92 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import type { BollywoodSong } from "@/lib/games/geetdle/types";
+import { useState, useRef, useEffect, useCallback } from "react";
+
+type Suggestion = {
+  id: string;
+  title: string;
+  movie: string;
+  year: number;
+  singers: string;
+};
 
 interface GuessInputProps {
-  songs: BollywoodSong[];
-  onGuess: (songTitle: string) => void;
-  getAutocompleteSuggestions: (
-    query: string,
-    songs: BollywoodSong[],
-    limit?: number
-  ) => BollywoodSong[];
+  onGuess: (song: { id: string; title: string }) => void;
+  disabled?: boolean;
 }
 
-export function GuessInput({ songs, onGuess, getAutocompleteSuggestions }: GuessInputProps) {
+export function GuessInput({ onGuess, disabled = false }: GuessInputProps) {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<BollywoodSong[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
+  // Debounced server search. All state updates happen inside the async
+  // callback (never synchronously in the effect body).
   useEffect(() => {
-    if (query.length >= 2) {
-      const results = getAutocompleteSuggestions(query, songs, 8);
-      setSuggestions(results);
-      setShowSuggestions(results.length > 0);
-      setSelectedIndex(-1);
-    } else {
+    const q = query.trim();
+    const t = setTimeout(async () => {
+      if (q.length < 2) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      abortRef.current?.abort();
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      try {
+        const res = await fetch(
+          `/api/geetdle/search?q=${encodeURIComponent(q)}`,
+          { signal: ctrl.signal },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { results: Suggestion[] };
+        setSuggestions(data.results);
+        setShowSuggestions(data.results.length > 0);
+        setSelectedIndex(-1);
+      } catch {
+        /* aborted or network error — ignore */
+      }
+    }, 180);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const submit = useCallback(
+    (song: Suggestion) => {
+      onGuess({ id: song.id, title: song.title });
+      setQuery("");
       setSuggestions([]);
       setShowSuggestions(false);
-    }
-  }, [query, songs, getAutocompleteSuggestions]);
+      setSelectedIndex(-1);
+    },
+    [onGuess],
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const songTitle =
-      selectedIndex >= 0 ? suggestions[selectedIndex].song_title : query;
-
-    if (!songTitle.trim()) return;
-
-    onGuess(songTitle);
-    setQuery("");
-    setSuggestions([]);
-    setShowSuggestions(false);
-    setSelectedIndex(-1);
+    if (disabled || suggestions.length === 0) return;
+    const pick = selectedIndex >= 0 ? suggestions[selectedIndex] : suggestions[0];
+    if (pick) submit(pick);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions || suggestions.length === 0) return;
-
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      );
+      setSelectedIndex((p) => (p < suggestions.length - 1 ? p + 1 : p));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      setSelectedIndex((p) => (p > 0 ? p - 1 : -1));
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
     }
   };
 
-  const handleSuggestionClick = (song: BollywoodSong) => {
-    onGuess(song.song_title);
-    setQuery("");
-    setSuggestions([]);
-    setShowSuggestions(false);
-    setSelectedIndex(-1);
-  };
-
   return (
     <div className="relative">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2.5">
         <div className="relative flex-1">
           <input
             ref={inputRef}
@@ -81,45 +94,51 @@ export function GuessInput({ songs, onGuess, getAutocompleteSuggestions }: Guess
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            onFocus={() => query.length >= 2 && setShowSuggestions(true)}
-            placeholder="Type song name..."
-            className="w-full px-4 py-3 border border-input rounded-md bg-paper text-ink placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-ring"
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            placeholder="Type a song name…"
+            disabled={disabled}
+            className="w-full rounded-full border border-input bg-surface px-5 py-3.5 text-ink placeholder:text-faint transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
           />
 
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-50 w-full mt-1 bg-paper border border-rule rounded-md shadow-lg max-h-64 overflow-y-auto">
-              {suggestions.map((song, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSuggestionClick(song)}
-                  className={`w-full px-4 py-3 text-left hover:bg-surface transition-colors ${
-                    idx === selectedIndex ? "bg-surface" : ""
-                  }`}
-                >
-                  <div className="font-medium text-ink text-sm">
-                    {song.song_title}
-                  </div>
-                  <div className="text-xs text-muted mt-1">
-                    {song.movie} ({song.year}) • {song.singers}
-                  </div>
-                </button>
-              ))}
+            <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-rule bg-paper shadow-xl shadow-black/5">
+              <div className="max-h-72 overflow-y-auto p-1.5">
+                {suggestions.map((song, idx) => (
+                  <button
+                    key={song.id}
+                    type="button"
+                    onClick={() => submit(song)}
+                    className={`flex w-full flex-col gap-0.5 rounded-xl px-4 py-2.5 text-left transition-colors ${
+                      idx === selectedIndex ? "bg-surface" : "hover:bg-surface"
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-ink">
+                      {song.title}
+                    </span>
+                    <span className="text-xs text-muted">
+                      {song.movie} ({song.year}) · {song.singers}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         <button
           type="submit"
-          className="px-6 py-3 bg-accent text-accent-ink font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
-          disabled={!query.trim()}
+          className="rounded-full bg-accent px-7 py-3.5 font-semibold text-accent-ink transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+          disabled={disabled || suggestions.length === 0}
         >
           Guess
         </button>
       </form>
 
-      <p className="text-xs text-faint mt-2">
-        Start typing to see song suggestions from the database
+      <p
+        className="mt-3 pl-1 text-xs tracking-wide text-faint"
+        style={{ fontFamily: "var(--mono-family)" }}
+      >
+        START TYPING TO SEARCH THE DATABASE
       </p>
     </div>
   );

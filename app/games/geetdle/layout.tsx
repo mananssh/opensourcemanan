@@ -40,43 +40,48 @@ export default function GeetdleLayout({
 }) {
   return (
     <div
-      className={`vertical-geetdle ${poppins.variable} ${inter.variable} ${jetbrainsMono.variable} min-h-screen`}
+      className={`vertical-geetdle ${poppins.variable} ${inter.variable} ${jetbrainsMono.variable} flex min-h-screen flex-col`}
     >
-      <header className="sticky top-0 z-40 border-b border-rule bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/80">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <header className="sticky top-0 z-40 border-b border-rule bg-paper/80 backdrop-blur-xl supports-[backdrop-filter]:bg-paper/70">
+        <div className="container mx-auto flex h-16 items-center justify-between px-5">
           <Link
             href="/games/geetdle"
-            className="geetdle-wordmark font-display text-2xl text-ink transition-colors hover:text-accent"
+            className="geetdle-wordmark text-xl tracking-tight text-ink transition-opacity hover:opacity-70"
             style={{ fontFamily: "var(--display-family)" }}
           >
             GEETDLE
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <Link
               href="/games"
               className="text-sm text-muted transition-colors hover:text-ink"
             >
-              ← All Games
+              All Games
             </Link>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      <main className="relative z-10">{children}</main>
+      <main className="relative z-10 flex-1">{children}</main>
 
-      <footer className="relative z-10 border-t border-rule bg-surface py-8 mt-16">
-        <div className="container mx-auto px-4 text-center text-sm text-muted">
-          <p>
-            A daily puzzle game by{" "}
-            <Link href="/" className="text-accent hover:underline">
+      <footer className="relative z-10 mt-auto border-t border-rule">
+        <div
+          className="container mx-auto flex flex-col items-center gap-1 px-5 py-8 text-center text-xs text-faint"
+          style={{ fontFamily: "var(--mono-family)" }}
+        >
+          <p className="tracking-wide">
+            A DAILY PUZZLE BY{" "}
+            <Link
+              href="/"
+              className="text-muted transition-colors hover:text-ink"
+            >
               OSM
             </Link>
           </p>
-          <p className="mt-2">
-            Songs from MrAsacker Bollywood Dataset • New puzzle daily at
-            midnight
+          <p className="tracking-wide">
+            SONGS FROM MRASACKER BOLLYWOOD DATASET
           </p>
         </div>
       </footer>
