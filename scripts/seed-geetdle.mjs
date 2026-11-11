@@ -28,6 +28,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import postgres from "postgres";
+import { inferGenre } from "./lib/geetdle-genre.mjs";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -65,15 +66,19 @@ function toRow(r) {
   const language = clean(r.language) || "Hindi";
   if (HINDI_ONLY && language.toLowerCase() !== "hindi") return null;
   const secondary = r.secondaryGenres ?? r.secondary_genres ?? [];
-  const genre = clean(r.genre) || null;
+  const singers = clean(r.singers ?? r.song_singers);
+  const movie = clean(r.movie ?? r.album_title);
+  // Base rows carry a genre; crawled (JioSaavn) rows don't — infer one from the
+  // title/movie/singers so every song has a sensible genre clue.
+  const genre = clean(r.genre) || inferGenre(title, { singers, movie });
   const pop = r.popularity ?? r.song_rating ?? r.play_count;
   const popNum = Number(pop);
   return {
     song_uuid: songUuid,
     title,
     title_lower: title.toLowerCase(),
-    singers: clean(r.singers ?? r.song_singers),
-    movie: clean(r.movie ?? r.album_title),
+    singers,
+    movie,
     year,
     music_director: clean(r.musicDirector ?? r.music_director),
     language,
