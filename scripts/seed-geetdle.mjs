@@ -134,15 +134,21 @@ for (const r of crawlRows) {
 }
 console.log(`Added ${added} JioSaavn-only searchable songs.`);
 
-// 4) Eligibility: genre present AND play_count >= threshold.
+// 4) Eligibility: genre present AND play_count >= threshold AND a youtube_url
+// (so every daily answer has a poster hint — JioSaavn-only rows have none, so
+// this also keeps answers to the confidently-tagged base catalog).
 const rows = [...byUuid.values()];
 for (const r of rows) {
-  r.is_answer_eligible = r.genre != null && r.popularity != null && r.popularity >= MIN_PLAYS;
+  r.is_answer_eligible =
+    r.genre != null &&
+    r.popularity != null &&
+    r.popularity >= MIN_PLAYS &&
+    !!r.youtube_url;
 }
 const eligible = rows.filter((r) => r.is_answer_eligible);
 console.log(
   `Prepared ${rows.length} rows; ${eligible.length} answer-eligible ` +
-    `(genre + play_count >= ${MIN_PLAYS}) — ` +
+    `(genre + poster + play_count >= ${MIN_PLAYS}) — ` +
     `${eligible.filter((r) => r.year >= 2000).length} post-2000 / ` +
     `${eligible.filter((r) => r.year < 2000).length} pre-2000.`,
 );
