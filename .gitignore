@@ -49,3 +49,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Geetdle — raw/prepared Bollywood catalog + crawl output.
+# The full catalog is PRIVATE: it lives only in the DB (seeded locally), never
+# in the public repo. See db/schema/geetdle.ts and scripts/seed-geetdle.mjs.
+/bollywood-*.json
+/bollywood-*.csv
+/data/geetdle/
+TAGGING_REPORT.md
+tagging-methodology.md
+README-BOLLYWOOD-DATASET.md
+DELIVERABLES.txt
+/temp-bollywood-data/
+analyze_dataset.py
+enhance_tagging.py
+tag_bollywood_dataset.py
+
+# editor/rename leftovers
+*.old

@@ -431,6 +431,155 @@ html.dark .vertical-games .arcd-art {
   }
 }
 
+/*
+ * Geetdle (/games/geetdle) — "Quiet Marquee":
+ * Apple-minimalist. A neutral off-white / true-black canvas with hairline
+ * rules, and ONE confident rose accent used sparingly for intent. The colour
+ * lives in the feedback tiles and the single CTA — never in the chrome.
+ * See docs/design/geetdle.md. Fonts in app/games/geetdle/layout.tsx.
+ */
+ .vertical-geetdle {
+   --paper: #fbfbfd;
+   --surface: #f3f3f6;
+   --surface-2: #ececf1;
+   --ink: #1d1d1f;
+   --muted: #6e6e73;
+   --faint: #a1a1a6;
+   --rule: #e3e3e8;
+   --accent: #e11d48;
+   --accent-2: #2a9d5c;
+   --accent-soft: #fdeef2;
+   --accent-ink: #ffffff;
+   --success: #2a9d5c;
+   --partial: #d9a200;
+   --wrong: #d6d6db;
+   --wrong-ink: #4b4b50;
+   --chart-1: #e11d48;
+   --chart-2: #2a9d5c;
+   --chart-3: #6e6e73;
+   --chart-4: #d9a200;
+   --chart-5: #1d1d1f;
+   --chart-background: var(--surface);
+   --chart-foreground: var(--ink);
+   --chart-foreground-muted: var(--muted);
+   --chart-label: var(--faint);
+   --background: var(--paper);
+   --foreground: var(--ink);
+   --primary: var(--accent);
+   --primary-foreground: var(--accent-ink);
+   --secondary: var(--surface);
+   --secondary-foreground: var(--ink);
+   --muted-foreground: var(--muted);
+   --destructive: #dc2626;
+   --border: var(--rule);
+   --input: var(--rule);
+   --ring: var(--accent);
+   --radius: 0.875rem;
+
+   --display-family: var(--font-poppins);
+   --body-family: var(--font-inter-geetdle);
+   --mono-family: var(--font-jetbrains-mono);
+
+   position: relative;
+   isolation: isolate;
+   background-color: var(--paper);
+   color: var(--ink);
+   font-family: var(--body-family), system-ui, sans-serif;
+ }
+
+ html.dark .vertical-geetdle {
+   --paper: #000000;
+   --surface: #1c1c1e;
+   --surface-2: #2c2c2e;
+   --ink: #f5f5f7;
+   --muted: #a1a1a6;
+   --faint: #6e6e73;
+   --rule: #2e2e32;
+   --accent: #ff375f;
+   --accent-2: #30d158;
+   --accent-soft: #2a0f17;
+   --accent-ink: #ffffff;
+   --success: #30d158;
+   --partial: #ffd60a;
+   --wrong: #3a3a3c;
+   --wrong-ink: #d0d0d5;
+   --chart-1: #ff375f;
+   --chart-2: #30d158;
+   --chart-3: #a1a1a6;
+   --chart-4: #ffd60a;
+   --chart-5: #f5f5f7;
+   --chart-background: var(--surface);
+   --chart-foreground: var(--ink);
+   --chart-foreground-muted: var(--muted);
+   --chart-label: var(--faint);
+   --background: var(--paper);
+   --foreground: var(--ink);
+   --primary: var(--accent);
+   --primary-foreground: var(--accent-ink);
+   --secondary: var(--surface);
+   --secondary-foreground: var(--ink);
+   --muted-foreground: var(--muted);
+   --destructive: #ff453a;
+   --border: var(--rule);
+   --input: var(--rule);
+   --ring: var(--accent);
+ }
+
+ /* Barely-there accent wash — a single soft glow, top-centre, nothing more */
+ .vertical-geetdle::before {
+   content: "";
+   pointer-events: none;
+   position: fixed;
+   inset: 0;
+   z-index: 0;
+   opacity: 0.6;
+   background:
+     radial-gradient(ellipse 80% 45% at 50% -10%, rgb(225 29 72 / 0.06), transparent 70%);
+ }
+
+ html.dark .vertical-geetdle::before {
+   opacity: 1;
+   background:
+     radial-gradient(ellipse 80% 45% at 50% -10%, rgb(255 55 95 / 0.1), transparent 70%);
+ }
+
+ .vertical-geetdle .geetdle-wordmark {
+   font-weight: 700;
+   letter-spacing: -0.03em;
+   line-height: 0.9;
+   text-rendering: geometricPrecision;
+   -webkit-font-smoothing: antialiased;
+ }
+
+ /* Category tile feedback states */
+ .vertical-geetdle .category-tile {
+   border-radius: calc(var(--radius) - 0.375rem);
+   border: 1px solid var(--rule);
+   background: var(--surface);
+   color: var(--ink);
+   transition: transform 0.18s ease, box-shadow 0.18s ease;
+ }
+
+ .vertical-geetdle .category-tile.exact {
+   background: var(--success);
+   color: #ffffff;
+   border-color: transparent;
+   font-weight: 600;
+ }
+
+ .vertical-geetdle .category-tile.partial {
+   background: var(--partial);
+   color: #1d1d1f;
+   border-color: transparent;
+   font-weight: 600;
+ }
+
+ .vertical-geetdle .category-tile.wrong {
+   background: var(--wrong);
+   color: var(--wrong-ink);
+   border-color: transparent;
+ }
+
 .vertical-movies {
   position: relative;
   isolation: isolate;
