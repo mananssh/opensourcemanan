@@ -70,7 +70,9 @@ export default function GeetdleLayout({
         </div>
       </header>
 
-      <main className="relative z-10 flex-1">{children}</main>
+      {/* z-20 keeps the guess autocomplete (inside main) painting above the
+          footer, which is a later same-z sibling. */}
+      <main className="relative z-20 flex-1">{children}</main>
 
       <footer className="relative z-10 mt-auto border-t border-rule">
         <div
