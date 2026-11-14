@@ -65,7 +65,9 @@ export async function POST(request: Request) {
       feedback,
       won,
       puzzleNumber,
-      posterUrl: revealPoster ? youtubeThumb(answerRow.youtubeUrl) : null,
+      posterUrl: revealPoster
+        ? answerRow.posterUrl ?? youtubeThumb(answerRow.youtubeUrl)
+        : null,
       answer: won
         ? { title: answerRow.title, movie: answerRow.movie, year: answerRow.year }
         : null,

@@ -3,11 +3,10 @@
  * Targeted JioSaavn crawler — grows the Geetdle catalog with popular Hindi
  * Bollywood songs and (crucially) their play counts.
  *
- * Why: the MrAsacker base has genre but no popularity; JioSaavn has popularity
- * but no genre. We crawl popular artists, then `seed-geetdle.mjs` MERGES each
- * song's play_count onto the matching base row (by normalized title+year+movie)
- * so well-known songs gain a real popularity signal, and inserts JioSaavn-only
- * songs as extra searchable guesses. Output is gitignored — nothing ships.
+ * JioSaavn is the SOLE catalog source: it gives title, year, language, play
+ * count, album/movie, music director, singers, and album art (the poster hint).
+ * It has no genre, so `seed-geetdle.mjs` infers one from the title. Output is
+ * gitignored — nothing ships in the repo; the catalog lives only in the DB.
  *
  *   node scripts/crawl-jiosaavn.mjs                       # full targeted crawl
  *   node scripts/crawl-jiosaavn.mjs --cap 500             # stop after 500 unique (validation)
@@ -81,6 +80,13 @@ async function fetchPage(query, page) {
   return [];
 }
 
+// JioSaavn image URLs embed a size token (…-150x150.jpg). Bump it to 500x500
+// for a usable poster; the CDN serves that variant from the same path.
+const posterUrl = (img) => {
+  const u = decode(img);
+  return u ? u.replace(/\d+x\d+(?=\.\w+$)/, "500x500") : null;
+};
+
 function mapSong(r) {
   if (!r || r.type !== "song") return null;
   const language = decode(r.language).toLowerCase();
@@ -104,9 +110,11 @@ function mapSong(r) {
     year,
     musicDirector: decode(mi.music),
     language: "Hindi",
-    genre: null, // JioSaavn has no genre — intentionally left for base-row merge
+    genre: null, // JioSaavn has no genre — inferred at seed time from the title.
     secondaryGenres: [],
     youtubeUrl: null,
+    posterUrl: posterUrl(r.image), // album/song art — the poster hint source.
+    permaUrl: decode(r.perma_url) || null,
     popularity: Number.isFinite(playCount) ? playCount : null,
     source: "jiosaavn",
   };
