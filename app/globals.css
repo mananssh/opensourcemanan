@@ -452,6 +452,8 @@ html.dark .vertical-games .arcd-art {
    --accent-ink: #ffffff;
    --success: #2a9d5c;
    --partial: #d9a200;
+   --partial-weak: #efd9a0;
+   --partial-weak-ink: #5a4a16;
    --wrong: #d6d6db;
    --wrong-ink: #4b4b50;
    --chart-1: #e11d48;
@@ -501,6 +503,8 @@ html.dark .vertical-games .arcd-art {
    --accent-ink: #ffffff;
    --success: #30d158;
    --partial: #ffd60a;
+   --partial-weak: #5c4a12;
+   --partial-weak-ink: #ffe99a;
    --wrong: #3a3a3c;
    --wrong-ink: #d0d0d5;
    --chart-1: #ff375f;
@@ -578,6 +582,66 @@ html.dark .vertical-games .arcd-art {
    background: var(--wrong);
    color: var(--wrong-ink);
    border-color: transparent;
+ }
+
+ /* Paler amber — a looser match (same decade, same genre-family edge cases) */
+ .vertical-geetdle .category-tile.partial-weak {
+   background: var(--partial-weak);
+   color: var(--partial-weak-ink);
+   border-color: transparent;
+   font-weight: 600;
+ }
+
+ /* Example (teaching) row — muted so it reads as illustrative, not a real guess */
+ .vertical-geetdle .geetdle-example {
+   opacity: 0.72;
+ }
+
+ /* Clue legend swatches */
+ .vertical-geetdle .legend-swatch {
+   display: inline-block;
+   width: 0.875rem;
+   height: 0.875rem;
+   flex: none;
+   border-radius: 0.25rem;
+ }
+ .vertical-geetdle .legend-swatch.exact { background: var(--success); }
+ .vertical-geetdle .legend-swatch.partial { background: var(--partial); }
+ .vertical-geetdle .legend-swatch.partial-weak { background: var(--partial-weak); }
+ .vertical-geetdle .legend-swatch.wrong { background: var(--wrong); }
+
+ /* "Possibilities" panel */
+ .vertical-geetdle .possibility-count {
+   font-family: var(--mono-family), monospace;
+   font-size: 0.75rem;
+   font-weight: 600;
+   color: var(--accent);
+ }
+ .vertical-geetdle .possibility-chip {
+   display: inline-flex;
+   align-items: center;
+   border: 1px solid var(--rule);
+   border-radius: 9999px;
+   background: var(--paper);
+   padding: 0.2rem 0.6rem;
+   font-size: 0.75rem;
+   color: var(--ink);
+ }
+ .vertical-geetdle .possibility-chip.more { color: var(--faint); }
+ .vertical-geetdle .possibility-chip.interactive { cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease; }
+ .vertical-geetdle .possibility-chip.interactive:hover {
+   border-color: var(--accent);
+   color: var(--accent);
+ }
+ .vertical-geetdle .geetdle-possibilities {
+   animation: geetdle-rise 150ms ease both;
+ }
+ @keyframes geetdle-rise {
+   from { opacity: 0; transform: translateY(6px); }
+   to { opacity: 1; transform: none; }
+ }
+ @media (prefers-reduced-motion: reduce) {
+   .vertical-geetdle .geetdle-possibilities { animation: none; }
  }
 
 .vertical-movies {
