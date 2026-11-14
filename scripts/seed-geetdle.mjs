@@ -16,7 +16,9 @@
  *   --force          TRUNCATE geetdle_songs before seeding
  *
  * Fields & eligibility:
- *   - JioSaavn has no genre, so we INFER one from the title/movie/singers.
+ *   - JioSaavn has no genre. If data/geetdle/genres.json (an accurate
+ *     song_uuid -> genre map from the classification pass) exists, it wins;
+ *     otherwise we INFER a genre from the title/movie/singers.
  *   - Every JioSaavn song carries album art → `poster_url` (the poster hint).
  *   - A row is answer-eligible iff it has an (inferred) genre AND a play_count
  *     >= min-plays AND a poster — i.e. a recognizable, provably-popular song
@@ -52,7 +54,16 @@ const clean = (v) => (typeof v === "string" ? v.trim() : "");
 const norm = (s) => clean(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 const dupKey = (title, year, movie) => `${norm(title)}|${year}|${norm(movie)}`;
 
-/** Normalize a JioSaavn crawl row to a DB row (genre inferred from the title). */
+// Optional accurate-genre override map (song_uuid -> genre), produced by the
+// genre-classification pass. Keyed by uuid so it survives a re-crawl. When
+// present it wins over the keyword inference below.
+const genreOverride = existsSync("data/geetdle/genres.json")
+  ? readJson("data/geetdle/genres.json")
+  : {};
+if (Object.keys(genreOverride).length)
+  console.log(`Genre override: ${Object.keys(genreOverride).length} songs.`);
+
+/** Normalize a JioSaavn crawl row to a DB row (genre: override > inferred). */
 function toRow(r) {
   const songUuid = r.songUuid ?? r.song_uuid;
   const title = clean(r.title ?? r.song_title);
@@ -63,7 +74,8 @@ function toRow(r) {
   const secondary = r.secondaryGenres ?? r.secondary_genres ?? [];
   const singers = clean(r.singers ?? r.song_singers);
   const movie = clean(r.movie ?? r.album_title);
-  const genre = clean(r.genre) || inferGenre(title, { singers, movie });
+  const genre =
+    genreOverride[songUuid] || clean(r.genre) || inferGenre(title, { singers, movie });
   const pop = r.popularity ?? r.play_count;
   const popNum = Number(pop);
   return {
@@ -79,6 +91,7 @@ function toRow(r) {
     secondary_genres: Array.isArray(secondary) ? secondary : [],
     youtube_url: clean(r.youtubeUrl ?? r.youtube_url) || null,
     poster_url: clean(r.posterUrl ?? r.poster_url) || null,
+    audio_url: clean(r.audioUrl ?? r.audio_url) || null,
     popularity: Number.isFinite(popNum) && popNum > 0 ? Math.round(popNum) : null,
     source: clean(r.source) || "jiosaavn",
   };
@@ -118,7 +131,7 @@ console.log(
 const COLS = [
   "song_uuid", "title", "title_lower", "singers", "movie", "year",
   "music_director", "language", "genre", "secondary_genres", "youtube_url",
-  "poster_url", "popularity", "is_answer_eligible", "source",
+  "poster_url", "audio_url", "popularity", "is_answer_eligible", "source",
 ];
 
 const sql = postgres(url, { max: 1 });
@@ -136,7 +149,7 @@ try {
         music_director = excluded.music_director, language = excluded.language,
         genre = excluded.genre, secondary_genres = excluded.secondary_genres,
         youtube_url = excluded.youtube_url, poster_url = excluded.poster_url,
-        popularity = excluded.popularity,
+        audio_url = excluded.audio_url, popularity = excluded.popularity,
         is_answer_eligible = excluded.is_answer_eligible, source = excluded.source
     `;
     done += batch.length;

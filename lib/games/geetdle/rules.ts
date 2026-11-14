@@ -141,18 +141,22 @@ export function isWinningGuess(feedback: CategoryFeedback[]): boolean {
   return feedback.every((f) => f.state === "exact");
 }
 
+/** Launch day: Geetdle puzzle #1 is 2026-11-01 (there are no puzzles before it). */
+export const PUZZLE_EPOCH_UTC = Date.UTC(2026, 10, 1); // 2026-11-01 UTC
+
 /**
- * The puzzle number for a given day: whole days since the fixed epoch
- * (2024-01-01 UTC). This is the shared seed for the daily puzzle — the client
- * uses it to label/share "#N", and the server uses it to seed the weighted
- * pseudo-random answer pick (lib/games/geetdle/daily.ts), so everyone gets the
- * same song on the same day. Pure (no DB), safe to import on the client.
+ * The puzzle number for a given day: 1 on launch day (2026-11-01), +1 each day
+ * after. This is the shared seed for the daily puzzle — the client uses it to
+ * label/share "#N", and the server uses it to seed the weighted pseudo-random
+ * answer pick (lib/games/geetdle/queries.ts), so everyone gets the same song on
+ * the same day. Computed from the UTC calendar date so the client and server
+ * always agree on the number (puzzles roll over at 00:00 UTC). Pure (no DB),
+ * safe to import on the client.
  */
 export function getPuzzleNumber(date = new Date()): number {
-  const epoch = new Date("2024-01-01T00:00:00Z");
-  const now = new Date(date);
-  now.setHours(0, 0, 0, 0);
-  return Math.floor((now.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
+  const d = new Date(date);
+  const todayUtc = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return Math.floor((todayUtc - PUZZLE_EPOCH_UTC) / 86_400_000) + 1;
 }
 
 /**
@@ -162,12 +166,14 @@ export function getPuzzleNumber(date = new Date()): number {
 export function generateShareText(
   guesses: Guess[],
   puzzleNumber: number,
-  url?: string
+  url?: string,
+  solved = true
 ): string {
   const tries = guesses.length;
   const title = `🎬 Geetdle #${puzzleNumber}`;
-  const result =
-    tries > 0
+  const result = !solved
+    ? `Stumped by today's Bollywood tune 🙈`
+    : tries > 0
       ? `Named that Bollywood tune in ${tries} ${tries === 1 ? "guess" : "guesses"} 🎶`
       : `Today's Bollywood song puzzle 🎶`;
 

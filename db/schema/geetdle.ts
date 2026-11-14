@@ -45,7 +45,8 @@ export const geetdleSongs = pgTable(
     genre: text(),
     secondaryGenres: text().array().notNull().default([]),
     youtubeUrl: text(), // nullable; kept for optional later enrichment.
-    posterUrl: text(), // album/song art — the poster hint shown after 3 guesses.
+    posterUrl: text(), // album/song art — the poster hint shown after 7 guesses.
+    audioUrl: text(), // direct audio stream — the preview hint shown after 3 guesses.
     popularity: integer(), // nullable; play count / rank for answer curation
     isAnswerEligible: boolean().notNull().default(true),
     source: text().notNull().default("jiosaavn"),

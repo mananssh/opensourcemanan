@@ -15,7 +15,11 @@ import {
  */
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const POSTER_UNLOCK_AT = 3;
+// Hint ladder, by number of incorrect guesses made: audio preview after 3,
+// song poster after 7, and the answer is revealed after the 8th (final) miss.
+const AUDIO_UNLOCK_AT = 3;
+const POSTER_UNLOCK_AT = 7;
+const MAX_GUESSES = 8;
 
 export async function POST(request: Request) {
   let id = "";
@@ -58,19 +62,26 @@ export async function POST(request: Request) {
       toBollywoodSong(answerRow),
     );
     const won = isWinningGuess(feedback);
-    const revealPoster = won || guessNumber >= POSTER_UNLOCK_AT;
+    // Out of guesses: the 8th (final) miss ends the game and reveals the answer.
+    const lost = !won && guessNumber >= MAX_GUESSES;
+    const revealAudio = won || guessNumber >= AUDIO_UNLOCK_AT;
+    const revealPoster = won || lost || guessNumber >= POSTER_UNLOCK_AT;
 
     return NextResponse.json({
       guessTitle: guessRow.title,
       feedback,
       won,
+      lost,
       puzzleNumber,
+      maxGuesses: MAX_GUESSES,
+      audioUrl: revealAudio ? answerRow.audioUrl : null,
       posterUrl: revealPoster
         ? answerRow.posterUrl ?? youtubeThumb(answerRow.youtubeUrl)
         : null,
-      answer: won
-        ? { title: answerRow.title, movie: answerRow.movie, year: answerRow.year }
-        : null,
+      answer:
+        won || lost
+          ? { title: answerRow.title, movie: answerRow.movie, year: answerRow.year }
+          : null,
     });
   } catch (err) {
     console.error("[geetdle/guess]", err);
