@@ -38,11 +38,12 @@ Daily Bollywood song guessing game built for the OSM games vertical.
 
 ## Dataset
 
-**Source**: `content/games/geetdle/songs.json`
-- Based on MrAsacker Bollywood Songs Dataset
-- 100 curated songs across eras (1950s-2020s)
-- Enriched with inferred language and genre data
-- Includes YouTube URLs for poster extraction
+**Source**: the private `geetdle_songs` table (DB only — nothing ships in the repo).
+- Crawled from JioSaavn (title, year, language, play count, movie, music
+  director, singers, album art). Crawl JSON is gitignored.
+- Genre is **inferred** from the song title (JioSaavn has no genre field).
+- Album art (`poster_url`) is the poster hint, revealed after 3 guesses.
+- Daily answer picked server-side; see `lib/games/geetdle/queries.ts`.
 
 ## Architecture
 
@@ -186,8 +187,8 @@ Per ADR 0006 (design-first workflow):
 
 ## Credits
 
-- **Dataset**: MrAsacker Bollywood Songs Dataset
-- **Design**: "Cinematic Gold" theme by OSM
+- **Dataset**: crawled from JioSaavn into a private DB table (not in the repo)
+- **Design**: "Quiet Marquee" theme by OSM
 - **Architecture**: Following OSM games vertical pattern
 - **Fonts**: Google Fonts (Poppins, Inter, JetBrains Mono)
 

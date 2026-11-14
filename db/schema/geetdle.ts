@@ -27,6 +27,8 @@ import {
  *                        pick is seeded by the puzzle number and weighted 75/25
  *                        toward songs from 2000 onward.
  * - `popularity`       — nullable play-count/rank for future answer curation.
+ * - `posterUrl`        — album/song art (JioSaavn, the sole source); the poster
+ *                        hint revealed after 3 guesses / on a win.
  */
 export const geetdleSongs = pgTable(
   "geetdle_songs",
@@ -42,10 +44,11 @@ export const geetdleSongs = pgTable(
     language: text().notNull().default("Hindi"),
     genre: text(),
     secondaryGenres: text().array().notNull().default([]),
-    youtubeUrl: text(),
+    youtubeUrl: text(), // nullable; kept for optional later enrichment.
+    posterUrl: text(), // album/song art — the poster hint shown after 3 guesses.
     popularity: integer(), // nullable; play count / rank for answer curation
     isAnswerEligible: boolean().notNull().default(true),
-    source: text().notNull().default("mrasacker"),
+    source: text().notNull().default("jiosaavn"),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

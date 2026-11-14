@@ -89,7 +89,7 @@ export default function GeetdleLayout({
             </Link>
           </p>
           <p className="tracking-wide">
-            SONGS FROM MRASACKER BOLLYWOOD DATASET
+            A NEW BOLLYWOOD SONG EVERY DAY
           </p>
         </div>
       </footer>
