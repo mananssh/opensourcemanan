@@ -49,6 +49,8 @@ export function GeetdleApp({
   const [guesses, setGuesses] = useState<Guess[]>([]);
   const [isWon, setIsWon] = useState(false);
   const [isLost, setIsLost] = useState(false);
+  // True when the loss was voluntary (gave up) rather than running out of guesses.
+  const [gaveUp, setGaveUp] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -94,6 +96,7 @@ export function GeetdleApp({
           guesses: Guess[];
           isWon: boolean;
           isLost: boolean;
+          gaveUp: boolean;
           posterUrl: string | null;
           audioUrl: string | null;
           answer: GuessResponse["answer"];
@@ -102,6 +105,7 @@ export function GeetdleApp({
         if (Array.isArray(s.guesses) && s.guesses.length) setGuesses(s.guesses);
         if (s.isWon) setIsWon(true);
         if (s.isLost) setIsLost(true);
+        if (s.gaveUp) setGaveUp(true);
         if (s.posterUrl) setPosterUrl(s.posterUrl);
         if (s.audioUrl) setAudioUrl(s.audioUrl);
         if (s.answer) setAnswer(s.answer);
@@ -118,16 +122,18 @@ export function GeetdleApp({
   // until the first guess.
   useEffect(() => {
     if (!hydrated) return;
-    if (guesses.length === 0) return;
+    // Nothing to save until the first guess — unless the game already ended
+    // (e.g. gave up with zero guesses).
+    if (guesses.length === 0 && !isWon && !isLost) return;
     try {
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ v: 2, guesses, isWon, isLost, posterUrl, audioUrl, answer, phase }),
+        JSON.stringify({ v: 2, guesses, isWon, isLost, gaveUp, posterUrl, audioUrl, answer, phase }),
       );
     } catch {
       /* no-op: storage unavailable */
     }
-  }, [hydrated, storageKey, guesses, isWon, isLost, posterUrl, audioUrl, answer, phase]);
+  }, [hydrated, storageKey, guesses, isWon, isLost, gaveUp, posterUrl, audioUrl, answer, phase]);
 
   // Narrow the catalog by every guess so far → the hover "Possibilities" panel.
   const possibilities = useMemo(() => {
@@ -136,6 +142,37 @@ export function GeetdleApp({
   }, [catalog, guesses]);
 
   const handleShare = () => setShowShare(true);
+
+  const handleGiveUp = async () => {
+    if (submitting || isWon || isLost) return;
+    if (!window.confirm("Give up and reveal today's song?")) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/geetdle/giveup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ puzzle: puzzleNumber }),
+      });
+      if (!res.ok) throw new Error(`give up failed: ${res.status}`);
+      const data = (await res.json()) as {
+        answer: GuessResponse["answer"];
+        posterUrl: string | null;
+        audioUrl: string | null;
+      };
+      if (data.posterUrl) setPosterUrl(data.posterUrl);
+      if (data.audioUrl) setAudioUrl(data.audioUrl);
+      setAnswer(data.answer);
+      setGaveUp(true);
+      setIsLost(true);
+      setPhase("lost");
+      setTimeout(() => setShowShare(true), 1000);
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleGuess = async (song: CatalogSong) => {
     if (submitting || isWon || isLost) return;
@@ -248,6 +285,17 @@ export function GeetdleApp({
             {catalog.length === 0 && (
               <p className="mt-2 pl-1 text-xs text-faint">Loading songs…</p>
             )}
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={handleGiveUp}
+                disabled={submitting}
+                className="text-xs tracking-wide text-faint underline-offset-4 transition-colors hover:text-ink hover:underline disabled:opacity-50"
+                style={{ fontFamily: "var(--mono-family)" }}
+              >
+                GIVE UP &amp; REVEAL SONG
+              </button>
+            </div>
           </div>
         )}
 
@@ -280,7 +328,7 @@ export function GeetdleApp({
                 className="mb-3 text-xs uppercase tracking-[0.2em]"
                 style={{ fontFamily: "var(--mono-family)", color: "var(--wrong-ink)" }}
               >
-                Out of guesses — the song was
+                {gaveUp ? "You gave up — the song was" : "Out of guesses — the song was"}
               </p>
               <p
                 className="mb-1 text-2xl font-bold text-ink"
