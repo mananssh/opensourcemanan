@@ -1,64 +1,52 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-
-type Suggestion = {
-  id: string;
-  title: string;
-  movie: string;
-  year: number;
-  singers: string;
-};
+import { useState, useRef, useMemo, useCallback } from "react";
+import type { CatalogSong } from "@/lib/games/geetdle/types";
 
 interface GuessInputProps {
-  onGuess: (song: { id: string; title: string }) => void;
+  /** The full lean catalog, shipped to the client — search runs locally, instantly. */
+  catalog: CatalogSong[];
+  onGuess: (song: CatalogSong) => void;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
-export function GuessInput({ onGuess, disabled = false }: GuessInputProps) {
+const MAX_SUGGESTIONS = 8;
+
+export function GuessInput({
+  catalog,
+  onGuess,
+  disabled = false,
+  autoFocus = false,
+}: GuessInputProps) {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
-  // Debounced server search. All state updates happen inside the async
-  // callback (never synchronously in the effect body).
-  useEffect(() => {
-    const q = query.trim();
-    const t = setTimeout(async () => {
-      if (q.length < 2) {
-        setSuggestions([]);
-        setShowSuggestions(false);
-        return;
+  // Instant, local substring match. The catalog arrives pre-sorted by
+  // popularity, so taking the first N matches in order ranks the obvious songs
+  // first — no network round-trip per keystroke.
+  const suggestions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const out: CatalogSong[] = [];
+    for (const s of catalog) {
+      if (s.song_title.toLowerCase().includes(q)) {
+        out.push(s);
+        if (out.length >= MAX_SUGGESTIONS) break;
       }
-      abortRef.current?.abort();
-      const ctrl = new AbortController();
-      abortRef.current = ctrl;
-      try {
-        const res = await fetch(
-          `/api/geetdle/search?q=${encodeURIComponent(q)}`,
-          { signal: ctrl.signal },
-        );
-        if (!res.ok) return;
-        const data = (await res.json()) as { results: Suggestion[] };
-        setSuggestions(data.results);
-        setShowSuggestions(data.results.length > 0);
-        setSelectedIndex(-1);
-      } catch {
-        /* aborted or network error — ignore */
-      }
-    }, 180);
-    return () => clearTimeout(t);
-  }, [query]);
+    }
+    return out;
+  }, [query, catalog]);
+
+  const showSuggestions = open && suggestions.length > 0;
 
   const submit = useCallback(
-    (song: Suggestion) => {
-      onGuess({ id: song.id, title: song.title });
+    (song: CatalogSong) => {
+      onGuess(song);
       setQuery("");
-      setSuggestions([]);
-      setShowSuggestions(false);
+      setOpen(false);
       setSelectedIndex(-1);
     },
     [onGuess],
@@ -72,7 +60,7 @@ export function GuessInput({ onGuess, disabled = false }: GuessInputProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions || suggestions.length === 0) return;
+    if (!showSuggestions) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setSelectedIndex((p) => (p < suggestions.length - 1 ? p + 1 : p));
@@ -80,7 +68,7 @@ export function GuessInput({ onGuess, disabled = false }: GuessInputProps) {
       e.preventDefault();
       setSelectedIndex((p) => (p > 0 ? p - 1 : -1));
     } else if (e.key === "Escape") {
-      setShowSuggestions(false);
+      setOpen(false);
     }
   };
 
@@ -91,16 +79,24 @@ export function GuessInput({ onGuess, disabled = false }: GuessInputProps) {
           <input
             ref={inputRef}
             type="text"
+            name="geetdle-guess"
+            aria-label="Guess a Bollywood song"
+            autoComplete="off"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            autoFocus={autoFocus}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setOpen(true);
+              setSelectedIndex(-1);
+            }}
             onKeyDown={handleKeyDown}
-            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            onFocus={() => setOpen(true)}
             placeholder="Type a song name…"
             disabled={disabled}
             className="w-full rounded-full border border-input bg-surface px-5 py-3.5 text-ink placeholder:text-faint transition-shadow focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
           />
 
-          {showSuggestions && suggestions.length > 0 && (
+          {showSuggestions && (
             <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-rule bg-paper shadow-xl shadow-black/5">
               <div className="max-h-72 overflow-y-auto p-1.5">
                 {suggestions.map((song, idx) => (
@@ -113,7 +109,7 @@ export function GuessInput({ onGuess, disabled = false }: GuessInputProps) {
                     }`}
                   >
                     <span className="text-sm font-medium text-ink">
-                      {song.title}
+                      {song.song_title}
                     </span>
                     <span className="text-xs text-muted">
                       {song.movie} ({song.year}) · {song.singers}

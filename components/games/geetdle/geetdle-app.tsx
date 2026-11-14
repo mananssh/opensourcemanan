@@ -2,8 +2,18 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import type { Guess, GeetdlePhase, CategoryFeedback } from "@/lib/games/geetdle/types";
-import { generateShareText, getPuzzleNumber } from "@/lib/games/geetdle/rules";
+import type {
+  Guess,
+  GeetdlePhase,
+  CategoryFeedback,
+  CatalogSong,
+} from "@/lib/games/geetdle/types";
+import {
+  generateShareText,
+  getPuzzleNumber,
+  remainingPossibilities,
+  summarizePossibilities,
+} from "@/lib/games/geetdle/rules";
 import { GameBoard } from "./game-board";
 import { GuessInput } from "./guess-input";
 import { ShareModal } from "./share-modal";
@@ -20,10 +30,10 @@ type GuessResponse = {
   answer: { title: string; movie: string; year: number } | null;
 };
 
-const AUDIO_UNLOCK_THRESHOLD = 3;
-const POSTER_UNLOCK_THRESHOLD = 7;
 const MAX_GUESSES = 8;
 const SHARE_URL = "https://mananssh.com/games/geetdle";
+/** Bump when the saved shape changes — v2 stores each guess's full song. */
+const STORAGE_VERSION = "v2";
 
 export function GeetdleApp({
   puzzleNumber: puzzleProp,
@@ -34,7 +44,8 @@ export function GeetdleApp({
   /** True when playing an archived (past) puzzle, not today's. */
   archive?: boolean;
 } = {}) {
-  const [phase, setPhase] = useState<GeetdlePhase>("hub");
+  // No "hub" gate — the board is the landing surface (see design brief revision).
+  const [phase, setPhase] = useState<GeetdlePhase>("playing");
   const [guesses, setGuesses] = useState<Guess[]>([]);
   const [isWon, setIsWon] = useState(false);
   const [isLost, setIsLost] = useState(false);
@@ -43,6 +54,7 @@ export function GeetdleApp({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [answer, setAnswer] = useState<GuessResponse["answer"]>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogSong[]>([]);
   // Gates the save effect so it can't overwrite saved progress with the empty
   // initial state before the load effect has restored it.
   const [hydrated, setHydrated] = useState(false);
@@ -52,11 +64,24 @@ export function GeetdleApp({
     [puzzleProp],
   );
 
-  const storageKey = `geetdle:v1:${puzzleNumber}`;
+  const storageKey = `geetdle:${STORAGE_VERSION}:${puzzleNumber}`;
+
+  // Fetch the lean catalog once — powers instant local search and the
+  // possibilities filter. Cached hard at the edge, so this is cheap.
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/geetdle/catalog")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d: { songs: CatalogSong[] }) => {
+        if (alive) setCatalog(d.songs ?? []);
+      })
+      .catch((err) => console.error("[geetdle] catalog load failed", err));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // Restore saved progress for THIS puzzle on mount (per-puzzle, per-device).
-  // Runs only in the browser; a refresh mid-game or after solving comes back to
-  // the exact same state. Guarded so private mode / disabled storage degrades.
   useEffect(() => {
     // localStorage can only be read after mount (reading it during render would
     // desync SSR), so restoring saved state here necessarily sets state in an
@@ -80,7 +105,7 @@ export function GeetdleApp({
         if (s.posterUrl) setPosterUrl(s.posterUrl);
         if (s.audioUrl) setAudioUrl(s.audioUrl);
         if (s.answer) setAnswer(s.answer);
-        if (s.phase && s.phase !== "hub") setPhase(s.phase);
+        if (s.phase === "won" || s.phase === "lost") setPhase(s.phase);
       }
     } catch {
       /* no-op: storage unavailable */
@@ -90,24 +115,29 @@ export function GeetdleApp({
   }, [storageKey]);
 
   // Persist progress whenever it changes (after hydration). Nothing to save
-  // while still on the hub with no guesses.
+  // until the first guess.
   useEffect(() => {
     if (!hydrated) return;
-    if (phase === "hub" && guesses.length === 0) return;
+    if (guesses.length === 0) return;
     try {
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ v: 1, guesses, isWon, isLost, posterUrl, audioUrl, answer, phase }),
+        JSON.stringify({ v: 2, guesses, isWon, isLost, posterUrl, audioUrl, answer, phase }),
       );
     } catch {
       /* no-op: storage unavailable */
     }
   }, [hydrated, storageKey, guesses, isWon, isLost, posterUrl, audioUrl, answer, phase]);
 
-  const handleStartGame = () => setPhase("playing");
+  // Narrow the catalog by every guess so far → the hover "Possibilities" panel.
+  const possibilities = useMemo(() => {
+    if (catalog.length === 0 || guesses.length === 0) return null;
+    return summarizePossibilities(remainingPossibilities(catalog, guesses));
+  }, [catalog, guesses]);
+
   const handleShare = () => setShowShare(true);
 
-  const handleGuess = async (song: { id: string; title: string }) => {
+  const handleGuess = async (song: CatalogSong) => {
     if (submitting || isWon || isLost) return;
     setSubmitting(true);
     try {
@@ -125,7 +155,12 @@ export function GeetdleApp({
 
       setGuesses((prev) => [
         ...prev,
-        { song_title: data.guessTitle, feedback: data.feedback, timestamp: Date.now() },
+        {
+          song_title: data.guessTitle,
+          feedback: data.feedback,
+          timestamp: Date.now(),
+          song, // full fields — powers the client-side possibilities filter
+        },
       ]);
       // Hints, once revealed by the server, stay revealed.
       if (data.posterUrl) setPosterUrl(data.posterUrl);
@@ -149,107 +184,24 @@ export function GeetdleApp({
     }
   };
 
-  if (phase === "hub") {
-    return (
-      <div className="container mx-auto px-5 py-16 sm:py-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <p
-            className="mb-4 text-[11px] tracking-[0.2em] text-faint sm:mb-5 sm:text-xs"
-            style={{ fontFamily: "var(--mono-family)" }}
-          >
-            {archive ? `ARCHIVE · PUZZLE #${puzzleNumber}` : `DAILY PUZZLE #${puzzleNumber}`}
-          </p>
-
-          <h1
-            className="geetdle-wordmark mb-5 text-6xl text-ink sm:mb-6 sm:text-7xl md:text-9xl"
-            style={{ fontFamily: "var(--display-family)" }}
-          >
-            GEETDLE
-          </h1>
-
-          <p className="mx-auto mb-10 max-w-md text-balance text-base text-muted sm:text-lg">
-            {archive
-              ? "Replay an earlier daily puzzle. Guess the Bollywood song from category clues."
-              : "Guess the Bollywood song from category clues. A new puzzle every day."}
-          </p>
-
-          <button
-            onClick={handleStartGame}
-            className="rounded-full bg-accent px-9 py-4 text-base font-semibold text-accent-ink transition-all hover:opacity-90 active:scale-[0.98]"
-          >
-            {archive ? "Play this puzzle" : "Play today’s puzzle"}
-          </button>
-
-          <div className="mt-6 text-sm">
-            {archive ? (
-              <Link href="/games/geetdle" className="text-muted transition-colors hover:text-ink">
-                ← Today&apos;s puzzle
-              </Link>
-            ) : (
-              <Link href="/games/geetdle/archive" className="text-muted transition-colors hover:text-ink">
-                Past puzzles →
-              </Link>
-            )}
-          </div>
-
-          <div className="mx-auto mt-20 max-w-lg border-t border-rule pt-10 text-left">
-            <h2
-              className="mb-6 text-center text-xs uppercase tracking-[0.2em] text-faint"
-              style={{ fontFamily: "var(--mono-family)" }}
-            >
-              How to play
-            </h2>
-            <div className="space-y-4 text-sm text-muted">
-              <p>
-                Each guess scores six categories — Music Director, Singer(s),
-                Year, Movie, Language and Genre.
-              </p>
-              <ul className="space-y-2.5">
-                <li className="flex items-center gap-3">
-                  <span
-                    className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm"
-                    style={{ background: "var(--success)" }}
-                  />
-                  Exact match
-                </li>
-                <li className="flex items-center gap-3">
-                  <span
-                    className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm"
-                    style={{ background: "var(--partial)" }}
-                  />
-                  Close — within a year, or a shared singer
-                </li>
-                <li className="flex items-center gap-3">
-                  <span
-                    className="inline-block h-3.5 w-3.5 shrink-0 rounded-sm"
-                    style={{ background: "var(--wrong)" }}
-                  />
-                  Wrong — arrows point toward the year
-                </li>
-              </ul>
-              <p className="pt-1 text-faint">
-                You get {MAX_GUESSES} guesses. An audio preview unlocks after{" "}
-                {AUDIO_UNLOCK_THRESHOLD}, and the song poster after{" "}
-                {POSTER_UNLOCK_THRESHOLD}.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto px-5 py-10">
       <div className="mx-auto max-w-3xl">
+        {/* Slim hero — brand + puzzle number (the old "Play" gate is gone). */}
         <div className="mb-8 flex items-end justify-between">
           <div>
             <p
               className="text-xs tracking-[0.2em] text-faint"
               style={{ fontFamily: "var(--mono-family)" }}
             >
-              {archive ? "ARCHIVE · " : ""}PUZZLE #{puzzleNumber}
+              {archive ? `ARCHIVE · PUZZLE #${puzzleNumber}` : `DAILY · PUZZLE #${puzzleNumber}`}
             </p>
+            <h1
+              className="geetdle-wordmark mt-1 text-4xl text-ink sm:text-5xl"
+              style={{ fontFamily: "var(--display-family)" }}
+            >
+              GEETDLE
+            </h1>
             <p
               className="mt-2 text-sm text-muted"
               style={{ fontFamily: "var(--mono-family)" }}
@@ -282,11 +234,20 @@ export function GeetdleApp({
           audioUrl={audioUrl}
           isWon={isWon}
           isLost={isLost}
+          possibilities={possibilities}
         />
 
         {!isWon && !isLost && (
           <div className="mt-8">
-            <GuessInput onGuess={handleGuess} disabled={submitting} />
+            <GuessInput
+              catalog={catalog}
+              onGuess={handleGuess}
+              disabled={submitting || catalog.length === 0}
+              autoFocus
+            />
+            {catalog.length === 0 && (
+              <p className="mt-2 pl-1 text-xs text-faint">Loading songs…</p>
+            )}
           </div>
         )}
 
@@ -317,7 +278,7 @@ export function GeetdleApp({
             <div className="rounded-2xl border border-rule bg-surface p-8 text-center">
               <p
                 className="mb-3 text-xs uppercase tracking-[0.2em]"
-                style={{ fontFamily: "var(--mono-family)", color: "var(--wrong)" }}
+                style={{ fontFamily: "var(--mono-family)", color: "var(--wrong-ink)" }}
               >
                 Out of guesses — the song was
               </p>
@@ -336,6 +297,18 @@ export function GeetdleApp({
             </div>
           </div>
         )}
+
+        <div className="mt-10 text-center text-sm">
+          {archive ? (
+            <Link href="/games/geetdle" className="text-muted transition-colors hover:text-ink">
+              ← Today&apos;s puzzle
+            </Link>
+          ) : (
+            <Link href="/games/geetdle/archive" className="text-muted transition-colors hover:text-ink">
+              Past puzzles →
+            </Link>
+          )}
+        </div>
       </div>
 
       {showShare && (

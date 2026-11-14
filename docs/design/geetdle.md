@@ -3,6 +3,52 @@
 `/games/geetdle` — daily guessing game for Bollywood songs.
 Nested under `/games` but **does not inherit** Cabinet After Hours or Blind look.
 
+> **Revision (2026-11-15): Gameplay UX overhaul.** Extends "Quiet Marquee" —
+> no new mood, no new type stack. Changes, all within existing tokens except one
+> new paler-amber tier:
+>
+> - **Direct-board onboarding.** The separate "Play" gate is gone; players land
+>   on the board with category headers visible, the search autofocused, and a
+>   greyed **EXAMPLE** guess row (muted ~0.5 opacity, mono "EXAMPLE" tag) that
+>   demonstrates the colour legend and clears on first input. Teaches the game
+>   before the first commit.
+> - **Two amber tiers for partial hints.** New token `--partial-weak` (a paler,
+>   lower-chroma amber) joins the existing strong `--partial`. New tile class
+>   `.category-tile.partial-weak`. Semantics:
+>   - **Year:** exact = green · within ±2 = strong amber · same decade (Δ>2) =
+>     weak amber · else neutral — always with ↑↓ arrow when not exact.
+>   - **Genre:** exact = green · same genre-family = strong amber · else neutral.
+>     Families: Romantic↔Sad/Emotional · Dance/Party↔Item/Cabaret↔Wedding/
+>     Celebration · Devotional↔Qawwali/Sufi · Classical/Ghazal↔Folk/Regional ·
+>     Motivational↔Patriotic · (Rap/Hip-Hop, General, Children stand alone).
+>   - **Singers:** unchanged (exact all / any-overlap = strong amber / none).
+>   - **"Language" clue dropped entirely** → a tighter **5-category** board
+>     (Music Director · Singer(s) · Year · Movie · Genre). Language was green on
+>     every guess (Hindi-only catalog) — dead signal, removed rather than
+>     replaced. Grid goes from 6 to 5 columns on desktop.
+> - **Hover "Possibilities" panel** (Stumple-style). Below the board: a surface
+>   card (hairline rule, mono headers) showing, per category, the values still
+>   consistent with all feedback so far, plus a **"N songs still possible"**
+>   count badge in `--accent`. Hovering a category header/cell highlights that
+>   column and focuses its possibilities. Computed client-side (see plumbing
+>   note). Motion: 150ms fade/slide-in; none under `prefers-reduced-motion`.
+> - **"How to read the clues" instructions block** on the board: the colour
+>   legend (green / strong amber / weak amber / neutral), ↑↓ meaning, the genre
+>   families, Solo/Duet/Group, and a one-line hover tip.
+>
+> **Plumbing (no UI):** a lean catalog (guessable fields only — no answer flag,
+> no audio/poster URLs) ships to the client via a cached API route for instant
+> local search and the client-side possibility filter. The daily answer is still
+> picked and every guess still scored server-side; the seed salt stays
+> server-only, so which row is the answer is never derivable from the payload.
+>
+> **New/changed token (add to `.vertical-geetdle` + `html.dark`):**
+>
+> | Token | Light | Dark | Role |
+> |-------|-------|------|------|
+> | `--partial-weak` | `#efd9a0` | `#5c4a12` | Looser-match tile (same decade) |
+> | `--partial-weak-ink` | `#5a4a16` | `#ffe99a` | Text on weak-amber tile |
+
 > **Revision (2026-11-11):** The original "Mumbai Nights" brief (saturated
 > magenta/purple jewel tones splashed across every surface) was replaced with an
 > Apple-minimalist system at the user's request. The restraint comes from the

@@ -4,7 +4,7 @@ import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { geetdleSongs, type GeetdleSong } from "@/db/schema";
 import { getPuzzleNumber } from "./rules";
-import type { BollywoodSong } from "./types";
+import type { BollywoodSong, CatalogSong } from "./types";
 
 /**
  * Server-only data access for Geetdle. The full catalog lives in the DB and
@@ -78,29 +78,29 @@ export async function getDailySong(
   return song;
 }
 
-/** Autocomplete: match the catalog by title substring (case-insensitive). */
-export async function searchSongs(
-  query: string,
-  limit = 8,
-): Promise<
-  Array<{ id: string; title: string; movie: string; year: number; singers: string }>
-> {
-  const q = query.trim().toLowerCase();
-  if (q.length < 2) return [];
-  // Escape LIKE wildcards in user input so they match literally.
-  const esc = q.replace(/[\\%_]/g, "\\$&");
-  return db
+/**
+ * The lean, client-safe catalog: every searchable song, guessable fields only.
+ * Shipped to the browser (via the cached /api/geetdle/catalog route) for instant
+ * local autocomplete and the client-side "possibilities" filter. Deliberately
+ * omits the audio/poster hints, and nothing here marks which row is today's
+ * answer — that pick and all scoring stay server-side, seeded by a salt the
+ * client never sees. Ordered by popularity so the client can rank matches.
+ */
+export async function getClientCatalog(): Promise<CatalogSong[]> {
+  const rows = await db
     .select({
       id: geetdleSongs.id,
-      title: geetdleSongs.title,
+      song_title: geetdleSongs.title,
       movie: geetdleSongs.movie,
-      year: geetdleSongs.year,
+      music_director: geetdleSongs.musicDirector,
       singers: geetdleSongs.singers,
+      year: geetdleSongs.year,
+      genre: geetdleSongs.genre,
+      popularity: geetdleSongs.popularity,
     })
     .from(geetdleSongs)
-    .where(sql`${geetdleSongs.titleLower} LIKE ${`%${esc}%`} ESCAPE '\\'`)
-    .orderBy(sql`${geetdleSongs.popularity} DESC NULLS LAST`, geetdleSongs.title)
-    .limit(limit);
+    .orderBy(sql`${geetdleSongs.popularity} DESC NULLS LAST`, geetdleSongs.title);
+  return rows.map((r) => ({ ...r, genre: r.genre ?? "" }));
 }
 
 /** Resolve a guessed song by its catalog id. */
