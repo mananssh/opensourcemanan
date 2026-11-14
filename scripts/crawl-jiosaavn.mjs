@@ -8,15 +8,43 @@
  * It has no genre, so `seed-geetdle.mjs` infers one from the title. Output is
  * gitignored — nothing ships in the repo; the catalog lives only in the DB.
  *
- *   node scripts/crawl-jiosaavn.mjs                       # full targeted crawl
- *   node scripts/crawl-jiosaavn.mjs --cap 500             # stop after 500 unique (validation)
- *   node scripts/crawl-jiosaavn.mjs --out data/geetdle/jiosaavn.json
+ *   node --openssl-legacy-provider scripts/crawl-jiosaavn.mjs            # full crawl (DES audio decrypt needs the flag)
+ *   node --openssl-legacy-provider scripts/crawl-jiosaavn.mjs --cap 500  # stop after 500 unique (validation)
+ *   node --openssl-legacy-provider scripts/crawl-jiosaavn.mjs --out data/geetdle/jiosaavn.json
  *
  * Uses the public JioSaavn web API (no auth). Polite: one request at a time
  * with a delay, retries on transient failure. Hindi-only.
  */
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { createDecipheriv } from "node:crypto";
+
+/**
+ * JioSaavn ships the stream URL DES-ECB-encrypted in `encrypted_media_url`.
+ * Decrypt it (public key "38346591") to a direct CDN URL, then pick a bitrate.
+ * DES lives in OpenSSL's legacy provider, so this script must run with
+ * `node --openssl-legacy-provider`. If it can't decrypt (flag missing), we warn
+ * once and leave audio null rather than crashing the whole crawl.
+ */
+let warnedDecrypt = false;
+const decryptAudio = (enc) => {
+  if (!enc) return null;
+  try {
+    const d = createDecipheriv("des-ecb", Buffer.from("38346591", "utf8"), null);
+    d.setAutoPadding(true);
+    const url = d.update(enc, "base64", "utf8") + d.final("utf8");
+    // Prefer 160kbps; the decrypted URL defaults to _96.mp4.
+    return url.replace(/_\d+\.mp4$/, "_160.mp4");
+  } catch (e) {
+    if (!warnedDecrypt) {
+      warnedDecrypt = true;
+      console.warn(
+        `  ! audio decrypt unavailable (${e.message}). Re-run with: node --openssl-legacy-provider scripts/crawl-jiosaavn.mjs`,
+      );
+    }
+    return null;
+  }
+};
 
 const argv = process.argv.slice(2);
 const arg = (name, dflt) => {
@@ -114,6 +142,7 @@ function mapSong(r) {
     secondaryGenres: [],
     youtubeUrl: null,
     posterUrl: posterUrl(r.image), // album/song art — the poster hint source.
+    audioUrl: decryptAudio(mi.encrypted_media_url), // decrypted stream — audio hint.
     permaUrl: decode(r.perma_url) || null,
     popularity: Number.isFinite(playCount) ? playCount : null,
     source: "jiosaavn",
@@ -149,7 +178,9 @@ const rows = [...byId.values()];
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(rows, null, 0));
 const withPlays = rows.filter((r) => r.popularity != null).length;
+const withAudio = rows.filter((r) => r.audioUrl != null).length;
+const withPoster = rows.filter((r) => r.posterUrl != null).length;
 console.log(
-  `\nCrawled ${rows.length} unique Hindi songs (${withPlays} with play_count) ` +
-    `in ${requests} requests → ${OUT}`,
+  `\nCrawled ${rows.length} unique Hindi songs (${withPlays} with play_count, ` +
+    `${withPoster} with poster, ${withAudio} with audio) in ${requests} requests → ${OUT}`,
 );

@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPuzzleNumber } from "@/lib/games/geetdle/rules";
+import { getPuzzleNumber, PUZZLE_EPOCH_UTC } from "@/lib/games/geetdle/rules";
 
 export const metadata: Metadata = {
   title: "Geetdle Archive — Past Daily Puzzles",
   description: "Replay every past Geetdle daily Bollywood song puzzle.",
 };
 
-const EPOCH_UTC = Date.UTC(2024, 0, 1);
+// Puzzle #1 is PUZZLE_EPOCH_UTC (2026-11-01), so #n is (n-1) days after it.
 const fmtDate = (n: number) =>
-  new Date(EPOCH_UTC + n * 86_400_000).toLocaleDateString("en-US", {
+  new Date(PUZZLE_EPOCH_UTC + (n - 1) * 86_400_000).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",

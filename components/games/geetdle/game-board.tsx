@@ -1,13 +1,62 @@
 "use client";
 
+import { useRef, useState } from "react";
 import type { Guess, CategoryKey } from "@/lib/games/geetdle/types";
 import Image from "next/image";
 
 interface GameBoardProps {
   guesses: Guess[];
-  /** Poster hint URL, revealed by the server after 3 guesses or on a win. */
+  /** Song-poster hint URL, revealed by the server after 7 guesses or on game end. */
   posterUrl: string | null;
+  /** Audio-preview URL, revealed by the server after 3 guesses or on game end. */
+  audioUrl: string | null;
   isWon: boolean;
+  isLost?: boolean;
+}
+
+/** How many seconds of the track the preview hint plays before stopping. */
+const PREVIEW_SECONDS = 20;
+
+/** A play/pause control that plays a short preview of the answer's track. */
+function AudioPreview({ src }: { src: string }) {
+  const ref = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+
+  const toggle = () => {
+    const a = ref.current;
+    if (!a) return;
+    if (playing) {
+      a.pause();
+    } else {
+      a.currentTime = 0;
+      void a.play().catch(() => setPlaying(false));
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-md text-center">
+      <audio
+        ref={ref}
+        src={src}
+        preload="none"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => setPlaying(false)}
+        onTimeUpdate={(e) => {
+          if (e.currentTarget.currentTime >= PREVIEW_SECONDS) e.currentTarget.pause();
+        }}
+      />
+      <button
+        onClick={toggle}
+        className="inline-flex items-center gap-2.5 rounded-full border border-rule bg-surface px-6 py-3 text-sm font-semibold text-ink transition-all hover:opacity-80 active:scale-[0.98]"
+      >
+        <span aria-hidden className="text-base leading-none">
+          {playing ? "⏸" : "▶"}
+        </span>
+        {playing ? "Pause preview" : "Play preview"}
+      </button>
+    </div>
+  );
 }
 
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
@@ -19,7 +68,13 @@ const CATEGORY_LABELS: Record<CategoryKey, string> = {
   genre: "Genre",
 };
 
-export function GameBoard({ guesses, posterUrl, isWon }: GameBoardProps) {
+export function GameBoard({
+  guesses,
+  posterUrl,
+  audioUrl,
+  isWon,
+  isLost = false,
+}: GameBoardProps) {
   const categories: CategoryKey[] = [
     "music_director",
     "singers",
@@ -99,28 +154,46 @@ export function GameBoard({ guesses, posterUrl, isWon }: GameBoardProps) {
         </div>
       )}
 
-      {/* Poster hint (revealed by the server after 3 guesses or on a win) */}
+      {/* Audio preview (revealed by the server after 3 guesses or on game end) */}
+      {audioUrl && (
+        <div className="mt-10 border-t border-rule pt-8">
+          <h3
+            className="mb-4 text-center text-[10px] uppercase tracking-[0.12em] text-faint"
+            style={{ fontFamily: "var(--mono-family)" }}
+          >
+            Audio Preview
+          </h3>
+          <AudioPreview src={audioUrl} />
+          {!isWon && !isLost && (
+            <p className="mt-3 text-center text-xs text-faint">
+              Preview unlocked after 3 guesses
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Song poster (revealed by the server after 7 guesses or on game end) */}
       {posterUrl && (
         <div className="mt-10 border-t border-rule pt-8">
           <h3
             className="mb-4 text-center text-[10px] uppercase tracking-[0.12em] text-faint"
             style={{ fontFamily: "var(--mono-family)" }}
           >
-            Movie Poster
+            Song Poster
           </h3>
           <div className="mx-auto max-w-md">
-            <div className="relative aspect-video overflow-hidden rounded-2xl bg-surface">
+            <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface">
               <Image
                 src={posterUrl}
-                alt="Movie poster hint"
+                alt="Song poster hint"
                 fill
                 className="object-cover"
                 unoptimized
               />
             </div>
-            {!isWon && (
+            {!isWon && !isLost && (
               <p className="mt-2 text-center text-xs text-faint">
-                Poster unlocked after 3 guesses
+                Poster unlocked after 7 guesses
               </p>
             )}
           </div>
