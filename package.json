@@ -15,6 +15,7 @@
     "seed:portfolio": "node --env-file=.env scripts/seed-portfolio.mjs",
     "prompts:encode": "node scripts/encode-prompts.mjs",
     "prompts:upload": "node --env-file=.env scripts/upload-prompts.mjs",
+    "geetdle:prune-dupes": "node --env-file=.env scripts/prune-geetdle-dupes.mjs",
     "prune-deploys": "node scripts/prune-deployments.mjs"
   },
   "dependencies": {
