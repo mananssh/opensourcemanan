@@ -27,6 +27,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import postgres from "postgres";
 import { inferGenre } from "./lib/geetdle-genre.mjs";
+import { dedupeSongs } from "./lib/geetdle-dedupe.mjs";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -51,8 +52,6 @@ const HINDI_ONLY = true;
 const readJson = (p) => JSON.parse(readFileSync(p, "utf8"));
 const arrayOf = (d) => (Array.isArray(d) ? d : d.songs ?? []);
 const clean = (v) => (typeof v === "string" ? v.trim() : "");
-const norm = (s) => clean(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-const dupKey = (title, year, movie) => `${norm(title)}|${year}|${norm(movie)}`;
 
 // Optional accurate-genre override map (song_uuid -> genre), produced by the
 // genre-classification pass. Keyed by uuid so it survives a re-crawl. When
@@ -97,22 +96,22 @@ function toRow(r) {
   };
 }
 
-// Load crawl rows, de-duplicating by uuid and by normalized title+year+movie.
+// Load crawl rows, keeping the first row seen per song_uuid.
 const byUuid = new Map();
-const seenKeys = new Set();
 for (const f of crawlFiles) {
-  const rows = arrayOf(readJson(f)).map(toRow).filter(Boolean);
-  for (const r of rows) {
-    const key = dupKey(r.title, r.year, r.movie);
-    if (seenKeys.has(key) || byUuid.has(r.song_uuid)) continue;
-    seenKeys.add(key);
-    byUuid.set(r.song_uuid, r);
-  }
-  console.log(`Crawl: read ${rows.length} rows from ${f}`);
+  const fileRows = arrayOf(readJson(f)).map(toRow).filter(Boolean);
+  for (const r of fileRows) if (!byUuid.has(r.song_uuid)) byUuid.set(r.song_uuid, r);
+  console.log(`Crawl: read ${fileRows.length} rows from ${f}`);
 }
 
-// Eligibility: inferred genre AND play_count >= threshold AND a poster.
-const rows = [...byUuid.values()];
+// Collapse the same recording re-listed under many playlist "albums" — keep the
+// original (oldest) per title + singer-set. See scripts/lib/geetdle-dedupe.mjs.
+const { keepers: rows, losers, duplicated } = dedupeSongs([...byUuid.values()]);
+if (losers.length)
+  console.log(
+    `De-duped: ${duplicated} songs had copies; dropped ${losers.length} ` +
+      `playlist/remix rows, kept ${rows.length}.`,
+  );
 for (const r of rows) {
   r.is_answer_eligible =
     r.genre != null &&
