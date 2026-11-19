@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useMemo, useCallback } from "react";
+import Fuse from "fuse.js";
 import type { CatalogSong } from "@/lib/games/geetdle/types";
 
 interface GuessInputProps {
@@ -24,21 +25,43 @@ export function GuessInput({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Instant, local substring match. The catalog arrives pre-sorted by
-  // popularity, so taking the first N matches in order ranks the obvious songs
-  // first — no network round-trip per keystroke.
+  // Instant, local fuzzy match. Fuse tolerates typos, phonetic slips, and the
+  // many valid Hindi transliterations (khwabon ↔ khaabon) that exact substring
+  // matching misses, so a near-miss spelling still surfaces the right song.
+  // Title is weighted highest, then movie, then singers — and the catalog ships
+  // pre-sorted by popularity, so we break near-ties in Fuse's score by that
+  // order to keep the obvious songs on top. All local: no round-trip per key.
+  const fuse = useMemo(
+    () =>
+      new Fuse(catalog, {
+        keys: [
+          { name: "song_title", weight: 0.6 },
+          { name: "movie", weight: 0.25 },
+          { name: "singers", weight: 0.15 },
+        ],
+        includeScore: true,
+        threshold: 0.4,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+      }),
+    [catalog],
+  );
+
   const suggestions = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (q.length < 2) return [];
-    const out: CatalogSong[] = [];
-    for (const s of catalog) {
-      if (s.song_title.toLowerCase().includes(q)) {
-        out.push(s);
-        if (out.length >= MAX_SUGGESTIONS) break;
-      }
-    }
-    return out;
-  }, [query, catalog]);
+    return fuse
+      .search(q)
+      .sort((a, b) => {
+        const byScore = (a.score ?? 0) - (b.score ?? 0);
+        // Within a hair of each other on relevance? Prefer the more popular
+        // song (lower refIndex, since the catalog is popularity-sorted).
+        if (Math.abs(byScore) > 0.02) return byScore;
+        return a.refIndex - b.refIndex;
+      })
+      .slice(0, MAX_SUGGESTIONS)
+      .map((r) => r.item);
+  }, [query, fuse]);
 
   const showSuggestions = open && suggestions.length > 0;
 
